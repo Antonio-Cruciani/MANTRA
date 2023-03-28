@@ -111,7 +111,7 @@ end
 
 
 
-function threaded_adaptive_trk_prefix_foremost(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
+function threaded_progressive_trk_prefix_foremost(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
 
     start_time = time()
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
