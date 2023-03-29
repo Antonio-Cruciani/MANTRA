@@ -17,7 +17,7 @@ struct BFS_PFM_SRTP_DS_BI
     end
 end
 
-function trk_prefix_foremost(tg::temporal_graph, sample_size::Int64, verbose_step::Int64, bigint::Bool)::Tuple{Array{Float64},Int64,Tuple{Float64,Float64,Float64}}
+function trk_prefix_foremost(tg::temporal_graph, sample_size::Int64, verbose_step::Int64, bigint::Bool)::Tuple{Array{Float64},Int64,Float64}
 
     start_time = time()
    
@@ -38,8 +38,6 @@ function trk_prefix_foremost(tg::temporal_graph, sample_size::Int64, verbose_ste
     temporal_edge::Tuple{Int64,Int64,Int64} = (-1,-1,-1)
     processed_so_far::Int64 = 0
     exec_time::Array{Float64} = zeros(sample_size)
-    avg_path_length::Float64 = 0
-    path_sampled::Int64 = 0
     totalWeight,randomEdge,curWeight,curEdge = initialize_weights(bigint)
 
     for i in 1:sample_size
@@ -109,7 +107,6 @@ function trk_prefix_foremost(tg::temporal_graph, sample_size::Int64, verbose_ste
 
             end
 
-            path_sampled += 1
         
         end
         exec_time[i] = time() - exec_time[i]
@@ -120,9 +117,8 @@ function trk_prefix_foremost(tg::temporal_graph, sample_size::Int64, verbose_ste
             flush(stdout)
         end
     end
-    avg_path_length = 0
 
-    return tilde_b,path_sampled ,(mean(exec_time), std(exec_time), time() - start_time)
+    return tilde_b , time() - start_time
 
 end
 

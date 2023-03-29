@@ -31,7 +31,7 @@ struct BI_BFS_SFM_SRTP_DS
     end
 end
 
-function trk_shortest_foremost(tg::temporal_graph, sample_size::Int64,verbose_step::Int64, bigint::Bool; test_sample=Array{Tuple{Int64,Int64}}[])::Tuple{Array{Float64},Int64,Tuple{Float64,Float64,Float64}}
+function trk_shortest_foremost(tg::temporal_graph, sample_size::Int64,verbose_step::Int64, bigint::Bool; test_sample=Array{Tuple{Int64,Int64}}[])::Tuple{Array{Float64},Float64}
     start_time = time()
     sample = test_sample
     if (length(sample) == 0 || length(sample) != sample_size)
@@ -56,7 +56,6 @@ function trk_shortest_foremost(tg::temporal_graph, sample_size::Int64,verbose_st
     totalWeight,randomEdge,curWeight,curEdge = initialize_weights(bigint)
     cur_w::Tuple{Int64,Int64} = (-1,-1)
     temporal_betweenness_centrality::Array{Float64} = zeros(tg.num_nodes)
-    path_sampled::Int64 = 0
     exec_time::Array{Float64} = zeros(sample_size)
     for i in 1:sample_size
         exec_time[i] = time()
@@ -166,7 +165,6 @@ function trk_shortest_foremost(tg::temporal_graph, sample_size::Int64,verbose_st
 
 
             
-            path_sampled += 1
         end
         exec_time[i] = time() - exec_time[i]
         delete!(tn_index,(z,t_z))
@@ -180,25 +178,10 @@ function trk_shortest_foremost(tg::temporal_graph, sample_size::Int64,verbose_st
 
     end
    
-    return temporal_betweenness_centrality,path_sampled ,(mean(exec_time), std(exec_time), time() - start_time)
+    return temporal_betweenness_centrality ,time() - start_time
 
 end
 
 
-
-function average_results(temporal_betweenness_centrality::Array{Float64},tg::temporal_graph,num_samples::Int64)
-    apx::Array{Float64} = [0.0 for i in 1:tg.num_nodes]
-    for l in 1:num_samples
-        for u in 1:tg.num_nodes
-            apx[u] += temporal_betweenness_centrality[(l-1)*tg.num_nodes+u]
-        end
-    end
-    for u in 1:tg.num_nodes
-        apx[u] = apx[u]/num_samples
-    end
-    
-
-    return apx
-end
 
 

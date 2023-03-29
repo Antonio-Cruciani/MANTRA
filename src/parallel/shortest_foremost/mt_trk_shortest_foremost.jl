@@ -217,7 +217,7 @@ function threaded_progressive_trk_shortest_foremost(tg::temporal_graph,eps::Floa
     if stop[1]
         println("Progressive sampler converged at "*string(sampled_so_far)*"/"*string(omega)*" iterations")
     end
-    return betweenness,eps_lb,eps_ub,sampled_so_far,time()-start_time
+    return betweenness,eps_lb,eps_ub,sampled_so_far,omega,time()-start_time
 
 
 end

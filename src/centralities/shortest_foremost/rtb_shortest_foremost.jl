@@ -3,7 +3,7 @@ using DataStructures
 
 
 
-function rtb_shortest_foremost(tg::temporal_graph, sample_size::Int64,verbose_step::Int64, bigint::Bool; test_sample=Array{Tuple{Int64,Int64}}[])::Tuple{Array{Float64},Tuple{Float64,Float64,Float64}}
+function rtb_shortest_foremost(tg::temporal_graph, sample_size::Int64,verbose_step::Int64, bigint::Bool; test_sample=Array{Tuple{Int64,Int64}}[])::Tuple{Array{Float64},Float64}
     start_time = time()
     sample = test_sample
     if (length(sample) == 0 || length(sample) != sample_size)
@@ -117,14 +117,14 @@ function rtb_shortest_foremost(tg::temporal_graph, sample_size::Int64,verbose_st
         temporal_betweenness_centrality[k] = temporal_betweenness_centrality[k]/(tg.num_nodes-1)
     end
     
-    return temporal_betweenness_centrality, (mean(exec_time), std(exec_time), time() - start_time)
+    return temporal_betweenness_centrality, time() - start_time
 
 end
 
 
 # ------- Progressive -------
 
-function progressive_rtb_shortest_foremost(tg::temporal_graph, c::Int64, verbose_step::Int64, bigint::Bool)::Tuple{Array{Float64},Int64,Tuple{Float64,Float64,Float64}}
+function progressive_rtb_shortest_foremost(tg::temporal_graph, c::Int64, verbose_step::Int64, bigint::Bool)::Tuple{Array{Float64},Int64,Float64}
     start_time = time()
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
     tn_index::Dict{Tuple{Int64,Int64},Int64} = temporal_node_index(tg)
@@ -252,6 +252,6 @@ function progressive_rtb_shortest_foremost(tg::temporal_graph, c::Int64, verbose
         temporal_betweenness_centrality[y] = temporal_betweenness_centrality[y] * (1/(k* (tg.num_nodes-1)))
     end
     
-    return temporal_betweenness_centrality,k, (mean(exec_time), std(exec_time), time() - start_time)
+    return temporal_betweenness_centrality,k, time() - start_time
 
 end

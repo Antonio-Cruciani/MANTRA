@@ -44,41 +44,35 @@ Number temporal of edges 19654
 Number of unique time stamps 7104
 ====================================================
 ```
+# Running the multi-thread implementation
+To run the multi-thread implementation of our algorithms you need to add the `threaded_` prefix to the algorithm name you wish to run, for example:
+```
+threaded_temporal_shortest_betweenness(tg,50,false)
+```
+runs the multi-thread implementation of the exact shortest-temporal betweenness algorithm `shortest_betweenness(tg,50,false)`
+Here we show ho to run the multi-threading versions, in order to run the single-threaded remove the prefix `threaded_` from the functions' name.
+
 # Computing the exact temporal betweenness scores
 
 The values of the (*)-temporal betweenness of the graph `tg` can be computed by executing the following command.
 
 #### shortest-temporal betweenness
-In case of multi-threading execution:
+
 ```
 stb,t_stb = threaded_temporal_shortest_betweenness(tg,50,false)
 ```
-If single-threaded:
-```
-stb,t_stb = temporal_shortest_betweenness(tg,50,false)
-```
 
 #### shortest-foremost-temporal betweenness
-In case of multi-threading execution:
 ```
 sftb,t_sftb = threaded_temporal_shortest_foremost_betweenness(tg,50,false)
 ```
-If single-threaded:
-```
-sftb,t_sftb = temporal_shortest_foremost_betweenness(tg,50,false)
-```
-
 #### prefix-foremost-temporal betweenness
-In case of multi-threading execution:
+
 ```
 pftb,t_pftb = threaded_prefix_foremost_betweenness(tg,50,false)
 ```
-If single-threaded:
-```
-pftb,t_pftb = prefix_foremost_betweenness(tg,50,false)
-```
 
-The second parameter specifies after how many processed nodes a message has to be printed on the console (in order to verify the status of the computation). If this parameter is `0`, then no ouptut is produced. The third parameter specifies whether the big integer implementation has to be used (in case there too many shortest paths). The execution of the above command should require less than a minute. The values returned are the array of the (*)-temporal betweenness values and the execution time.
+The second parameter specifies after how many processed nodes a message has to be printed on the console (in order to verify the status of the computation). If this parameter is `0`, then no output is produced. The third parameter specifies whether the big integer implementation has to be used (in case there too many shortest paths). The execution of the above command should require less than a minute. The values returned are the array of the (*)-temporal betweenness values and the execution time.
 
 The values of the (*)-temporal betweenness and the execution time can be saved in the scores and the times directory, respectively, as follows.
 
@@ -105,131 +99,171 @@ Every `fixed sample size` approximation algorithm takes as input: (1) temporal g
 
 #### Random Temporal Betweenness (rtb)
 ##### shortest-temporal betweenness
-In case of multi-threading execution:
+
 ```
-apx_tbc,t_est = threaded_rtb(tg,20,false)
-```
-If single-threaded:
-```
-apx_tbc,t_est  = rtb(tg,20,false)
+apx_tbc,t_est = threaded_rtb(tg,20,10,false)
 ```
 
 ```
-save_results("workplace", "rtb_sh", apx_tbc, t_est)
+save_results_sampling("workplace", "rtb_sh", apx_tbc, 20,t_est)
 ```
 ##### shortest-foremost-temporal betweenness
-In case of multi-threading execution:
+
 ```
-apx_bc,t_est = threaded_rtb_shortest_foremost(tg,20,false)
-```
-If single-threaded:
-```
-apx_bc,t_est  = rtb_shortest_foremost(tg,20,false)
+apx_bc,t_est = threaded_rtb_shortest_foremost(tg,20,10,false)
 ```
 
 ```
-save_results("workplace", "rtb_sfm", apx_tbc, t_est)
+save_results_sampling("workplace", "rtb_sfm", apx_tbc, 20,t_est)
 ```
 
 ##### prefix-foremost-temporal betweenness
-In case of multi-threading execution:
+
 ```
-apx_bc,t_est = threaded_rtb_prefix_foremost(tg,20)
-```
-If single-threaded:
-```
-apx_bc,t_est  = rtb_prefix_foremost(tg,20)
+apx_bc,t_est = threaded_rtb_prefix_foremost(tg,10,20)
 ```
 
 ```
-save_results("workplace", "rtb_pfm", apx_tbc, t_est)
+save_results_sampling("workplace", "rtb_pfm", apx_tbc,20, t_est)
 ```
 
 #### ONBRA (ob)
 ##### shortest-temporal betweenness
-In case of multi-threading execution:
+
 ```
-apx_tbc,t_est = threaded_onbra(tg,20,false)
-```
-If single-threaded:
-```
-apx_tbc,t_est  = onbra(tg,20,false)
+apx_tbc,t_est = threaded_onbra(tg,20,10,false)
 ```
 
 ```
-save_results("workplace", "onbra_sh", apx_tbc, t_est)
+save_results_sampling("workplace", "onbra_sh", apx_tbc,20, t_est)
 ```
 ##### shortest-foremost-temporal betweenness
-In case of multi-threading execution:
+
 ```
-apx_bc,t_est = threaded_onbra_shortest_foremost(tg,20,false)
-```
-If single-threaded:
-```
-apx_bc,t_est  = onbra_shortest_foremost(tg,20,false)
+apx_bc,t_est = threaded_onbra_shortest_foremost(tg,20,10,false)
 ```
 
 ```
-save_results("workplace", "onbra_sfm", apx_tbc, t_est)
+save_results_sampling("workplace", "onbra_sfm", apx_tbc, 20,t_est)
 ```
 
 ##### prefix-foremost-temporal betweenness
-In case of multi-threading execution:
 ```
-apx_bc,t_est = threaded_onbra_prefix_foremost(tg,20)
-```
-If single-threaded:
-```
-apx_bc,t_est  = onbra_prefix_foremost(tg,20)
+apx_bc,t_est = threaded_onbra_prefix_foremost(tg,20,10)
 ```
 
 ```
-save_results("workplace", "onbra_pfm", apx_tbc, t_est)
+save_results_sampling("workplace", "onbra_pfm", apx_tbc,20, t_est)
 ```
 
 #### Temporal Riondato and Kornaropoloulos (trk)
 ##### shortest-temporal betweenness
-In case of multi-threading execution:
 ```
-apx_tbc,t_est = threaded_trk(tg,20,false)
-```
-If single-threaded:
-```
-apx_tbc,t_est  = trk(tg,20,false)
+apx_tbc,t_est = threaded_trk(tg,20,10,false)
 ```
 
 ```
-save_results("workplace", "trk_sh", apx_tbc, t_est)
+save_results_sampling("workplace", "trk_sh", apx_tbc, 20,t_est)
 ```
 ##### shortest-foremost-temporal betweenness
-In case of multi-threading execution:
 ```
 apx_bc,t_est = threaded_trk_shortest_foremost(tg,20,false)
 ```
-If single-threaded:
-```
-apx_bc,t_est  = trk_shortest_foremost(tg,20,false)
-```
 
 ```
-save_results("workplace", "trk_sfm", apx_tbc, t_est)
+save_results_sampling("workplace", "trk_sfm", apx_tbc,20, t_est)
 ```
 
 ##### prefix-foremost-temporal betweenness
-In case of multi-threading execution:
 ```
 apx_bc,t_est = threaded_trk_prefix_foremost(tg,20)
 ```
-If single-threaded:
-```
-apx_bc,t_est  = trk_prefix_foremost(tg,20)
-```
 
 ```
-save_results("workplace", "trk_pfm", apx_tbc, t_est)
+save_results_sampling("workplace", "trk_pfm", apx_tbc,20, t_est)
 ```
 
 ## Progressive sampling algorithms
 Here we illustrate how to run the `progressive sampling` approximation algorithms.
 
 #### Progressive-Random Temporal Betweenness (p-rtb)
+
+##### shortest-temporal betweenness
+```
+apx_bc,n_s,t_est  = progressive_rtb(tg,2,10,false)
+```
+
+##### shortest-foremost-temporal betweenness
+```
+apx_bc,n_s,t_est = progressive_shortest_foremost_rtb(tg,2,100,false)
+```
+##### prefix-foremost-temporal betweenness
+
+```
+apx_bc,n_s,t_est  = progressive_prefix_foremost_rtb(tg,2,10)
+```
+The second parameter is the threshold value that the algorithm uses to establish when to stop, the third how many processed nodes a message has to be printed on the console (in order to verify the status of the computation). If this parameter is `0`, then no output is disabled, the last one (if present) indicates if the algorithm has to use the BigINT data-structure.
+To save the output we can call the function
+
+```
+save_results_progressive_sampling("workplace","p_rtb",apx_bc,n_s,t_est,2)
+```
+Where the third element is the tolerance parameter, the fourth is the estimation time, the fifth is the overall number of samples used by the algorithm to converge, and the last one is the geometric value for the progressive sampling (this algorithm does not use this technique, so you can put an arbitrary value).
+
+#### Progressive-ONBRA (p-ob)
+
+##### shortest-temporal betweenness
+```
+apx_bc,n_s,xi,t_est  = threaded_progressive_onbra(tg,350,0.1,0.1,1.5,50,false)
+```
+
+##### shortest-foremost-temporal betweenness
+```
+apx_bc,n_s,xi,t_est  = threaded_progressive_onbra_shortest_foremost(tg,350,0.1,0.1,1.5,50,false)
+```
+##### prefix-foremost-temporal betweenness
+
+```
+apx_bc,n_s,xi,t_est  = threaded_progressive_onbra_prefix_foremost(tg,350,0.1,0.1,1.5,50)
+```
+
+The second element is the starting sample size, the third is the accuracy $\varepsilon\in (0,1)$, the fourth is the acceptable failure probability $\delta\in (0,1)$, the fifth is the geometric schedule parameter, the sixth how many processed nodes a message has to be printed on the console (in order to verify the status of the computation). If this parameter is `0`, then no output is disabled, the last one (if present) indicates if the algorithm has to use the BigINT data-structure.
+To save the results we can use
+```
+save_results_progressive_sampling("workplace","p_onbra",apx_bc,n_s,t_est,350,xi)
+```
+
+#### Progressive-ONBRA (p-trk)
+
+##### shortest-temporal betweenness
+```
+apx_bc,lb,ub,n_s,ss,t_est = threaded_progressive_trk(tg,0.1,0.1,50,false,-1,100,10,true)
+```
+
+##### shortest-foremost-temporal betweenness
+```
+apx_bc,lb,ub,n_s,ss,t_est = threaded_progressive_trk_shortest_foremost(tg,0.1,0.1,50,false,-1,100,10,true)
+```
+
+##### shortest-foremost-temporal betweenness
+
+```
+apx_bc,lb,ub,n_s,ss,t_est = threaded_progressive_trk_prefix_foremost(tg,0.01,0.1,100,-1,100,10,true)
+```
+
+
+The second element is the accuracy $\varepsilon\in (0,1)$, the third is the acceptable failure probability $\delta\in (0,1)$, the fourth how many processed nodes a message has to be printed on the console (in order to verify the status of the computation). If this parameter is `0`, then no output is disabled, the fifth one (if present) indicates if the algorithm has to use the BigINT data-structure.
+
+From the sixth to the ninth:
+
+-	Diameter of the graph, default value -1
+- 	Start factor, default 100 (do not change)
+- Sample step, default 10, is the number of consecutive samples at each iteration (every 10 steps, the algorithm checks the convergence)
+- Hoeffeding's inequality, default false:
+	- if false, estimates the shortest-temporal diameter then uses the bound on the VC Dimension to establish the sample size
+	- if ture, uses the Hoeffeding's inequality to establish the sample size
+
+To save the results we can run
+```
+save_results_progressive_sampling("workplace","p_rtk",apx_bc,n_s,t_est,ss,-1.0)
+```
