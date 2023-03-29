@@ -12,7 +12,7 @@ awk '($1!=$2)' <in_file_name> | sort | uniq > <out_file_name>.txt
 
 You can then use the newly generated file as input to the tool.
 
-# Note on multithreading
+# Note on multi-threading
 In order to properly run the multi-threading implementations of our approaches you need to set the number of threads that you desire to use with: 
 ```
  julia --threads 16
@@ -266,4 +266,17 @@ From the sixth to the ninth:
 To save the results we can run
 ```
 save_results_progressive_sampling("workplace","p_rtk",apx_bc,n_s,t_est,ss,-1.0)
+```
+
+# Running the shortest-temporal distance-based metrics algorithms
+To compute the exact and approximated temporal-distance-based metrics you can run
+```
+diam,avg_dist,eff_diam,couples,zeta,t = threaded_temporal_shortest_diameter(tg,0,10,0.9)
+```
+The second element is the number of samples for the approximation algorithm, if `0`, it computes the `exact` values, otherwise uses `>0` samples to estimate the metrics, the third element is the verbose for the print function, and the last parameter is the effective diameter's threshold (default value `0.9`).
+
+To save the results we can run
+
+```
+save_results_diameter("workplace",diam,diam+1,avg_dist,couples,eff_diam,zeta,t)
 ```

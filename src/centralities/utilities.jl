@@ -108,3 +108,12 @@ function save_results_progressive_sampling(nn::String, cn::String,c::Array{Float
         close(f)
     end
 end
+
+
+
+function save_results_diameter(nn::String,diameter::Int64,vertex_diameter::Int64,avg_distance::Float64,number_of_pairs::Float64,eff_diam::Float64,zeta::Float64,tt::Float64)
+    mkpath("diameter/" * nn * "/")
+    f::IOStream = open("diameter/" * nn * "/distance_metrics.txt", "w")
+    write(f, string(diameter)*","*string(vertex_diameter)*","*string(avg_distance)*","*string(number_of_pairs)*","*string(eff_diam)*","*string(zeta)*","*string(tt)* "\n")
+    close(f)
+end
