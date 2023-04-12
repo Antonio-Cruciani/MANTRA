@@ -9,7 +9,7 @@ function threaded_temporal_shortest_foremost_betweenness(tg::temporal_graph,verb
  
 
     Base.Threads.@threads for s in 1:tg.num_nodes
-        _sstp_accumulate!(tg,tal,tn_index,s,bigint,local_temporal_betweenness[Base.Threads.threadid()])
+        _ssftp_accumulate!(tg,tal,tn_index,s,bigint,local_temporal_betweenness[Base.Threads.threadid()])
         processed_so_far = processed_so_far + 1
         if (verbose_step > 0 && processed_so_far % verbose_step == 0)
             finish_partial::String = string(round(time() - start_time; digits=4))
