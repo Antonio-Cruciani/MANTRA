@@ -233,7 +233,7 @@ To save the results we can use
 save_results_progressive_sampling("workplace","p_onbra",apx_bc,n_s,t_est,350,xi)
 ```
 
-#### Progressive-ONBRA (p-trk)
+#### Progressive-Temporal Riondato and Kornaropoloulos (p-trk)
 
 ##### shortest-temporal betweenness
 ```
