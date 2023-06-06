@@ -1,7 +1,7 @@
 using DataStructures
 
 
-function rtb_prefix_foremost(tg::temporal_graph, sample_size::Int64,verbose_step::Int64; test_sample=Array{Tuple{Int64,Int64}}[])::Tuple{Array{Float64},Tuple{Float64,Float64,Float64}}
+function rtb_prefix_foremost(tg::temporal_graph, sample_size::Int64,verbose_step::Int64; test_sample=Array{Tuple{Int64,Int64}}[])::Tuple{Array{Float64},Float64}
     start_time = time()
     sample = test_sample
     if (length(sample) == 0 || length(sample) != sample_size)
@@ -71,7 +71,7 @@ function rtb_prefix_foremost(tg::temporal_graph, sample_size::Int64,verbose_step
     for k in 1:lastindex(temporal_prefix_foremost_betweenness_centrality)
         temporal_prefix_foremost_betweenness_centrality[k] = temporal_prefix_foremost_betweenness_centrality[k]/(tg.num_nodes-1)
     end
-    return temporal_prefix_foremost_betweenness_centrality, (mean(exec_time), std(exec_time), time() - start_time)
+    return temporal_prefix_foremost_betweenness_centrality, time() - start_time
 
 end
 
@@ -80,7 +80,7 @@ end
 #------- Progressive ------------
 
 
-function progressive_rtb_prefix_foremost(tg::temporal_graph, c::Int64, verbose_step::Int64)::Tuple{Array{Float64},Int64,Tuple{Float64,Float64,Float64}}
+function progressive_rtb_prefix_foremost(tg::temporal_graph, c::Int64, verbose_step::Int64)::Tuple{Array{Float64},Int64,Float64}
     start_time = time()
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
     bfs_ds = BFS_prefix_foremost_betweenness(tg.num_nodes)
@@ -165,7 +165,7 @@ function progressive_rtb_prefix_foremost(tg::temporal_graph, c::Int64, verbose_s
     for y in 1:lastindex(temporal_prefix_foremost_betweenness_centrality)
         temporal_prefix_foremost_betweenness_centrality[y] = temporal_prefix_foremost_betweenness_centrality[y] *(1/(k * (tg.num_nodes-1)))
     end
-    return temporal_prefix_foremost_betweenness_centrality,k, (mean(exec_time), std(exec_time), time() - start_time)
+    return temporal_prefix_foremost_betweenness_centrality,k,  time() - start_time
 
 end
 

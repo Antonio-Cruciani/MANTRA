@@ -29,7 +29,7 @@ struct BFS_ONBRA_PFM_DS_BI
 end
 
 
-function onbra_prefix_foremost(tg::temporal_graph, sample_size::Int64, verbose_step::Int64, bigint::Bool; test_sample=Array{Tuple{Int64,Int64}}[])::Tuple{Array{Float64},Tuple{Float64,Float64,Float64}}
+function onbra_prefix_foremost(tg::temporal_graph, sample_size::Int64, verbose_step::Int64, bigint::Bool; test_sample=Array{Tuple{Int64,Int64}}[])::Tuple{Array{Float64},Float64}
     start_time = time()
     sample = test_sample
     if (length(sample) == 0 || length(sample) != sample_size)
@@ -128,12 +128,12 @@ function onbra_prefix_foremost(tg::temporal_graph, sample_size::Int64, verbose_s
             println("ONBRA. Processed " * string(processed_so_far) * "/" * string(sample_size) * " pairs in " * finish_partial * " seconds")
         end
     end
-    return tilde_b, (mean(exec_time), std(exec_time), time() - start_time)
+    return tilde_b,  time() - start_time
 end
 
 
 
-function progressive_onbra_prefix_foremost(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64 ,verbose_step::Int64, bigint::Bool; test_sample=Array{Tuple{Int64,Int64}}[])::Tuple{Array{Float64},Array{Int64},Float64,Tuple{Float64, Float64, Float64}}
+function progressive_onbra_prefix_foremost(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64 ,verbose_step::Int64, bigint::Bool; test_sample=Array{Tuple{Int64,Int64}}[])::Tuple{Array{Float64},Array{Int64},Float64, Float64}
     start_time = time()
     B,B_2 = initialize_structures(bigint,tg.num_nodes)
     B_1::Array{Float64} = zeros(tg.num_nodes)
@@ -287,7 +287,7 @@ function progressive_onbra_prefix_foremost(tg::temporal_graph,initial_sample::In
 
     #betweenness::Array{Float64} = [B_1[i] / sample_size_schedule[j] for i in 1:lastindex(B_1)]
 
-    return B_1,sample_size_schedule,xi, (mean(exec_time), std(exec_time), time() - start_time)
+    return B_1,sample_size_schedule,xi, time() - start_time
 
 
 end
