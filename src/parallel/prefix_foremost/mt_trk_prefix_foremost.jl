@@ -192,7 +192,7 @@ function threaded_progressive_trk_prefix_foremost_topk(tg::temporal_graph,eps::F
     approx_top_k::Array{Tuple{Int64,Float64}} =  Array{Tuple{Int64,Float64}}([])
     omega::Int64 = 1000
     t_diam::Float64 = 0.0
-    union_sample::Int64 = tg.num_nodes
+    union_sample::Int64 = min(tg.num_nodes,max(sqrt(lastindex(tg.temporal_edges))/nthreads(),k+20))
     if (diam == -1) && (!hb)
         println("Approximating diameter ")
         _,_,_,_,_,diam,t_diam = threaded_temporal_prefix_foremost_diameter(tg,64,verbose_step)
