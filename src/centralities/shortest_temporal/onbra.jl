@@ -43,7 +43,7 @@ function onbra_sample(tg::temporal_graph, sample_size::Int64)::Array{Tuple{Int64
     end
     return sample_pairs
 end
-
+#=
 function empirical_variance(tilde_b::Array{Float64}, sample_size::Int64, v::Int64)::Float64
     n::Int64 = div(length(tilde_b), sample_size)
     variance::Float64 = 0
@@ -59,16 +59,15 @@ function theoretical_error_bound(tilde_b::Array{Float64}, sample_size::Int64, et
     n::Int64 = div(length(tilde_b), sample_size)
     error::Float64 = 0.0
     max_error::Float64 = 0.0
+    errors::Array{Float64} = zeros(n)
     for u in 1:n
         variance::Float64 = empirical_variance(tilde_b, sample_size, u)
-        error = sqrt(2 * variance * log(4 * n / eta) / sample_size) + 7 * log(4 * n / eta) / (3 * (sample_size - 1))
-        if (error > max_error)
-            max_error = error
-        end
-    end
-    return max_error
-end
+        errors[u] = sqrt(2 * variance * log(4 * n / eta) / sample_size) + 7 * log(4 * n / eta) / (3 * (sample_size - 1))
 
+    end
+    return maximum(errors)
+end
+=#
 function onbra(tg::temporal_graph, sample_size::Int64, verbose_step::Int64, bigint::Bool; test_sample=Array{Tuple{Int64,Int64}}[])::Tuple{Array{Float64},Float64}
     start_time = time()
     sample = test_sample
@@ -439,3 +438,5 @@ function compute_xi(B,r)
     JuMP.optimize!(model)
     return(objective_value(model))
 end
+
+

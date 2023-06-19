@@ -277,6 +277,120 @@ function compute_bet_err(eps::Float64,eps_lb::Array{Float64},eps_ub::Array{Float
     return eps_lb,eps_ub
 end
 
+#= top k =#
+
+function compute_bet_err_topk(eps::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},start_factor::Int64,k::Int64,approx_top_k::Array{Tuple{Int64,Float64}},union_sample::Int64)::Tuple{Array{Float64},Array{Float64}}
+    n::Int64 = lastindex(eps_lb)
+    bet::Array{Float64} = zeros(n)
+    max_error::Float64 = sqrt(start_factor) * eps/4
+    Base.Threads.@threads for i in 1:union_sample 
+        bet[i] = approx_top_k[i][2]
+    end
+    eps_ub[1] = max(eps,(bet[1]-bet[2])/2)
+    eps_lb[1] = 10
+    Base.Threads.@threads for i in 2:k
+        eps_lb[i] = max(eps,(bet[i-1]-bet[i])/2)
+        eps_ub[i] = max(eps,(bet[i]-bet[i+1])/2)
+    end
+    Base.Threads.@threads for i in (k+1):union_sample
+        eps_lb[i] = 10
+        eps_ub[i] = max(eps,bet[k-1]+(bet[k-1]-bet[k])/2 - bet[i])
+    end
+    for i in 1:(k-1)
+        if bet[i] - bet[i + 1] < max_error
+            eps_lb[i] = eps
+            eps_ub[i] = eps
+            eps_lb[i+1] = eps
+            eps_ub[i+1] = eps
+        end
+    end
+    for i in (k+1):union_sample
+        if bet[k] - bet[i] < max_error
+            eps_lb[k] = eps
+            eps_ub[k] = eps
+            eps_lb[i] = eps
+            eps_ub[i] = eps
+        end
+    end
+    return eps_lb,eps_ub
+end
+
+function _compute_δ_guess_topk!(betweenness::Array{Float64},eps::Float64,delta::Float64,balancing_factor::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},delta_lb_min_guess::Array{Float64},delta_ub_min_guess::Array{Float64},delta_lb_guess::Array{Float64},delta_ub_guess::Array{Float64},k::Int64,approx_top_k::Array{Tuple{Int64,Float64}},start_factor::Int64,union_sample::Int64) 
+
+    n::Int64 = lastindex(betweenness)
+    v::Int64 = -1
+    a::Float64 = 0
+    b::Float64 = 1.0 / eps / eps* log(n* 4* (1-balancing_factor)/delta)
+    c::Float64 = (a+b)/2
+    summation::Float64 = 0.0
+    eps_lb,eps_ub = compute_bet_err_topk(eps,eps_lb,eps_ub,start_factor,k,approx_top_k,union_sample)
+  
+    while (b-a > eps/10.0)
+        c = (b+a)/2
+        summation = 0
+        for i in 1:n
+            summation += exp(-c * eps_lb[i]*eps_lb[i] / betweenness[i] )
+            summation += exp(-c * eps_ub[i]*eps_ub[i] / betweenness[i] )
+        end
+        summation += exp(-c * eps_lb[union_sample-1]*eps_lb[union_sample-1] / betweenness[union_sample-1] ) * (n-union_sample)
+        summation += exp(-c * eps_ub[union_sample-1]*eps_ub[union_sample-1] / betweenness[union_sample-1] ) * (n-union_sample)
+        if (summation >= delta/2.0 * (1-balancing_factor))
+            a = c 
+        else
+            b = c
+        end
+    end
+    delta_lb_min_guess[1] = exp(-b * eps_lb[union_sample-1]* eps_lb[union_sample-1] / betweenness[union_sample-1]) + delta*balancing_factor/4.0 / n
+    delta_ub_min_guess[1] = exp(-b * eps_ub[union_sample-1]* eps_ub[union_sample-1] / betweenness[union_sample-1] ) + delta*balancing_factor/4.0 / n
+    Base.Threads.@threads for v in 1:n
+        delta_lb_guess[v] = delta_lb_min_guess[1]
+        delta_ub_guess[v] =  delta_ub_min_guess[1] 
+    end
+
+    Base.Threads.@threads for i in 1:union_sample
+        v = approx_top_k[i][1]
+        delta_lb_guess[v] = exp(-b *  eps_lb[i]*eps_lb[i]/ betweenness[i])+ delta*balancing_factor/4.0 / n
+        delta_ub_guess[v] = exp(-b *  eps_ub[i]*eps_ub[i] / betweenness[i]) + delta*balancing_factor/4.0 / n
+    end 
+
+    return nothing
+end
+
+
+function _compute_finished_topk!(stop::Array{Bool},omega::Int64,top_k_approx::Array{Tuple{Int64,Float64}},sampled_so_far::Int64,eps::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},delta_lb_guess::Array{Float64},delta_ub_guess::Array{Float64},delta_lb_min_guess::Float64,delta_ub_min_guess::Float64,union_sample::Int64)
+    #j::Int64 = 1
+    k = lastindex(top_k_approx)
+    all_finished::Bool = true
+    finished::Array{Bool} = falses(union_sample)
+    betweenness::Array{Float64} = zeros(union_sample)
+    Base.Threads.@threads for i in 1:(union_sample-1)
+        betweenness[i] = top_k_approx[i][2] / sampled_so_far
+        eps_lb[i] = commpute_f(betweenness[i],sampled_so_far,delta_lb_guess[top_k_approx[i][1]],omega)
+        eps_ub[i] = compute_g(betweenness[i],sampled_so_far,delta_ub_guess[top_k_approx[i][1]],omega)
+        #j+=1
+    end
+    betweenness[union_sample] = top_k_approx[union_sample][2] / sampled_so_far
+    eps_lb[union_sample] = commpute_f(betweenness[union_sample],sampled_so_far,delta_lb_min_guess,omega)
+    eps_ub[union_sample] = compute_g(betweenness[union_sample],sampled_so_far,delta_ub_min_guess,omega)
+    for i in 1:union_sample
+        if i == 1
+            finished[i] = (betweenness[i] - eps_lb[i] > betweenness[i+1] + eps_ub[i+1] )
+        elseif i < k
+            finished[i] = (betweenness[i-1] - eps_lb[i-1] > betweenness[i] + eps_ub[i] ) & (betweenness[i] - eps_lb[i] > betweenness[i+1] + eps_ub[i+1] )
+        else
+            finished[i] = (betweenness[k-1] - eps_ub[k-1] > betweenness[i] + eps_ub[i] )
+        end
+        
+        all_finished = all_finished & finished[i] ||( (eps_lb[i] < eps) & (eps_ub[i] < eps))
+    end
+    stop[1] = all_finished
+
+    return nothing
+end
+
+
+
+
 function _compute_δ_guess!(betweenness::Array{Float64},eps::Float64,delta::Float64,balancing_factor::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},delta_lb_min_guess::Array{Float64},delta_ub_min_guess::Array{Float64},delta_lb_guess::Array{Float64},delta_ub_guess::Array{Float64}) 
 
     n::Int64 = lastindex(betweenness)
@@ -312,3 +426,191 @@ function _compute_δ_guess!(betweenness::Array{Float64},eps::Float64,delta::Floa
     end
     return nothing
 end
+
+
+
+
+#------------------------------------------------------
+# Progressive TRK using Bernstein Bound to compute ξ
+#------------------------------------------------------
+
+function threaded_progressive_trk_bernstein(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64,verbose_step::Int64, bigint::Bool)::Tuple{Array{Float64},Array{Int64},Float64,Float64}
+
+    start_time = time()
+    print_algorithm_status("TRK","Bernstein",true)
+    tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
+    tn_index::Dict{Tuple{Int64,Int64},Int64} = temporal_node_index_srtp(tg)
+
+    local_temporal_betweenness::Vector{Vector{Vector{Float64}}} = [[] for i in 1:nthreads()]
+    t_bc::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
+    reduced_betweenness::Vector{Float64} = Vector{Float64}([])
+    betweenness::Vector{Float64} = zeros(tg.num_nodes)
+
+    s::Int64 = 0
+    z::Int64 = 0
+    sample_size_schedule::Array{Int64} = [0,initial_sample]
+    xi::Float64 = 0
+    sampled_so_far::Int64 = 0
+    new_sample::Int64 = 0
+    keep_sampling::Bool = true
+    k::Int64 = 0
+    j::Int64 = 2
+    finish_partial::String = ""
+    println("Using ",nthreads()," Trheads")
+    while keep_sampling
+        k+=1
+        if (k >= 2)
+            new_sample = trunc(Int,geo^k*sample_size_schedule[2])
+            push!(sample_size_schedule,new_sample)
+        end
+
+        Base.Threads.@threads for i in 1:(sample_size_schedule[j]-sample_size_schedule[j-1])
+            sampled_so_far+=1
+            sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+            s = sample[1][1]
+            z = sample[1][2]
+            _p_trk_sh_accumulate_bernstein!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[Base.Threads.threadid()],t_bc[Base.Threads.threadid()])
+            if (verbose_step > 0 && sampled_so_far % verbose_step == 0)
+                finish_partial = string(round(time() - start_time; digits=4))
+                println("P-TRK. Processed " * string(sampled_so_far) * " pairs in " * finish_partial * " seconds ")
+            end
+        end
+        _reduce_arrays!(local_temporal_betweenness,reduced_betweenness)
+        xi = theoretical_error_bound(reduced_betweenness,reduce(+,t_bc),sample_size_schedule[j],delta/2^k)
+
+
+     
+        finish_partial = string(round(time() - start_time; digits=4))
+        println("P-TRK. Processed " * string(sampled_so_far) * " pairs in " * finish_partial * " seconds | Est. ξ = ",xi)
+        if xi <= epsilon
+            keep_sampling = false
+        else
+            j+=1
+            local_temporal_betweenness = [[zeros(tg.num_nodes)] for i in 1:nthreads()]
+        end
+
+    end
+    
+    _reduce_list_of_arrays!(local_temporal_betweenness,betweenness,sample_size_schedule[j],tg.num_nodes)
+    betweenness = betweenness .* [1/sample_size_schedule[j]]
+    return betweenness,sample_size_schedule,xi,time()-start_time
+end
+
+
+
+
+function _p_trk_sh_accumulate_bernstein!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,Int64}}},tn_index::Dict{Tuple{Int64,Int64},Int64},bigint::Bool,s::Int64,z::Int64,B_1::Vector{Vector{Float64}},B_2::Vector{Float64})
+    indexes::Int64 = length(keys(tn_index))
+    if (bigint)
+        bfs_ds = BI_BFS_SRTP_DS(tg.num_nodes, indexes)
+    else
+        bfs_ds = BFS_SRTP_DS(tg.num_nodes, indexes)
+    end
+    push!(B_1,zeros(tg.num_nodes))
+    p::Int64 = lastindex(B_1)
+    t_z::Int64 = tg.temporal_edges[lastindex(tg.temporal_edges)][3]+1
+    index_z::Int64 = tn_index[(z,t_z)]
+    u::Int64 = -1
+    w::Int64 = -1
+    t::Int64 = -1
+    t_w::Int64 = -1
+    tni::Int64 = -1
+    tni_w::Int64 = -1
+    temporal_node::Tuple{Int64,Int64,Int64} = (-1, -1,-1)
+    totalWeight,randomEdge,curWeight,curEdge = initialize_weights(bigint)
+    cur_w::Tuple{Int64,Int64} = (-1,-1)
+    for u in 1:tg.num_nodes
+        bfs_ds.dist[u] = -1
+        bfs_ds.sigma[u] = 0
+    end
+    for tn in 1:lastindex(bfs_ds.dist_t)
+        bfs_ds.sigma_t[tn] = 0
+        bfs_ds.dist_t[tn] = -1
+        bfs_ds.predecessors[tn] = Set{Tuple{Int64,Int64,Int64}}()
+    end
+    tni = tn_index[(s, 0)]
+    bfs_ds.sigma[s] = 1
+    bfs_ds.sigma_t[tni] = 1
+    bfs_ds.dist[s] = 0
+    bfs_ds.dist_t[tni] = 0
+    enqueue!(bfs_ds.forward_queue, (s, 0,tni))
+    d_z_min = Inf
+    while length(bfs_ds.forward_queue) != 0
+        temporal_node = dequeue!(bfs_ds.forward_queue)
+        u = temporal_node[1]
+        t = temporal_node[2]
+        tni = temporal_node[3]
+        if bfs_ds.dist_t[tni] < d_z_min
+            for neig in next_temporal_neighbors(tal, u, t)
+                w = neig[1]
+                t_w = neig[2]
+                tni_w = tn_index[(w, t_w)]
+                if bfs_ds.dist_t[tni_w] == -1
+                    bfs_ds.dist_t[tni_w] = bfs_ds.dist_t[tni] + 1
+                    if bfs_ds.dist[w] == -1
+                        bfs_ds.dist[w] = bfs_ds.dist_t[tni] + 1
+                        if w == z
+                            d_z_min = bfs_ds.dist[w]
+                        end
+                    end
+                    enqueue!(bfs_ds.forward_queue, (w,t_w,tni_w))
+                end
+                if bfs_ds.dist_t[tni_w] == bfs_ds.dist_t[tni] + 1
+                    if (!bigint && bfs_ds.sigma_t[tni] > typemax(UInt128) - bfs_ds.sigma_t[tni_w])
+                        println("Overflow occurred with sample (", s, ",", z, ")")
+                        return [], 0.0
+                    end
+                    bfs_ds.sigma_t[tni_w] += bfs_ds.sigma_t[tni]
+                    push!(bfs_ds.predecessors[tni_w], (temporal_node[1],temporal_node[2],tni))
+                    if bfs_ds.dist_t[tni_w] == bfs_ds.dist[w]
+                        if (!bigint && bfs_ds.sigma_t[tni] > typemax(UInt128) - bfs_ds.sigma[w])
+                            println("Overflow occurred with sample (", s, ",", z, ")")
+                            return [], 0.0
+                        end
+                        bfs_ds.sigma[w] += bfs_ds.sigma_t[tni]
+                    end
+                    if w == z
+                        push!(bfs_ds.predecessors[index_z], (neig[1],neig[2],tni_w))
+                    end
+                end
+            end
+        end
+    end
+    if bfs_ds.dist[z] > 0
+       
+        totalWeight = 0
+        randomEdge = 0
+        curWeight = 0
+        totalWeight = bfs_ds.sigma[z]
+        cur_w = (z,t_z)
+        tni = index_z
+        while cur_w[1] != s
+            if cur_w == (z,t_z)
+                totalWeight = bfs_ds.sigma[z]
+            else
+                totalWeight = bfs_ds.sigma_t[tni]
+            end
+            randomEdge = rand(0:totalWeight-1)
+            curEdge = 0
+            for pred in bfs_ds.predecessors[tni]
+                pred_i = pred[3]
+                curEdge += bfs_ds.sigma_t[pred_i]
+                cur_w = (pred[1],pred[2])
+                tni = pred_i
+                if curEdge > randomEdge
+                    if pred[1]!= s && pred[1] != z
+                        B_1[p][pred[1]] += 1
+                        B_2[pred[1]] += 1
+                    end
+                    break
+                end
+            end
+            
+        end
+       
+        
+    end
+    return nothing
+
+end
+

@@ -25,7 +25,7 @@ include("centralities/prefix_foremost/trk_prefix_foremost.jl")
 include("temporal_neighborhood_function/mt_diameter.jl")
 include("centralities/utilities.jl")
 include("statistics/rankings.jl")
-include("statistics/correlations_and_error.jl")
+#include("statistics/correlations_and_error.jl")
 
 #PARALLEL 
 # EXACT

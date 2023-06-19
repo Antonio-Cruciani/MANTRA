@@ -29,18 +29,16 @@ struct BFS_ONBRA_PFM_DS_BI
 end
 
 
-function onbra_prefix_foremost(tg::temporal_graph, sample_size::Int64, verbose_step::Int64, bigint::Bool; test_sample=Array{Tuple{Int64,Int64}}[])::Tuple{Array{Float64},Float64}
+function onbra_prefix_foremost(tg::temporal_graph, sample_size::Int64, verbose_step::Int64; test_sample=Array{Tuple{Int64,Int64}}[])::Tuple{Array{Float64},Float64}
     start_time = time()
     sample = test_sample
     if (length(sample) == 0 || length(sample) != sample_size)
         sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, sample_size)
     end
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
-    if (bigint)
-        bfs_ds = BFS_ONBRA_PFM_DS_BI(tg.num_nodes)
-    else
-        bfs_ds = BFS_ONBRA_PFM_DS(tg.num_nodes)
-    end
+    
+    bfs_ds = BFS_ONBRA_PFM_DS(tg.num_nodes)
+    
     
     tilde_b::Array{Float64} = zeros(tg.num_nodes)
     w::Int64 = -1
@@ -133,7 +131,7 @@ end
 
 
 
-function progressive_onbra_prefix_foremost(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64 ,verbose_step::Int64, bigint::Bool; test_sample=Array{Tuple{Int64,Int64}}[])::Tuple{Array{Float64},Array{Int64},Float64, Float64}
+function progressive_onbra_prefix_foremost(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64 ,verbose_step::Int64; test_sample=Array{Tuple{Int64,Int64}}[])::Tuple{Array{Float64},Array{Int64},Float64, Float64}
     start_time = time()
     B,B_2 = initialize_structures(bigint,tg.num_nodes)
     B_1::Array{Float64} = zeros(tg.num_nodes)
@@ -141,13 +139,11 @@ function progressive_onbra_prefix_foremost(tg::temporal_graph,initial_sample::In
     j::Int64 = 2
     keep_sampling::Bool = true
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
-    if (bigint)
-        bfs_ds = BFS_ONBRA_PFM_DS_BI(tg.num_nodes)
-    else
-        bfs_ds = BFS_ONBRA_PFM_DS(tg.num_nodes)
-    end
+    
+    bfs_ds = BFS_ONBRA_PFM_DS(tg.num_nodes)
+    
 
-    summand,b ,b_1 = def_summand(bigint)
+    summand,b ,b_1 = def_summand(false)
     w::Int64 = -1
     v::Int64 = -1
     t_w::Int64 = -1
@@ -224,11 +220,9 @@ function progressive_onbra_prefix_foremost(tg::temporal_graph,initial_sample::In
                 while length(bfs_ds.backward_queue) > 0
                     v = dequeue!(bfs_ds.backward_queue)
                     if v != s
-                        if bigint
-                            summand = Float64(bfs_ds.sigma[v] * (bfs_ds.sigma_z[v] / bfs_ds.sigma[z])   , RoundUp)
-                        else
-                            summand = (bfs_ds.sigma[v] * (bfs_ds.sigma_z[v] / bfs_ds.sigma[z]))
-                        end
+                       
+                        summand = (bfs_ds.sigma[v] * (bfs_ds.sigma_z[v] / bfs_ds.sigma[z]))
+                        
                         
                         # Updating phase
                         b = B_2[v]

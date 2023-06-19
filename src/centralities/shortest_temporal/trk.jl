@@ -224,4 +224,3 @@ function average_results(temporal_betweenness_centrality::Array{Float64},tg::tem
     return apx
 end
 
-
