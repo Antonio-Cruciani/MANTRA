@@ -195,7 +195,7 @@ function threaded_progressive_trk_shortest_foremost(tg::temporal_graph,eps::Floa
     delta_ub_guess::Array{Float64} = zeros(tg.num_nodes)
     _compute_δ_guess!(betweenness,eps,delta,balancing_factor,eps_lb,eps_ub,delta_lb_min_guess,delta_ub_min_guess,delta_lb_guess,delta_ub_guess) 
     println("Bootstrap completed ")
-
+    local_temporal_betweenness = [zeros(tg.num_nodes) for i in 1:nthreads()]
     betweenness = zeros(tg.num_nodes)
     sampled_so_far::Int64 = 0
     stop::Array{Bool} = [false]

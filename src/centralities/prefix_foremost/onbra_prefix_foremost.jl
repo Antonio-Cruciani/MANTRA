@@ -39,7 +39,7 @@ function onbra_prefix_foremost(tg::temporal_graph, sample_size::Int64, verbose_s
     
     bfs_ds = BFS_ONBRA_PFM_DS(tg.num_nodes)
     
-    
+    bigint::Bool = false
     tilde_b::Array{Float64} = zeros(tg.num_nodes)
     w::Int64 = -1
     v::Int64 = -1

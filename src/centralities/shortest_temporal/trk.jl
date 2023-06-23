@@ -68,7 +68,7 @@ function initialize_weights(bigint::Bool)
         return(totalWeight,randomEdge,curWeight,curEdge)
     end
 end
-function trk(tg::temporal_graph, sample_size::Int64,verbose_step::Int64, bigint::Bool; test_sample=Array{Tuple{Int64,Int64}}[])::Tuple{Array{Float64},Int64,Float64}
+function trk(tg::temporal_graph, sample_size::Int64,verbose_step::Int64, bigint::Bool; test_sample=Array{Tuple{Int64,Int64}}[])::Tuple{Array{Float64},Float64}
     start_time = time()
     sample = test_sample
     if (length(sample) == 0 || length(sample) != sample_size)
@@ -94,9 +94,9 @@ function trk(tg::temporal_graph, sample_size::Int64,verbose_step::Int64, bigint:
     totalWeight,randomEdge,curWeight,curEdge = initialize_weights(bigint)
     cur_w::Tuple{Int64,Int64} = (-1,-1)
     temporal_betweenness_centrality::Array{Float64} = zeros(tg.num_nodes)
-    exec_time::Array{Float64} = zeros(sample_size)
+    #exec_time::Array{Float64} = zeros(sample_size)
     for i in 1:sample_size
-        exec_time[i] = time()
+        #exec_time[i] = time()
         s = sample[i][1]
         z = sample[i][2]
         t_z::Int64 = tg.temporal_edges[lastindex(tg.temporal_edges)][3]+1
@@ -196,7 +196,7 @@ function trk(tg::temporal_graph, sample_size::Int64,verbose_step::Int64, bigint:
             end
           
         end
-        exec_time[i] = time() - exec_time[i]
+        #exec_time[i] = time() - exec_time[i]
         delete!(tn_index,(z,t_z))
         processed_so_far = processed_so_far + 1
         if (verbose_step > 0 && processed_so_far % verbose_step == 0)

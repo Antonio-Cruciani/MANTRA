@@ -29,8 +29,8 @@ struct BFS_DIAM_PFM
     end
 end
 
-
-function threaded_temporal_shortest_diameter(tg::temporal_graph,sample_size::Int64,verbose_step::Int64,threshold::Float64 = 0.9)::Tuple{Int64,Float64,Float64,Float64,Float64,Float64}
+#::Tuple{Int64,Float64,Float64,Float64,Float64,Float64}
+function threaded_temporal_shortest_diameter(tg::temporal_graph,sample_size::Int64,verbose_step::Int64,threshold::Float64 = 0.9,persist_dd::Bool = false)
     start_time::Float64 = time()
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
     tn_index::Dict{Tuple{Int64,Int64},Int64}  = temporal_node_index(tg)
@@ -75,7 +75,11 @@ function threaded_temporal_shortest_diameter(tg::temporal_graph,sample_size::Int
     total_couples::Float64 = total_reachable_couples(temporal_hop_table)
     alpha::Float64 = total_couples / (tg.num_nodes*(tg.num_nodes-1))
     #println("Diameter ",diameter, " Effective Diameter ",eff_diam," Average Distance ",avg_dist, " #Couples ",total_couples, " α ",alpha)
-    return diameter,avg_dist,eff_diam,total_couples,alpha,time()-start_time
+    if !persist_dd
+        return diameter,avg_dist,eff_diam,total_couples,alpha,time()-start_time
+    else
+        return diameter,avg_dist,eff_diam,total_couples,alpha,time()-start_time,dd
+    end
 end
 
 function get_temporal_diameter(dd::Array{Float64})::Int64
@@ -106,7 +110,7 @@ function average_distance(ht::Array{Float64})::Float64
     distance::Array{Float64} = distance_function(ht)
     m::Float64 = 0.0
     for i in 1:lastindex(distance)
-        m += (distance[i] * i)
+        m += (distance[i] * (i-1))
     end
     return m/ht[length(ht)]
 end

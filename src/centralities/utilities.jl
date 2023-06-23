@@ -119,14 +119,14 @@ end
 function save_results_progressive_sampling(nn::String, cn::String,c::Array{Float64}, ss::Int64, t::Float64,starting_ss::Int64,xi::Float64 = -1.0)
     if (length(c) > 0)
         mkpath("scores/" * nn * "/")
-        save_centrality_values("scores/" * nn * "/"*cn*"_"*string(starting_ss)*".txt", c)
+        append_centrality_values("scores/" * nn * "/"*cn*"_"*string(starting_ss)*".txt", c)
         mkpath("times/" * nn * "/")
-        f = open("times/" * nn * "/"*cn*"_"*string(starting_ss)*".txt", "w")
+        f = open("times/" * nn * "/"*cn*"_"*string(starting_ss)*".txt", "a")
         write(f, string(round(t; digits=4)) * " " * string(ss) *" "*string(xi) *"\n")
         close(f)
     else
         mkpath("times/" * nn * "/")
-        f = open("times/" * nn * "/"*cn*"_"*string(starting_ss)*".txt", "w")
+        f = open("times/" * nn * "/"*cn*"_"*string(starting_ss)*".txt", "a")
         write(f, "-1.0 -1.0 -1.0 -1.0,-1.0")
         close(f)
     end
@@ -177,7 +177,9 @@ function compute_hoeffding_bound(n::Int64,epsilon::Float64,delta::Float64)::Int6
     return trunc(Int,(1.0/(2*epsilon^2))*log2(2*n/delta))
 end
 
-
+function compute_starting_sample(epsilon::Float64,delta::Float64)::Int64
+    return trunc(Int,((1+8*epsilon+sqrt(1+16*epsilon))*log(6/delta)/(4*epsilon^2)))+1
+end
 
 # ================================
 #       |Exact Algorithms|
@@ -338,18 +340,42 @@ end
 
 #-------| KADABRA's progressive sampling |-------
 
-function progressive_trk_shortest_temporal_betweenness(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,bigint::Bool,diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
-    return threaded_progressive_trk(tg,eps,delta,verbose_step,bigint,diam,start_factor,sample_step,hb)
+function progressive_trk_shortest_temporal_betweenness(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64 = 0,verbose_step::Int64 = 0,bigint::Bool = false,diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
+    if nthreads()>1
+        if k > 0
+            return threaded_progressive_trk_topk(tg,eps,delta,k,verbose_step,bigint,diam,start_factor,sample_step,hb)
+        else
+            return threaded_progressive_trk(tg,eps,delta,verbose_step,bigint,diam,start_factor,sample_step,hb)
+        end
+    else
+        println("Error: set the number of threads > 1 julia --threads <thread_number>")
+    end
 end
 
 
-function progressive_trk_shortest_foremost_temporal_betweenness(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,bigint::Bool,diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)    
-    return threaded_progressive_trk_shortest_foremost(tg,eps,delta,verbose_step,bigint,diam,start_factor,sample_step,hb)    
+function progressive_trk_shortest_foremost_temporal_betweenness(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64 = 0,verbose_step::Int64 = 0,bigint::Bool = false,diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)    
+    if nthreads()>1
+        if k > 0
+            return threaded_progressive_trk_shortest_foremost_topk(tg,eps,delta,k,verbose_step,bigint,diam,start_factor,sample_step,hb)   
+        else
+            return threaded_progressive_trk_shortest_foremost(tg,eps,delta,verbose_step,bigint,diam,start_factor,sample_step,hb)      
+        end
+    else
+        println("Error: set the number of threads > 1 julia --threads <thread_number>")
+    end 
 end
 
 
-function progressive_trk_prefix_foremost_temporal_betweenness(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
-    return threaded_progressive_trk_prefix_foremost(tg,eps,delta,verbose_step,diam,start_factor,sample_step,hb)
+function progressive_trk_prefix_foremost_temporal_betweenness(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64 = 0,verbose_step::Int64= 0,diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
+    if nthreads()>1
+        if k > 0
+            return threaded_progressive_trk_prefix_foremost_topk(tg,eps,delta,k,verbose_step,diam,start_factor,sample_step,hb)
+        else
+            return threaded_progressive_trk_prefix_foremost(tg,eps,delta,verbose_step,diam,start_factor,sample_step,hb)
+        end
+    else
+        println("Error: set the number of threads > 1 julia --threads <thread_number>")
+    end 
 end
 
 
@@ -358,46 +384,82 @@ end
 # ONBRA
 
 function progressive_onbra_bernstein_shortest_temporal_betweenness(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64,verbose_step::Int64, bigint::Bool)
-    return threaded_progressive_onbra_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step, bigint)
+    if nthreads()>1
+        return threaded_progressive_onbra_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step, bigint)
+    else
+        println("Error: set the number of threads > 1 julia --threads <thread_number>")
+    end 
 end
 
 
 function progressive_onbra_bernstein_shortest_foremost_temporal_betweenness(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64,verbose_step::Int64, bigint::Bool)
-    return threaded_progressive_onbra_shortest_foremost_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step, bigint)
+    if nthreads()>1
+        return threaded_progressive_onbra_shortest_foremost_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step, bigint)
+    else
+        println("Error: set the number of threads > 1 julia --threads <thread_number>")
+    end 
 end
 
 function progressive_onbra_bernstein_prefix_foremost_temporal_betweenness(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64,verbose_step::Int64)
-    return threaded_progressive_onbra_prefix_foremost_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step )
+    if nthreads()>1
+        return threaded_progressive_onbra_prefix_foremost_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step )
+    else
+        println("Error: set the number of threads > 1 julia --threads <thread_number>")
+    end 
 end
 
 # TRK
 
 function progressive_trk_bernstein_shortest_temporal_betweenness(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64,verbose_step::Int64, bigint::Bool)
-    return threaded_progressive_trk_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step, bigint)
+    if nthreads()>1
+        return threaded_progressive_trk_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step, bigint)
+    else
+        println("Error: set the number of threads > 1 julia --threads <thread_number>")
+    end  
 end
 
 
 function progressive_trk_bernstein_shortest_foremost_temporal_betweenness(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64,verbose_step::Int64, bigint::Bool)
-    return threaded_progressive_trk_shortest_foremost_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step, bigint)
+    if nthreads()>1
+        return threaded_progressive_trk_shortest_foremost_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step, bigint)
+    else
+        println("Error: set the number of threads > 1 julia --threads <thread_number>")
+    end  
 end
 
 function progressive_trk_bernstein_prefix_foremost_temporal_betweenness(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64,verbose_step::Int64)
-    return threaded_progressive_trk_prefix_foremost_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step )
+    if nthreads()>1
+        return threaded_progressive_trk_prefix_foremost_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step )
+    else
+        println("Error: set the number of threads > 1 julia --threads <thread_number>")
+    end  
 end
 
 # RTB 
 
 function progressive_rtb_bernstein_shortest_temporal_betweenness(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64,verbose_step::Int64, bigint::Bool)
-    return threaded_progressive_rtb_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step, bigint)
+    if nthreads()>1
+        return threaded_progressive_rtb_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step, bigint)
+    else
+        println("Error: set the number of threads > 1 julia --threads <thread_number>")
+    end  
 end
 
 
 function progressive_rtb_bernstein_shortest_foremost_temporal_betweenness(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64,verbose_step::Int64, bigint::Bool)
-    return threaded_progressive_rtb_shortest_foremost_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step, bigint)
+    if nthreads()>1
+        return threaded_progressive_rtb_shortest_foremost_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step, bigint)
+    else
+        println("Error: set the number of threads > 1 julia --threads <thread_number>")
+    end  
 end
 
 function progressive_rtb_bernstein_prefix_foremost_temporal_betweenness(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64,verbose_step::Int64)
-    return threaded_progressive_rtb_prefix_foremost_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step )
+    if nthreads()>1
+        return threaded_progressive_rtb_prefix_foremost_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step )
+    else
+        println("Error: set the number of threads > 1 julia --threads <thread_number>")
+    end  
 end
 #=
 
