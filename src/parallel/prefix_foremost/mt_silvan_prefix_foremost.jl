@@ -1,5 +1,5 @@
 
-function threaded_progressive_silvan_prefix_foremost(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,diam::Int64 = -1,algo::String = "trk",empirical_peeling_a::Float64 = 2.0,sample_step::Int64 = 10,hb::Bool = false)
+function threaded_progressive_silvan_prefix_foremost(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,diam::Int64 = -1,algo::String = "trk",empirical_peeling_a::Float64 = 2.0,sample_step::Int64 = 10)
     @assert (algo == "trk") || (algo == "ob") || (algo == "rtb") "Illegal algorithm, use: trk , ob , or rtb"
     norm::Float64 = 1.0
     if algo == "rtb"
@@ -28,11 +28,12 @@ function threaded_progressive_silvan_prefix_foremost(tg::temporal_graph,eps::Flo
     t_diam::Float64 = 0.0
     max_num_samples::Float64 = 0.0
 
-    if (diam == -1) && (!hb)
+    if (diam == -1)
         println("Approximating diameter ")
-        diam,avg_dist,_,_,_,t_diam = threaded_temporal_prefix_foremost_diameter(tg,64,verbose_step,0.9)
-        println("Task completed in "*string(round(t_diam;digits = 4))*". Δ = "*string(diam)*" ρ = "*string(avg_dist))
-        diam+=1
+        _,_,_,_,_,diam_v,t_diam = threaded_temporal_prefix_foremost_diameter(tg,64,verbose_step,0.9)
+        diam = trunc(Int,diam_v)
+        println("Task completed in "*string(round(t_diam;digits = 4))*". Δ = "*string(diam))
+        
     end
     
     tau::Int64 = trunc(Int64,max(1. / eps * (log(1. / delta)) , 100.))
