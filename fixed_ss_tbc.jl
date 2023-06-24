@@ -17,12 +17,14 @@ datasets = ["01_hypertext.txt",
 "14_SMS.txt",
 "16_brain_100206_90.txt",
 "17_brain_100206_70.txt"]
+
 path = "graphs/"
 
-epsilon = 0.1
+epsilon = 0.05
 delta = 0.1
 trials = 10
 algo = "onbra_"
+#=
 for gn in datasets
     nn = String(split(gn, ".t")[1])
     tg = load_temporal_graph(path*gn," ")
@@ -48,13 +50,14 @@ for gn in datasets
         save_results_samplings(nn,"rtb_pfm",result[1],vc,result[2])
     end
 end
-
+=#
 
 for gn in datasets
     nn = String(split(gn, ".t")[1])
     tg = load_temporal_graph(path*gn," ")
     vd = read_vertex_diameter(nn,"sh")
     vc = compute_vapnik_chervonenkis_bound(vd,epsilon,delta)
+    println("Number of samples "*string(vc))
     print_stats(tg, graph_name= gn)
     println("Running ONBRA")
     flush(stdout)

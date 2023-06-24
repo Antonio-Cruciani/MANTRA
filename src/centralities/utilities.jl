@@ -221,7 +221,7 @@ end
 function rtb_shortest_temporal_betweenness(tg::temporal_graph, sample_size::Int64,verbose_step::Int64, bigint::Bool; test_sample=Array{Tuple{Int64,Int64}}[])
     if nthreads() > 1
 
-        return threaded_rtb_shortest_foremost(tg,sample_size,verbose_step,bigint)
+        return threaded_rtb(tg,sample_size,verbose_step,bigint)
 
     else
         return rtb(tg,sample_size,verbose_step,bigint)
