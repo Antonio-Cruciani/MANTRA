@@ -71,12 +71,14 @@ for gn in datasets
         result = trk_shortest_temporal_betweenness(tg,vc,0,false)
         save_results_samplings(nn,"trk_sh",result[1],vc,result[2])
     end
+    #=
     println("Running RTB")
     flush(stdout)
     for i in 1:trials
         result = rtb_shortest_temporal_betweenness(tg,vc,0,false)
         save_results_samplings(nn,"rtb_sh",result[1],vc,result[2])
     end
+    =#
 end
 
 
@@ -98,11 +100,14 @@ for gn in datasets
         result = trk_shortest_foremost_temporal_betweenness(tg,vc,0,false)
         save_results_samplings(nn,"trk_sfm",result[1],vc,result[2])
     end
+    #=
     println("Running RTB")
     flush(stdout)
+
     for i in 1:trials
         result = rtb_shortest_foremost_temporal_betweenness(tg,vc,0,false)
         save_results_samplings(nn,"rtb_sfm",result[1],vc,result[2])
     end
+    =#
 end
 

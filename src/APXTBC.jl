@@ -66,3 +66,5 @@ include("parallel/TOP-K/prefix_foremost/mt_onbra_prefix_foremost_topk.jl")
 include("parallel/shortest_temporal/mt_silvan.jl")
 include("parallel/shortest_foremost/mt_silvan_shortest_foremost.jl")
 include("parallel/prefix_foremost/mt_silvan_prefix_foremost.jl")
+
+include("parallel/TOP-K/shortest_temporal/mt_silvan_shortest_topk.jl")
