@@ -106,7 +106,7 @@ function threaded_progressive_silvan_shortest_foremost(tg::temporal_graph,eps::F
     local_temporal_betweenness = [zeros(tg.num_nodes) for i in 1:nthreads()]
     mcrade = [zeros((tg.num_nodes+1)*mc_trials) for i in 1:nthreads()]
     local_sp_lengths = [zeros(tg.num_nodes) for i in 1:nthreads()]
-    oemga::Float64 = 10^15
+    omega = 10^15
     if max_num_samples > 0
         omega = max_num_samples
     end
@@ -129,7 +129,7 @@ function threaded_progressive_silvan_shortest_foremost(tg::temporal_graph,eps::F
     last_stopping_samples = omega
     println("First stopping samples "*string(first_stopping_samples))
     if first_stopping_samples >= last_stopping_samples/4
-        last_stopping_samples = last_stopping_samples/4
+        first_stopping_samples = last_stopping_samples/4
         println("First stopping samples dropped to "*string(first_stopping_samples))
     end
     next_stopping_samples::Float64 = first_stopping_samples

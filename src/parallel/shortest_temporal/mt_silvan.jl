@@ -152,7 +152,7 @@ function check_stopping_condition(betweenness::Array{Float64},wv::Array{Float64}
         sup_empwvar_partition[mapped_partition_index] = max(sup_empwvar_partition[mapped_partition_index],emp_wimpy_vars[i])
         mcera_partition_index = mc_trials*mapped_partition_index
         for j in 1:mc_trials
-            max_mcera_partition[i+mcera_partition_index] = max(max_mcera_partition[j+mcera_partition_index] ,mcrade[v_rade_idx+j])
+            max_mcera_partition[j+mcera_partition_index] = max(max_mcera_partition[j+mcera_partition_index] ,mcrade[v_rade_idx+j])
         end
     end
     mcera_partition_avg::Array{Float64} = zeros(number_of_non_empty_partitions)
@@ -306,7 +306,7 @@ function threaded_progressive_silvan(tg::temporal_graph,eps::Float64,delta::Floa
     local_temporal_betweenness = [zeros(tg.num_nodes) for i in 1:nthreads()]
     mcrade = [zeros((tg.num_nodes+1)*mc_trials) for i in 1:nthreads()]
     local_sp_lengths = [zeros(tg.num_nodes) for i in 1:nthreads()]
-    oemga::Float64 = 10^15
+    omega = 10^15
     if max_num_samples > 0
         omega = max_num_samples
     end
@@ -329,7 +329,7 @@ function threaded_progressive_silvan(tg::temporal_graph,eps::Float64,delta::Floa
     last_stopping_samples = omega
     println("First stopping samples "*string(first_stopping_samples))
     if first_stopping_samples >= last_stopping_samples/4
-        last_stopping_samples = last_stopping_samples/4
+        first_stopping_samples = last_stopping_samples/4
         println("First stopping samples dropped to "*string(first_stopping_samples))
     end
     next_stopping_samples::Float64 = first_stopping_samples
