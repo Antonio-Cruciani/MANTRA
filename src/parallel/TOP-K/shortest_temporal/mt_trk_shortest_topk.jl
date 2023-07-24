@@ -1,7 +1,7 @@
 
 
-function threaded_progressive_trk_topk(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64,verbose_step::Int64,bigint::Bool,diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
-
+function threaded_progressive_trk_topk(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64,verbose_step::Int64,bigint::Bool,algo::String = "trk",diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
+    @assert (algo == "trk") || (algo == "ob") || (algo == "rtb") "Illegal algorithm, use: trk , ob , or rtb"
     start_time = time()
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
     tn_index::Dict{Tuple{Int64,Int64},Int64} = temporal_node_index_srtp(tg)
@@ -33,7 +33,11 @@ function threaded_progressive_trk_topk(tg::temporal_graph,eps::Float64,delta::Fl
         sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
         s = sample[1][1]
         z = sample[1][2]
-        _trk_sh_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[Base.Threads.threadid()])
+        if algo == "trk"
+            _trk_sh_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[Base.Threads.threadid()])
+        elseif algo == "ob"
+            _onbra_sh_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[Base.Threads.threadid()])
+        end
     end
     betweenness = reduce(+, local_temporal_betweenness)
     betweenness = betweenness .* [1/tau]
@@ -59,7 +63,11 @@ function threaded_progressive_trk_topk(tg::temporal_graph,eps::Float64,delta::Fl
             sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
             s = sample[1][1]
             z = sample[1][2]
-            _trk_sh_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[Base.Threads.threadid()])
+            if algo == "trk"
+                _trk_sh_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[Base.Threads.threadid()])
+            elseif algo == "ob"
+                _onbra_sh_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[Base.Threads.threadid()])
+            end
         end
         sampled_so_far += sample_step
         betweenness = reduce(+, local_temporal_betweenness)

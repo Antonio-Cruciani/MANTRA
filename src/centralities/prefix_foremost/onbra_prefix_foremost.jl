@@ -285,3 +285,128 @@ function progressive_onbra_prefix_foremost(tg::temporal_graph,initial_sample::In
 
 
 end
+
+
+
+#---- Heuristic 1
+
+
+function heuristic_onbra_prefix_foremost(tg::temporal_graph, c::Int64, verbose_step::Int64)
+    start_time = time()
+    tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
+    bfs_ds = BFS_ONBRA_PFM_DS(tg.num_nodes)
+    bigint::Bool = false
+    tilde_b::Array{Float64} = zeros(tg.num_nodes)
+    w::Int64 = -1
+    v::Int64 = -1
+    t_w::Int64 = -1
+    temporal_edge::Tuple{Int64,Int64,Int64} = (-1,-1,-1)
+    processed_so_far::Int64 = 0
+    repeat::Bool = true
+    k::Int64 = 0
+    s::Int64 = -1
+    z::Int64 = -1
+    max_betweenness::Float64 = 0.0
+    exec_time::Array{Float64} = Array{Float64}([])
+    while repeat
+        push!(exec_time,time())
+        sample_sz = onbra_sample(tg,1)
+        s= sample_sz[1][1]
+        z = sample_sz[1][2]
+        k+=1
+        for u in 1:tg.num_nodes
+            bfs_ds.sigma[u] = 0
+            bfs_ds.predecessors[u] = Set{Int64}()
+            bfs_ds.t_hit[u] = -1
+        end
+        bfs_ds.t_hit[s] = 0
+        bfs_ds.sigma[s] = 1
+        for tn in tal[s]
+            enqueue!(bfs_ds.priority_queue,(s,tn[1],tn[2]),tn[2])
+        end
+        t_z_min = Inf
+        while length(bfs_ds.priority_queue) != 0
+            temporal_edge = dequeue!(bfs_ds.priority_queue)
+            v = temporal_edge[1]
+            w = temporal_edge[2]
+            t_w = temporal_edge[3]
+            if t_w < t_z_min
+                if bfs_ds.t_hit[w] == -1
+                    bfs_ds.t_hit[w] = t_w
+                    for neig in next_temporal_neighbors(tal,w,t_w)
+                        enqueue!(bfs_ds.priority_queue,(w,neig[1],neig[2]),neig[2])
+                    end
+                    if z == w &&  t_z_min > t_w
+                        t_z_min = t_w
+                    end
+                end
+                if bfs_ds.t_hit[w] == t_w
+                    if (!bigint && bfs_ds.sigma[v] > typemax(UInt128) - bfs_ds.sigma[w])
+                        println("Overflow occurred with source ", s)
+                        return [], 0.0
+                    end
+                    bfs_ds.sigma[w] += bfs_ds.sigma[v]
+                    push!(bfs_ds.predecessors[w], v)
+                end
+            end
+        end
+        if bfs_ds.sigma[z] > 0
+            for v in 1:lastindex(bfs_ds.sigma)
+                bfs_ds.sigma_z[v] = 0
+                bfs_ds.boolean_matrix[v] = false
+            end
+            #bfs_ds.sigma_z[s] = 1
+        end
+        for pred in bfs_ds.predecessors[z]
+            bfs_ds.sigma_z[pred] =1
+            if !bfs_ds.boolean_matrix[pred]
+                enqueue!(bfs_ds.backward_queue,pred)
+                bfs_ds.boolean_matrix[pred] = true
+            end
+        end
+        while length(bfs_ds.backward_queue) > 0
+            v = dequeue!(bfs_ds.backward_queue)
+            if v != s
+                
+                tilde_b[v] += (bfs_ds.sigma[v] * (bfs_ds.sigma_z[v] / bfs_ds.sigma[z]))
+               
+                if tilde_b[v] >= c * tg.num_nodes
+                    repeat = false
+                end
+                if tilde_b[v] > max_betweenness
+                    max_betweenness = tilde_b[v]
+                end
+                for pred in bfs_ds.predecessors[v]
+                    if (!bigint && bfs_ds.sigma_z[pred] > typemax(UInt128) - bfs_ds.sigma_z[pred])
+                        println("Overflow occurred with sample (", s, ",", z, ")")
+                        return [], 0.0
+                    end
+                    bfs_ds.sigma_z[pred] += bfs_ds.sigma_z[v]
+                    if !bfs_ds.boolean_matrix[pred]
+                        enqueue!(bfs_ds.backward_queue, pred) 
+                        bfs_ds.boolean_matrix[pred] = true
+                    end                    
+                end
+            end
+        end
+        processed_so_far = processed_so_far + 1
+        exec_time[k] = time() - exec_time[k]
+        if (verbose_step > 0 && processed_so_far % verbose_step == 0)
+            finish_partial::String = string(round(time() - start_time; digits=4))
+            if repeat
+                println("H-ONBRA-PFM. Processed " * string(processed_so_far) *" couples in " * finish_partial * " seconds | max betwenness ",round(max_betweenness; digits=4), " threshold ",c*tg.num_nodes, " | sampling new couples...")
+                flush(stdout)
+            else
+                println("H-ONBRA-PFM. Processed " * string(processed_so_far) *" couples in " * finish_partial * " seconds | max betwenness ",round(max_betweenness; digits=4), " threshold " ,c*tg.num_nodes," | converged.")
+                flush(stdout)
+            end
+        end
+
+            
+    end
+    
+    return tilde_b .* [1/k],k, exec_time, time() - start_time
+
+end
+
+

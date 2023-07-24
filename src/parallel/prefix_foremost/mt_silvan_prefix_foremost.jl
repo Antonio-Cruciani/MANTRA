@@ -1,5 +1,5 @@
 
-function threaded_progressive_silvan_prefix_foremost(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,diam::Int64 = -1,algo::String = "trk",empirical_peeling_a::Float64 = 2.0,sample_step::Int64 = 10)
+function threaded_progressive_silvan_prefix_foremost(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,algo::String = "trk",diam::Int64 = -1,empirical_peeling_a::Float64 = 2.0,sample_step::Int64 = 10)
     @assert (algo == "trk") || (algo == "ob") || (algo == "rtb") "Illegal algorithm, use: trk , ob , or rtb"
     norm::Float64 = 1.0
     if algo == "rtb"
