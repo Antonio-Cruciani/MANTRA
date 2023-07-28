@@ -161,7 +161,7 @@ function threaded_progressive_trk_prefix_foremost(tg::temporal_graph,eps::Float6
 
     sampled_so_far::Int64 = 0
     stop::Array{Bool} = [false]
-    while sampled_so_far <= omega && !stop[1]
+    while sampled_so_far < omega && !stop[1]
         Base.Threads.@threads for i in 1:sample_step
             sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
             s = sample[1][1]

@@ -55,7 +55,7 @@ function threaded_progressive_trk_prefix_foremost_topk(tg::temporal_graph,eps::F
     betweenness = zeros(tg.num_nodes)
     sampled_so_far::Int64 = 0
     stop::Array{Bool} = [false]
-    while sampled_so_far <= omega && !stop[1]
+    while sampled_so_far < omega && !stop[1]
         approx_top_k = Array{Tuple{Int64,Float64}}([])
         Base.Threads.@threads for i in 1:sample_step
             sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)

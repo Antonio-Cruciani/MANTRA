@@ -340,12 +340,12 @@ end
 
 #-------| KADABRA's progressive sampling |-------
 
-function progressive_trk_shortest_temporal_betweenness(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64 = 0,verbose_step::Int64 = 0,bigint::Bool = false,diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
+function progressive_trk_shortest_temporal_betweenness(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64 = 0,verbose_step::Int64 = 0,bigint::Bool = false,algo::String = "trk",diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
     if nthreads()>1
         if k > 0
-            return threaded_progressive_trk_topk(tg,eps,delta,k,verbose_step,bigint,diam,start_factor,sample_step,hb)
+            return threaded_progressive_trk_topk(tg,eps,delta,k,verbose_step,bigint,algo,diam,start_factor,sample_step,hb)
         else
-            return threaded_progressive_trk(tg,eps,delta,verbose_step,bigint,diam,start_factor,sample_step,hb)
+            return threaded_progressive_trk(tg,eps,delta,verbose_step,bigint,algo,diam,start_factor,sample_step,hb)
         end
     else
         println("Error: set the number of threads > 1 julia --threads <thread_number>")
@@ -353,12 +353,12 @@ function progressive_trk_shortest_temporal_betweenness(tg::temporal_graph,eps::F
 end
 
 
-function progressive_trk_shortest_foremost_temporal_betweenness(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64 = 0,verbose_step::Int64 = 0,bigint::Bool = false,diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)    
+function progressive_trk_shortest_foremost_temporal_betweenness(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64 = 0,verbose_step::Int64 = 0,bigint::Bool = false,algo::String = "trk",diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)    
     if nthreads()>1
         if k > 0
-            return threaded_progressive_trk_shortest_foremost_topk(tg,eps,delta,k,verbose_step,bigint,diam,start_factor,sample_step,hb)   
+            return threaded_progressive_trk_shortest_foremost_topk(tg,eps,delta,k,verbose_step,bigint,algo,diam,start_factor,sample_step,hb)   
         else
-            return threaded_progressive_trk_shortest_foremost(tg,eps,delta,verbose_step,bigint,diam,start_factor,sample_step,hb)      
+            return threaded_progressive_trk_shortest_foremost(tg,eps,delta,verbose_step,bigint,algo,diam,start_factor,sample_step,hb)      
         end
     else
         println("Error: set the number of threads > 1 julia --threads <thread_number>")
@@ -366,12 +366,12 @@ function progressive_trk_shortest_foremost_temporal_betweenness(tg::temporal_gra
 end
 
 
-function progressive_trk_prefix_foremost_temporal_betweenness(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64 = 0,verbose_step::Int64= 0,diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
+function progressive_trk_prefix_foremost_temporal_betweenness(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64 = 0,verbose_step::Int64= 0,algo::String = "trk",diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
     if nthreads()>1
         if k > 0
-            return threaded_progressive_trk_prefix_foremost_topk(tg,eps,delta,k,verbose_step,diam,start_factor,sample_step,hb)
+            return threaded_progressive_trk_prefix_foremost_topk(tg,eps,delta,k,verbose_step,algo,diam,start_factor,sample_step,hb)
         else
-            return threaded_progressive_trk_prefix_foremost(tg,eps,delta,verbose_step,diam,start_factor,sample_step,hb)
+            return threaded_progressive_trk_prefix_foremost(tg,eps,delta,verbose_step,algo,diam,start_factor,sample_step,hb)
         end
     else
         println("Error: set the number of threads > 1 julia --threads <thread_number>")
