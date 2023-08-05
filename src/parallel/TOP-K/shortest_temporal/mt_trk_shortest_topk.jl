@@ -11,7 +11,7 @@ function threaded_progressive_trk_topk(tg::temporal_graph,eps::Float64,delta::Fl
     approx_top_k::Array{Tuple{Int64,Float64}} =  Array{Tuple{Int64,Float64}}([])
     omega::Int64 = 1000
     t_diam::Float64 = 0.0
-    union_sample::Int64 = min(tg.num_nodes,max(sqrt(lastindex(tg.temporal_edges))/nthreads(),k+20))
+    union_sample::Int64 = min(tg.num_nodes,max(trunc(Int,sqrt(lastindex(tg.temporal_edges))/nthreads()),k+20))
     if (diam == -1) && (!hb)
         println("Approximating diameter ")
         diam,_,_,_,_,t_diam = threaded_temporal_shortest_diameter(tg,64,verbose_step)
