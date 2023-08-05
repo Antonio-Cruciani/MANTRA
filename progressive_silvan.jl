@@ -4,22 +4,7 @@ function print_samplig_stats(epsilon,delta,trials,ss)
     println(" ε = "*string(epsilon)*" δ = "*string(delta)*" #trials = "*string(trials)*" starting sample size/ub sample size "*string(ss))
     flush(stdout)
 end
-datasets = ["01_hypertext.txt",
-"02_highschool.txt",
-"03_hospital_ward.txt",
-"04_college_msg.txt",
-"05_wiki_elections.txt",
-"06_highschool.txt",
-"07_digg_reply.txt",
-"08_infectious.txt",
-"09_primary_school.txt",
-"10_facebook_wall.txt",
-"11_slashdot_reply.txt",
-"12_highschool.txt",
-"13_topology.txt",
-"14_SMS.txt",
-"16_brain_100206_90.txt",
-"17_brain_100206_70.txt"]
+datasets = ["01_hypertext.txt"]
 
 path = "graphs/"
 
@@ -36,18 +21,18 @@ for gn in datasets
     vc = compute_vapnik_chervonenkis_bound(vd,epsilon,delta)
     print_samplig_stats(epsilon,delta,trials,vc)
     print_stats(tg, graph_name= gn)
-    println("Running W.UB. ONBRA")
+    println("Running SILVAN ONBRA")
     flush(stdout)
     for i in 1:trials
-        result = progressive_trk_prefix_foremost_temporal_betweenness(tg,epsilon,delta,k,0,"ob",vd)
-        save_results_progressive_sampling(nn,"wub_onbra_pfm",result[1],result[4],result[6],vc,epsilon)
+        result = threaded_progressive_silvan_prefix_foremost(tg,epsilon,delta,0,"ob",vd)
+        save_results_progressive_sampling(nn,"sil_onbra_pfm",result[1],result[2],result[3],vc,epsilon)
     end
     #=
-    println("Running W.UB. TRK")
+    println("Running SILVAN TRK")
     flush(stdout)
     for i in 1:trials
-        result = progressive_trk_prefix_foremost_temporal_betweenness(tg,epsilon,delta,k,0,"trk",vd)
-        save_results_progressive_sampling(nn,"wub_trk_pfm",result[1],result[4],result[6],vc,epsilon)
+        result = threaded_progressive_silvan_prefix_foremost(tg,epsilon,delta,0,"trk",vd)
+        save_results_progressive_sampling(nn,"sil_trk_pfm",result[1],result[2],result[3],vc,epsilon)
     end
     
     println("Running Bernstein RTB")
@@ -66,18 +51,18 @@ for gn in datasets
     vc = compute_vapnik_chervonenkis_bound(vd,epsilon,delta)
     print_samplig_stats(epsilon,delta,trials,vc)
     print_stats(tg, graph_name= gn)
-    println("Running W.UB. ONBRA")
+    println("Running SILVAN ONBRA")
     flush(stdout)
     for i in 1:trials
-        result = progressive_trk_shortest_temporal_betweenness(tg,epsilon,delta,k,0,false,"ob",vd)
-        save_results_progressive_sampling(nn,"wub_onbra_sh",result[1],result[4],result[6],vc,epsilon)
+        result = threaded_progressive_silvan(tg,epsilon,delta,0,false,"ob",vd)
+        save_results_progressive_sampling(nn,"sil_onbra_sh",result[1],result[2],result[3],vc,epsilon)
     end
     #=
-    println("Running W.UB. TRK")
+    println("Running SILVAN TRK")
     flush(stdout)
     for i in 1:trials
-        result = progressive_trk_shortest_temporal_betweenness(tg,epsilon,delta,k,0,false,"trk",vd)
-        save_results_progressive_sampling(nn,"wub_trk_sh",result[1],result[4],result[6],vc,epsilon)
+        result = threaded_progressive_silvan(tg,epsilon,delta,0,false,"trk",vd)
+        save_results_progressive_sampling(nn,"sil_trk_sh",result[1],result[2],result[3],vc,epsilon)
     end
     
     println("Running Bernstein RTB")
@@ -101,15 +86,15 @@ for gn in datasets
     println("Running W.UB. ONBRA")
     flush(stdout)
     for i in 1:trials
-        result = progressive_trk_shortest_foremost_temporal_betweenness(tg,epsilon,delta,k,0,false,"ob",vd)
-        save_results_progressive_sampling(nn,"wub_onbra_sfm",result[1],result[4],result[6],vc,epsilon)
+        result = threaded_progressive_silvan_shortest_foremost(tg,epsilon,delta,0,false,"ob",vd)
+        save_results_progressive_sampling(nn,"sil_onbra_sfm",result[1],result[2],result[3],vc,epsilon)
     end
     #=
     println("Running W.UB. TRK")
     flush(stdout)
     for i in 1:trials
-        result = progressive_trk_shortest_foremost_temporal_betweenness(tg,epsilon,delta,k,0,false,"trk",vd)
-        save_results_progressive_sampling(nn,"wub_trk_sfm",result[1],result[4],result[6],vc,epsilon)
+        result = threaded_progressive_silvan_shortest_foremost(tg,epsilon,delta,0,false,"trk",vd)
+        save_results_progressive_sampling(nn,"sil_trk_sfm",result[1],result[2],result[3],vc,epsilon)
     end
     
     println("Running Bernstein RTB")

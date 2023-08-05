@@ -22,6 +22,7 @@ function threaded_progressive_silvan_shortest_foremost(tg::temporal_graph,eps::F
     partition_index::Array{Int64} = zeros(tg.num_nodes)
     part_idx::Int64 = 1
     # TBC
+    tmp_has_to_stop::Array{Bool} = Array{Bool}([false])
     local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
     mcrade::Array{Array{Float64}} = [zeros(tg.num_nodes*mc_trials) for i in 1:nthreads()]
     local_sp_lengths::Array{Array{Int64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
@@ -169,8 +170,11 @@ function threaded_progressive_silvan_shortest_foremost(tg::temporal_graph,eps::F
             #println(" num_samples ",num_samples," last_stopping_samples ",last_stopping_samples)
             #println(" num_samples ",num_samples,"  ",next_stopping_samples)
             tmp_omega = Vector{Float64}([omega])
-            has_to_stop  = check_stopping_condition(betweenness,wv,last_stopping_samples,num_samples,eps,delta,iteration_index,true,diam,sp_lengths,num_samples,mc_trials,partition_index,partitions_ids_map,wv,r_mcrade,number_of_non_empty_partitions,tmp_omega,norm)
+            tmp_has_to_stop = Vector{Bool}([false])
+
+            _check_stopping_condition!(betweenness,wv,last_stopping_samples,num_samples,eps,delta,iteration_index,true,diam,sp_lengths,num_samples,mc_trials,partition_index,partitions_ids_map,wv,r_mcrade,number_of_non_empty_partitions,tmp_omega,norm,tmp_has_to_stop)
             omega = tmp_omega[1]
+            has_to_stop = tmp_has_to_stop[1]
             if has_to_stop
                 println("Progressive sampler converged!")
             else

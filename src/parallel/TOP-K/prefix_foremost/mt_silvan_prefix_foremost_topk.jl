@@ -125,7 +125,7 @@ function threaded_progressive_silvan_prefix_foremost_topk(tg::temporal_graph,eps
     local_temporal_betweenness = [zeros(tg.num_nodes) for i in 1:nthreads()]
     mcrade = [zeros((tg.num_nodes+1)*mc_trials) for i in 1:nthreads()]
     local_sp_lengths = [zeros(tg.num_nodes) for i in 1:nthreads()]
-    omega = 10^5
+    omega = compute_vapnik_chervonenkis_bound(trunc(Int,diam_v),eps,delta,0.5)
     if max_num_samples > 0
         omega = max_num_samples
     end

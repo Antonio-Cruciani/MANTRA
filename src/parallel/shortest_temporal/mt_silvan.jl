@@ -118,7 +118,7 @@ function upper_bound_samples(max_tbc::Float64,max_var::Float64, avg_dist::Float6
 end
 
 
-function check_stopping_condition(betweenness::Array{Float64},wv::Array{Float64},last_stopping_samples::Float64,num_samples::Int64,eps::Float64,delta::Float64,iteration::Int64,second_phase::Bool,diam::Int64,tdd::Array{Int64},sample_size::Int64,mc_trials::Int64,partition_index::Array{Int64},partitions_ids_map::Dict{Int64,Int64},emp_wimpy_vars::Array{Float64},mcrade::Array{Float64},number_of_non_empty_partitions::Int64,omega::Vector{Float64},norm::Float64)
+function _check_stopping_condition!(betweenness::Array{Float64},wv::Array{Float64},last_stopping_samples::Float64,num_samples::Int64,eps::Float64,delta::Float64,iteration::Int64,second_phase::Bool,diam::Int64,tdd::Array{Int64},sample_size::Int64,mc_trials::Int64,partition_index::Array{Int64},partitions_ids_map::Dict{Int64,Int64},emp_wimpy_vars::Array{Float64},mcrade::Array{Float64},number_of_non_empty_partitions::Int64,omega::Vector{Float64},norm::Float64,has_to_stop::Vector{Bool})
     n::Int64 = lastindex(betweenness)
     num_samples_d::Float64 = num_samples
     delta_for_progressive_bound::Float64 = delta/2^iteration
@@ -182,7 +182,8 @@ function check_stopping_condition(betweenness::Array{Float64},wv::Array{Float64}
     else
      println("MCRADE ξ "*string(sup_eps)*" target ε  "*string(eps) )
     end
-    return (sup_eps <= eps)
+    has_to_stop[1]= (sup_eps <= eps)
+    return nothing
 end
 function epsilon_mcrade(sup_emp_wimpy_var,mcera,delta,num_samples,mc_trials)
     mcera = max(mcera,0.0)
@@ -222,6 +223,7 @@ function threaded_progressive_silvan(tg::temporal_graph,eps::Float64,delta::Floa
     partition_index::Array{Int64} = zeros(tg.num_nodes)
     part_idx::Int64 = 1
     # TBC
+    tmp_has_to_stop::Array{Bool} = Array{Bool}([false])
     local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
     mcrade::Array{Array{Float64}} = [zeros(tg.num_nodes*mc_trials) for i in 1:nthreads()]
     local_sp_lengths::Array{Array{Int64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
@@ -369,8 +371,10 @@ function threaded_progressive_silvan(tg::temporal_graph,eps::Float64,delta::Floa
             #println(" num_samples ",num_samples," last_stopping_samples ",last_stopping_samples)
             #println(" num_samples ",num_samples,"  ",next_stopping_samples)
             tmp_omega = Vector{Float64}([omega])
-            has_to_stop  = check_stopping_condition(betweenness,wv,last_stopping_samples,num_samples,eps,delta,iteration_index,true,diam,sp_lengths,num_samples,mc_trials,partition_index,partitions_ids_map,wv,r_mcrade,number_of_non_empty_partitions,tmp_omega,norm)
+            tmp_has_to_stop = Vector{Bool}([false])
+            _check_stopping_condition!(betweenness,wv,last_stopping_samples,num_samples,eps,delta,iteration_index,true,diam,sp_lengths,num_samples,mc_trials,partition_index,partitions_ids_map,wv,r_mcrade,number_of_non_empty_partitions,tmp_omega,norm,tmp_has_to_stop)
             omega = tmp_omega[1]
+            has_to_stop = tmp_has_to_stop[1]
             if has_to_stop
                 println("Progressive sampler converged!")
             else
