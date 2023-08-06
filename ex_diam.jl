@@ -1,6 +1,6 @@
 include("src/APXTBC.jl")
 
-
+#=
 datasets = ["01_hypertext.txt",
 "02_highschool.txt",
 "03_hospital_ward.txt",
@@ -20,6 +20,13 @@ datasets = ["01_hypertext.txt",
 "18_venice.txt",
 "19_bordeaux.txt"
 ]
+=#
+datasets = [
+"21_mathoverflow.txt",
+"20_askubuntu.txt",
+"22_superuser.txt",
+"23_flickr_grow.txt"
+]
 path = "graphs/"
 
 
@@ -38,7 +45,7 @@ for gn in datasets
 
 end
 
-
+#=
 println("Computing Ground Truth values for the shortest temporal diameter")
 
 for gn in datasets
@@ -66,3 +73,5 @@ for gn in datasets
     
     save_results_diameter(nn,result[1],result[1]+1,result[2],result[4],result[3],result[5],result[6],"sfm")
 end
+
+=#
