@@ -40,9 +40,10 @@ for gn in datasets
         result = progressive_rtb_bernstein_prefix_foremost_temporal_betweenness(tg,ss,epsilon,delta,geo,0)
         save_results_progressive_sampling(nn,"b_rtb_pfm",result[1],result[2][end],result[4],ss,result[3])
     end
-    
+    =#
 end
-=#
+
+end
 for gn in datasets
     nn = String(split(gn, ".t")[1])
     tg = load_temporal_graph(path*gn," ")
@@ -68,9 +69,10 @@ for gn in datasets
         result = progressive_rtb_bernstein_shortest_temporal_betweenness(tg,ss,epsilon,delta,geo,0,false)
         save_results_progressive_sampling(nn,"b_rtb_sh",result[1],result[2][end],result[4],ss,result[3])
     end
-    
+   =# 
 end
-=#
+
+
 for gn in datasets
     nn = String(split(gn, ".t")[1])
     tg = load_temporal_graph(path*gn," ")
