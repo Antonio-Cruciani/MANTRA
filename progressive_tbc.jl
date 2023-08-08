@@ -4,17 +4,17 @@ function print_samplig_stats(epsilon,delta,trials,ss)
     println(" ε = "*string(epsilon)*" δ = "*string(delta)*" #trials = "*string(trials)*" starting sample size/ub sample size "*string(ss))
     flush(stdout)
 end
-datasets = ["18_venice.txt","19_bordeaux.txt"]
+datasets = ["19_bordeaux.txt"]
 
 path = "graphs/"
 
 epsilon = 0.05
 delta = 0.1
-trials = 10
+trials = 3
 ss = 750
 geo = 1.2
 big_int = true
-
+#=
 for gn in datasets
     nn = String(split(gn, ".t")[1])
     tg = load_temporal_graph(path*gn," ")
@@ -43,7 +43,7 @@ for gn in datasets
     =#
 end
 
-
+=#
 for gn in datasets
     nn = String(split(gn, ".t")[1])
     tg = load_temporal_graph(path*gn," ")
@@ -72,6 +72,7 @@ for gn in datasets
    =# 
 end
 
+datasets = ["18_venice.txt","19_bordeaux.txt"]
 
 for gn in datasets
     nn = String(split(gn, ".t")[1])
