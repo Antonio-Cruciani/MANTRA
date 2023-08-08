@@ -43,7 +43,7 @@ for gn in datasets
     =#
 end
 
-end
+
 for gn in datasets
     nn = String(split(gn, ".t")[1])
     tg = load_temporal_graph(path*gn," ")
