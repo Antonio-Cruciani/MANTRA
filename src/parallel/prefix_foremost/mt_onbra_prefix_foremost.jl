@@ -318,6 +318,7 @@ function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph
             if (verbose_step > 0 && sampled_so_far % verbose_step == 0)
                 finish_partial = string(round(time() - start_time; digits=4))
                 println("P-ONBRA. Processed " * string(sampled_so_far) * " pairs in " * finish_partial * " seconds ")
+                flush(stdout)
             end
         end
        
@@ -328,6 +329,7 @@ function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph
      
         finish_partial = string(round(time() - start_time; digits=4))
         println("P-ONBRA. Processed " * string(sampled_so_far) * " pairs in " * finish_partial * " seconds | Est. ξ = ",xi)
+        flush(stdout)
         if xi <= epsilon
             keep_sampling = false
         else

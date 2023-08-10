@@ -4,6 +4,7 @@ datasets = ["17_brain_100206_70.txt"]
 path = "graphs/"
 seeds = 256
 println("Computing APX values for the prefix-foremost temporal diameter")
+flush(stdout)
 trials = 10
 verb = 0
 for gn in datasets

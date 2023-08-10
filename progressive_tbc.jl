@@ -4,7 +4,8 @@ function print_samplig_stats(epsilon,delta,trials,ss)
     println(" ε = "*string(epsilon)*" δ = "*string(delta)*" #trials = "*string(trials)*" starting sample size/ub sample size "*string(ss))
     flush(stdout)
 end
-datasets = ["01_hypertext.txt",
+datasets = [
+"01_hypertext.txt",
 "02_highschool.txt",
 "03_hospital_ward.txt",
 "04_college_msg.txt",
@@ -32,7 +33,7 @@ path = "graphs/"
 
 epsilon = 0.01
 delta = 0.1
-trials = 10
+trials = 5
 ss = 1000
 geo = 1.2
 big_int = false
