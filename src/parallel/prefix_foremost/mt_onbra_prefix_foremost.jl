@@ -303,14 +303,14 @@ function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph
     finish_partial::String = ""
     omega::Int64 = 1000
     t_diam::Float64 = 0.0
-    diam = -1
+    diam::Float64 = -1.0
     if (diam == -1) 
         println("Approximating diameter ")
         _,_,_,_,_,diam,t_diam = threaded_temporal_prefix_foremost_diameter(tg,64,verbose_step)
         println("Task completed in "*string(round(t_diam;digits = 4))*". VD = "*string(diam))
     end
     
-    omega = trunc(Int,(0.5/eps^2) * ((floor(log2(diam-2)))+log(1/delta)))
+    omega = trunc(Int,(0.5/epsilon^2) * ((floor(log2(diam-2)))+log(1/delta)))
     println("ω = ",omega)
     
     println("Maximum sample size "*string(omega))
