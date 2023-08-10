@@ -315,6 +315,7 @@ function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph
     
     println("Maximum sample size "*string(omega))
     println("Using ",nthreads()," Trheads")
+    flush(stdout)
     while keep_sampling
         k+=1
         if (k >= 2)
