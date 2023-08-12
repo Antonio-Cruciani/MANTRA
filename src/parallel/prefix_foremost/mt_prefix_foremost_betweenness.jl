@@ -14,6 +14,7 @@ function threaded_temporal_prefix_foremost_betweenness(tg::temporal_graph,verbos
             finish_partial::String = string(round(time() - start_time; digits=4))
             time_to_finish::String = string(round((tg.num_nodes*(time() - start_time) / processed_so_far )-(time() - start_time) ; digits=4))
             println("TPFM. Processed " * string(processed_so_far) * "/" * string(tg.num_nodes) * " nodes in " * finish_partial * " seconds | Est. remaining time : "*time_to_finish)
+            flush(stdout)
         end
     end
     betweenness = reduce(+, local_temporal_betweenness)

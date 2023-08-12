@@ -4,7 +4,8 @@ function print_samplig_stats(epsilon,delta,trials,ss)
     println(" ε = "*string(epsilon)*" δ = "*string(delta)*" #trials = "*string(trials)*" starting sample size/ub sample size "*string(ss))
     flush(stdout)
 end
-datasets = ["01_hypertext.txt",
+datasets = [
+"01_hypertext.txt",
 "02_highschool.txt",
 "03_hospital_ward.txt",
 "04_college_msg.txt",
@@ -19,13 +20,20 @@ datasets = ["01_hypertext.txt",
 "13_topology.txt",
 "14_SMS.txt",
 "16_brain_100206_90.txt",
-"17_brain_100206_70.txt"]
+"17_brain_100206_70.txt",
+"18_venice.txt",
+"19_bordeaux.txt",
+"20_askubuntu.txt",
+"21_mathoverflow.txt",
+"22_superuser.txt",
+"23_flickr_grow.txt"
+]
 
 path = "graphs/"
 
 epsilon = 0.05
 delta = 0.1
-trials = 10
+trials = 5
 k = 0
 
 
@@ -39,7 +47,7 @@ for gn in datasets
     println("Running W.UB. ONBRA")
     flush(stdout)
     for i in 1:trials
-        result = progressive_trk_prefix_foremost_temporal_betweenness(tg,epsilon,delta,k,0,"ob",vd)
+        result = progressive_trk_prefix_foremost_temporal_betweenness(tg,epsilon,delta,k,10000,"ob",vd)
         save_results_progressive_sampling(nn,"wub_onbra_pfm",result[1],result[4],result[6],vc,epsilon)
     end
     #=
@@ -58,7 +66,7 @@ for gn in datasets
     end
     =#
 end
-
+#=
 for gn in datasets
     nn = String(split(gn, ".t")[1])
     tg = load_temporal_graph(path*gn," ")
@@ -120,3 +128,4 @@ for gn in datasets
     end
     =#
 end
+=#

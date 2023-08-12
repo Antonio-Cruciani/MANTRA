@@ -394,7 +394,21 @@ function threaded_progressive_onbra_shortest_foremost_bernstein(tg::temporal_gra
     k::Int64 = 0
     j::Int64 = 2
     finish_partial::String = ""
+    omega::Int64 = 1000
+    t_diam::Float64 = 0.0
+    
+    println("Approximating diameter ")
+    diam,_,_,_,_,t_diam = threaded_temporal_shortest_diameter(tg,64,verbose_step)
+    println("Task completed in "*string(round(t_diam;digits = 4))*". Δ = "*string(diam))
+    diam+=1
+    
+   
+    omega = trunc(Int,(0.5/epsilon^2) * ((floor(log2(diam-2)))+log(1/delta)))
+   
+    println("Maximum sample size "*string(omega))
     println("Using ",nthreads()," Trheads")
+    flush(stdout)
+
     while keep_sampling
         k+=1
         if (k >= 2)
@@ -422,7 +436,7 @@ function threaded_progressive_onbra_shortest_foremost_bernstein(tg::temporal_gra
      
         finish_partial = string(round(time() - start_time; digits=4))
         println("P-ONBRA. Processed " * string(sampled_so_far) * " pairs in " * finish_partial * " seconds | Est. ξ = ",xi)
-        if xi <= epsilon
+        if xi <= epsilon || sampled_so_far >= omega
             keep_sampling = false
         else
             j+=1

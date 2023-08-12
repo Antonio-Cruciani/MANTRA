@@ -31,10 +31,10 @@ datasets = [
 
 path = "graphs/"
 
-epsilon = 0.01
+epsilon = 0.05
 delta = 0.1
 trials = 5
-ss = 1000
+ss = 750
 geo = 1.2
 big_int = false
 

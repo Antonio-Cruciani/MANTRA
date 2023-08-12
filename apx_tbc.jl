@@ -2,7 +2,7 @@ include("src/APXTBC.jl")
 path = "graphs/"
 
 
-datasets = ["20_askubuntu.txt","22_superuser.txt","23_flickr_grow.txt"]
+datasets = ["21_mathoverflow.txt","20_askubuntu.txt","22_superuser.txt","23_flickr_grow.txt"]
 
 
 println("Computing Ground Truth values for the prefix-foremost temporal betweenness")
@@ -17,7 +17,7 @@ for gn in datasets
 
     save_results(nn,"pfm",result[1],result[2])
 end
-#=
+
 
 println("Computing Groun Truth values for the shortest temporal betweenness")
 
@@ -47,7 +47,7 @@ for gn in datasets
 
     save_results(nn,"sfm",result[1],result[2])
 end
-=#
+
 #=
 roads = ["18_venice.txt","19_bordeaux.txt"]
 
