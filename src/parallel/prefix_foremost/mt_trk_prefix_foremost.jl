@@ -124,10 +124,12 @@ function threaded_progressive_trk_prefix_foremost(tg::temporal_graph,eps::Float6
         println("Approximating diameter ")
         _,_,_,_,_,diam,t_diam = threaded_temporal_prefix_foremost_diameter(tg,64,verbose_step)
         println("Task completed in "*string(round(t_diam;digits = 4))*". VD = "*string(diam))
+        flush(stdout)
     end
     if !hb
         omega = trunc(Int,(0.5/eps^2) * ((floor(log2(diam-2)))+log(1/delta)))
         println("ω = ",omega)
+        flush(stdout)
     else
         omega = trunc(Int,(1.0/(2*eps^2))*log2(2*tg.num_nodes/delta))
     end
@@ -136,6 +138,7 @@ function threaded_progressive_trk_prefix_foremost(tg::temporal_graph,eps::Float6
     s::Int64 = 0
     z::Int64 = 0
     println("Bootstrap phase "*string(tau)*" iterations")
+    flush(stdout)
     Base.Threads.@threads for i in 1:tau
         sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
         s = sample[1][1]
@@ -157,6 +160,7 @@ function threaded_progressive_trk_prefix_foremost(tg::temporal_graph,eps::Float6
     delta_ub_guess::Array{Float64} = zeros(tg.num_nodes)
     _compute_δ_guess!(betweenness,eps,delta,balancing_factor,eps_lb,eps_ub,delta_lb_min_guess,delta_ub_min_guess,delta_lb_guess,delta_ub_guess) 
     println("Bootstrap completed ")
+    flush(stdout)
     local_temporal_betweenness = [zeros(tg.num_nodes) for i in 1:nthreads()]
 
     sampled_so_far::Int64 = 0
@@ -178,10 +182,12 @@ function threaded_progressive_trk_prefix_foremost(tg::temporal_graph,eps::Float6
         if (verbose_step > 0 && sampled_so_far % verbose_step == 0)
             finish_partial = string(round(time() - start_time; digits=4))
             println("P-TRK-PFM. Processed " * string(sampled_so_far) * " pairs in " * finish_partial * " seconds ")
+            flush(stdout)
         end
     end
     if stop[1]
         println("Progressive sampler converged at "*string(sampled_so_far)*"/"*string(omega)*" iterations")
+        flush(stdout)
     end
     return betweenness,eps_lb,eps_ub,sampled_so_far,omega,time()-start_time
 

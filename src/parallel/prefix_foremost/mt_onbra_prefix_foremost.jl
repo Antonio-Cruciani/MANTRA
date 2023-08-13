@@ -308,6 +308,7 @@ function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph
         println("Approximating diameter ")
         _,_,_,_,_,diam,t_diam = threaded_temporal_prefix_foremost_diameter(tg,64,verbose_step)
         println("Task completed in "*string(round(t_diam;digits = 4))*". VD = "*string(diam))
+        flush(stdout)
     end
     
     omega = trunc(Int,(0.5/epsilon^2) * ((floor(log2(diam-2)))+log(1/delta)))
