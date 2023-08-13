@@ -30,7 +30,7 @@ for gn in datasets
     flush(stdout)
     for i in 1:trials
         result = progressive_trk_prefix_foremost_temporal_betweenness(tg,epsilon,delta,k,10000,"ob")
-        save_results_progressive_sampling(nn,"wub_onbra_pfm",result[1],result[4],result[6],vc,epsilon)
+        save_results_progressive_sampling(nn,"wub_onbra_pfm",result[1],result[4],result[6],result[5],epsilon)
     end
     #=
     println("Running W.UB. TRK")
