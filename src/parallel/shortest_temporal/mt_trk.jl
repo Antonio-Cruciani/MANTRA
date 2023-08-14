@@ -298,7 +298,7 @@ function _compute_δ_guess!(betweenness::Array{Float64},eps::Float64,delta::Floa
     c::Float64 = (a+b)/2
     summation::Float64 = 0.0
     
-    for i in 1:n
+    Base.Threads.@threads for i in 1:n
         eps_lb[i] = eps
         eps_ub[i] = eps
     end

@@ -35,7 +35,7 @@ epsilon = 0.01
 delta = 0.1
 trials = 5
 k = 0
-
+sample_step = 32
 
 for gn in datasets
     nn = String(split(gn, ".t")[1])
@@ -47,7 +47,7 @@ for gn in datasets
     println("Running W.UB. ONBRA")
     flush(stdout)
     for i in 1:trials
-        result = progressive_trk_prefix_foremost_temporal_betweenness(tg,epsilon,delta,k,10000,"ob")
+        result = progressive_trk_prefix_foremost_temporal_betweenness(tg,epsilon,delta,k,10000,"ob",-1,100,sample_step)
         save_results_progressive_sampling(nn,"wub_onbra_pfm",result[1],result[4],result[6],result[5],epsilon)
     end
     #=
