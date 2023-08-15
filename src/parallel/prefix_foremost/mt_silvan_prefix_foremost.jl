@@ -60,6 +60,7 @@ function threaded_progressive_silvan_prefix_foremost(tg::temporal_graph,eps::Flo
     wv = reduce(+,local_wv)
     sp_lengths = reduce(+,local_sp_lengths) 
     println("Empirical peeling phase:")
+    flush(stdout)
     max_tbc::Float64 = 0.0
     max_wv::Float64 = 0.0
 
@@ -87,7 +88,8 @@ function threaded_progressive_silvan_prefix_foremost(tg::temporal_graph,eps::Flo
     for key in keys(non_empty_partitions)
         println(" Part w. index "*string(key)*" has "*string(non_empty_partitions[key])*" elements, map to "*string(partitions_ids_map[key]))
     end
-   
+    flush(stdout)
+
     # Upper bound on the average distance
     avg_diam_ub::Float64 = upper_bound_average_diameter(delta/8,diam,sp_lengths,tau,true,norm)
     # Upper bound on the top-1 temporal betweenness
@@ -101,6 +103,7 @@ function threaded_progressive_silvan_prefix_foremost(tg::temporal_graph,eps::Flo
     println("Maximum number of samples "*string(max_num_samples)*" VC Bound "*string(omega))
     println("Sup tbc est "*string(max_tbc))
     println("Sup emp wimpy variance "*string(max_wv/tau))
+    flush(stdout)
     iteration_index::Int64 =1 
     
     local_wv = [zeros(tg.num_nodes) for i in 1:nthreads()]
@@ -133,6 +136,7 @@ function threaded_progressive_silvan_prefix_foremost(tg::temporal_graph,eps::Flo
         first_stopping_samples = last_stopping_samples/4
         println("First stopping samples dropped to "*string(first_stopping_samples))
     end
+    flush(stdout)
     next_stopping_samples::Float64 = first_stopping_samples
     
     has_to_stop::Bool = false
@@ -155,6 +159,7 @@ function threaded_progressive_silvan_prefix_foremost(tg::temporal_graph,eps::Flo
         if num_samples >= omega
             println("Num samples/ω : "*string(num_samples)*"/"*string(omega))
             has_to_stop = true
+            flush(stdout)
         end
         #println("Checking stopping condition")
         #println(" num_samples ",num_samples," last_stopping_samples ",last_stopping_samples)
@@ -181,16 +186,16 @@ function threaded_progressive_silvan_prefix_foremost(tg::temporal_graph,eps::Flo
                 next_stopping_samples,iteration_index = get_next_stopping_sample(next_stopping_samples,iteration_index )
                 println("Increasing sample size to "*string(next_stopping_samples))
             end
-                    
+            flush(stdout)      
         end
 
 
     end
 
     println("(PFM)-Temporal Betweenness estimated in "*string(round(time() - start_time; digits=4)))
-
+    flush(stdout)
     betweenness = reduce(+, local_temporal_betweenness)
-    return betweenness.*[1/num_samples],num_samples,time()-start_time
+    return betweenness.*[1/num_samples],num_samples,max_num_samples,time()-start_time
 
 
 end

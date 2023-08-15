@@ -21,7 +21,6 @@ end
 
 println("Computing Groun Truth values for the shortest temporal betweenness")
 
-datasets = ["21_mathoverflow.txt"]
 
 for gn in datasets
 
