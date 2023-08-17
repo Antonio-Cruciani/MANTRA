@@ -2,9 +2,9 @@ include("src/APXTBC.jl")
 path = "graphs/"
 
 
-datasets = ["21_mathoverflow.txt","20_askubuntu.txt","22_superuser.txt","23_flickr_grow.txt"]
+datasets = ["21_mathoverflow.txt","14_SMS.txt","20_askubuntu.txt","22_superuser.txt"]
 
-
+#=
 println("Computing Ground Truth values for the prefix-foremost temporal betweenness")
 
 for gn in datasets
@@ -17,7 +17,7 @@ for gn in datasets
 
     save_results(nn,"pfm",result[1],result[2])
 end
-
+=#
 
 println("Computing Groun Truth values for the shortest temporal betweenness")
 
