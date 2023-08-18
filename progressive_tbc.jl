@@ -30,7 +30,7 @@ datasets = [
 
 path = "graphs/"
 
-epsilon = 0.05
+epsilon = 0.005
 delta = 0.1
 trials = 5
 ss = 750

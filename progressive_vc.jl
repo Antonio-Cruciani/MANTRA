@@ -26,12 +26,11 @@ datasets = [
 "20_askubuntu.txt",
 "21_mathoverflow.txt",
 "22_superuser.txt",
-"23_flickr_grow.txt"
 ]
 
 path = "graphs/"
 
-epsilon = 0.01
+epsilon = 0.005
 delta = 0.1
 trials = 5
 k = 0
