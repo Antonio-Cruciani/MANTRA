@@ -325,18 +325,14 @@ function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph
         end
 
         Base.Threads.@threads for i in 1:(sample_size_schedule[j]-sample_size_schedule[j-1])
-            sampled_so_far+=1
+            #sampled_so_far+=1
             sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
             s = sample[1][1]
             z = sample[1][2]
-            _p_onbra_pfm_bernstein_accumulate!(tg,tal,s,z,local_temporal_betweenness[Base.Threads.threadid()],t_bc[Base.Threads.threadid()])
-            if (verbose_step > 0 && sampled_so_far % verbose_step == 0)
-                finish_partial = string(round(time() - start_time; digits=4))
-                println("P-ONBRA. Processed " * string(sampled_so_far) * " pairs in " * finish_partial * " seconds ")
-                flush(stdout)
-            end
+            _p_onbra_pfm_bernstein_accumulate!(tg,tal,s,z,local_temporal_betweenness[Base.Threads.threadid()],t_bc[Base.Threads.threadid()])        
         end
-       
+        sampled_so_far += sample_size_schedule[j]-sample_size_schedule[j-1]
+      
         _reduce_arrays!(local_temporal_betweenness,reduced_betweenness)
         xi = theoretical_error_bound(reduced_betweenness,reduce(+,t_bc),sample_size_schedule[j],delta/2^k)
 

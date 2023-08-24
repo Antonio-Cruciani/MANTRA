@@ -25,7 +25,7 @@ datasets = [
 "19_bordeaux.txt",
 "20_askubuntu.txt",
 "21_mathoverflow.txt",
-"22_superuser.txt",
+"22_superuser.txt"
 ]
 
 path = "graphs/"
