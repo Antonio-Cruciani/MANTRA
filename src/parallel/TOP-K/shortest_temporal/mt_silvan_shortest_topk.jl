@@ -25,7 +25,7 @@ function threaded_progressive_silvan_topk(tg::temporal_graph,eps::Float64,delta:
     # TBC
     local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
     mcrade::Array{Array{Float64}} = [zeros(tg.num_nodes*mc_trials) for i in 1:nthreads()]
-    local_sp_lengths::Array{Array{Float64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
+    local_sp_lengths::Array{Array{Int64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
     omega::Float64 = 1000
     t_diam::Float64 = 0.0
     max_num_samples::Float64 = 0.0
@@ -126,8 +126,8 @@ function threaded_progressive_silvan_topk(tg::temporal_graph,eps::Float64,delta:
     local_wv = [zeros(tg.num_nodes) for i in 1:nthreads()]
     local_temporal_betweenness = [zeros(tg.num_nodes) for i in 1:nthreads()]
     mcrade = [zeros((tg.num_nodes+1)*mc_trials) for i in 1:nthreads()]
-    local_sp_lengths = [zeros(tg.num_nodes) for i in 1:nthreads()]
-    omega = compute_vapnik_chervonenkis_bound(trunc(Int,diam),eps,delta,0.5)
+    local_sp_lengths = [zeros(Int64,tg.num_nodes) for i in 1:nthreads()]
+    omega = 10^15
 
     if max_num_samples > 0
         omega = max_num_samples
@@ -207,7 +207,7 @@ function threaded_progressive_silvan_topk(tg::temporal_graph,eps::Float64,delta:
             #println(" num_samples ",num_samples," last_stopping_samples ",last_stopping_samples)
             #println(" num_samples ",num_samples,"  ",next_stopping_samples)
             #(approx_top_k,union_sample,num_samples,eps,delta,iteration_index,partition_index,partitions_ids_map,number_of_non_empty_partitions,mc_trials,sup_bcest_partition,sup_empwvar_partition,norm)
-            println(sp_lengths)
+            #println(sp_lengths)
             has_to_stop,top_k_result  = check_stopping_condition_topk(betweenness,k,union_sample,num_samples,eps,delta,iteration_index,mc_trials,r_mcrade,norm,partition_index, number_of_non_empty_partitions, non_empty_partitions,partitions_ids_map,wv,diam,sp_lengths)
 
             if has_to_stop

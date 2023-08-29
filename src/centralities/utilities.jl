@@ -215,6 +215,20 @@ end
 # ================================
 #       |Fixed Sample Size|
 # ================================
+function apx_shortest_temporal_betweenness(tg::temporal_graph, sample_size::Int64,verbose_step::Int64, bigint::Bool,algo::String = "ob")
+    if algo == "ob"
+        return onbra_shortest_temporal_betweenness(tg, sample_size,verbose_step, bigint)
+    elseif algo == "trk"
+        return trk_shortest_temporal_betweenness(tg, sample_size,verbose_step, bigint)
+    elseif algo == "rtb"
+        return rtb_shortest_temporal_betweenness(tg, sample_size,verbose_step, bigint)
+    else
+        println("Error "*algo*" is not a valid algorithm chose among: \n - ob : ONBRA\n - trk : Temporal Riondato K.\n -rtb : Random Temporal Betweenness")
+        exit(1)
+    end
+
+end
+
 
 # Random Temporal Betweenness
 
@@ -338,7 +352,36 @@ function progressive_onbra_prefix_foremost_temporal_betweenness(tg::temporal_gra
     end
 end
 
+# TO CHANGE
 #-------| KADABRA's progressive sampling |-------
+
+function progressive_wub(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64 = 0,verbose_step::Int64 = 0,bigint::Bool = false,algo::String = "trk",topt::String = "sh",diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
+    @assert (topt == "sh") || (topt == "sfm") || (topt == "pfm") "Illegal temporal-path optimality, use: sh for shortest , sfm for shortest foremost , or pfm for prefix foremost"
+    if nthreads() > 1
+        println("Algorithm "*algo* " Temporal path optimality "*topt)
+        flush(stdout)
+        if k > 0
+            if topt == "sh"
+                return threaded_progressive_wub_topk(tg,eps,delta,k,verbose_step,bigint,algo,diam,start_factor,sample_step,hb)
+            elseif topt == "sfm"
+                return threaded_progressive_wub_shortest_foremost_topk(tg,eps,delta,k,verbose_step,bigint,algo,diam,start_factor,sample_step,hb)
+            else
+                return threaded_progressive_wub_prefix_foremost_topk(tg,eps,delta,k,verbose_step,algo,diam,start_factor,sample_step,hb)
+            end
+        else
+            if topt == "sh"
+                return threaded_progressive_wub(tg,eps,delta,verbose_step,bigint,algo,diam,start_factor,sample_step,hb)
+            elseif topt == "sfm"
+                return threaded_progressive_wub_shortest_foremost(tg,eps,delta,verbose_step,bigint,algo,diam,start_factor,sample_step,hb)
+            else
+                return threaded_progressive_wub_prefix_foremost(tg,eps,delta,verbose_step,algo,diam,start_factor,sample_step,hb)
+            end
+        end
+    else
+        println("Error: set the number of threads > 1 julia --threads <thread_number>")
+    end
+end
+
 
 function progressive_trk_shortest_temporal_betweenness(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64 = 0,verbose_step::Int64 = 0,bigint::Bool = false,algo::String = "trk",diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
     if nthreads()>1
@@ -382,6 +425,27 @@ end
 #-------| Bernstein |-------
 
 # ONBRA
+
+
+function progressive_bernstein(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64,verbose_step::Int64, bigint::Bool = false,algo::String = "trk",topt::String = "sh")
+    @assert (topt == "sh") || (topt == "sfm") || (topt == "pfm") "Illegal temporal-path optimality, use: sh for shortest , sfm for shortest foremost , or pfm for prefix foremost"
+    if nthreads() > 1
+        println("Algorithm "*algo* " Temporal path optimality "*topt)
+        flush(stdout)
+        
+        if topt == "sh"
+            return  threaded_progressive_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step, bigint, algo)
+        elseif topt == "sfm"
+            return threaded_progressive_bernstein_shortest_foremost(tg,initial_sample,epsilon,delta,geo,verbose_step, bigint, algo)
+        else
+            return threaded_progressive_onbra_prefix_foremost_bernstein(tg,initial_sample,epsilon,delta,geo,verbose_step, algo)
+        end
+        
+    else
+        println("Error: set the number of threads > 1 julia --threads <thread_number>")
+    end
+end
+
 
 function progressive_onbra_bernstein_shortest_temporal_betweenness(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64,verbose_step::Int64, bigint::Bool)
     if nthreads()>1
@@ -470,3 +534,23 @@ else
 end
 
 =#
+
+
+function progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,bigint::Bool,algo::String = "trk",topt::String = "sh",empirical_peeling_a::Float64 = 2.0,sample_step::Int64 = 10)
+    @assert (topt == "sh") || (topt == "sfm") || (topt == "pfm") "Illegal temporal-path optimality, use: sh for shortest , sfm for shortest foremost , or pfm for prefix foremost"
+    if nthreads() > 1
+        println("Algorithm "*algo* " Temporal path optimality "*topt)
+        flush(stdout)
+        
+        if topt == "sh"
+            return  threaded_progressive_cmcera(tg,eps,delta,verbose_step,bigint,algo,-1,empirical_peeling_a,sample_step,false)
+        elseif topt == "sfm"
+            return threaded_progressive_cmcera_shortest_foremost(tg,eps,delta,verbose_step,bigint,algo,-1,empirical_peeling_a,sample_step,false)
+        else
+            return threaded_progressive_cmcera_prefix_foremost(tg,eps,delta,verbose_step,algo,-1,empirical_peeling_a,sample_step)
+        end
+
+    else
+        println("Error: set the number of threads > 1 julia --threads <thread_number>")
+    end
+end
