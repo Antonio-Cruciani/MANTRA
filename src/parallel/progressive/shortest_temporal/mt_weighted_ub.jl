@@ -20,7 +20,7 @@ function threaded_progressive_wub(tg::temporal_graph,eps::Float64,delta::Float64
         diam+=1
     end
     if !hb
-        omega = trunc(Int,(0.5/eps^2) * ((floor(log2(diam-2)))+log(1/delta)))
+        omega = trunc(Int,(0.5/eps^2) * ((floor(log2(diam-2)))+1+log(1/delta)))
     else
         omega = trunc(Int,(1.0/(2*eps^2))*log2(2*tg.num_nodes/delta))
     end

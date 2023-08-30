@@ -170,7 +170,7 @@ end
 
 
 function compute_vapnik_chervonenkis_bound(vd::Int64,epsilon::Float64,delta::Float64,c::Float64 = 0.5)::Int64
-    return trunc(Int,(c/epsilon^2) * ((floor(log2(vd-2)))+log(1/delta)))
+    return trunc(Int,(c/epsilon^2) * ((floor(log2(vd-2)))+1+log(1/delta)))
 end
 
 function compute_hoeffding_bound(n::Int64,epsilon::Float64,delta::Float64)::Int64
