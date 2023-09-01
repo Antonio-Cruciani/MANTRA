@@ -35,7 +35,7 @@ function threaded_progressive_bernstein(tg::temporal_graph,initial_sample::Int64
     diam+=1
     
    
-    omega = trunc(Int,(0.5/epsilon^2) * ((floor(log2(diam-2)))+log(1/delta)))
+    omega = trunc(Int,(0.5/epsilon^2) * ((floor(log2(diam-2)))+1+log(1/delta)))
    
     println("Maximum sample size "*string(omega))
     println("Using ",nthreads()," Trheads")

@@ -4,6 +4,7 @@ function print_samplig_stats(epsilon,delta,trials,ss)
     println(" ε = "*string(epsilon)*" δ = "*string(delta)*" #trials = "*string(trials)*" starting sample size/ub sample size "*string(ss))
     flush(stdout)
 end
+#=
 datasets = [
     "16_brain_100206_90.txt",
 "17_brain_100206_70.txt",
@@ -25,6 +26,11 @@ datasets = [
 "20_askubuntu.txt",
 "22_superuser.txt"
 ]
+=#
+datasets = [
+    "18_venice.txt",
+    "19_bordeaux.txt"
+]
 
 path = "graphs/"
 sample_step = 32
@@ -33,7 +39,7 @@ delta = 0.1
 trials = 5
 starting_ss = 750
 geo = 1.2
-big_int = false
+big_int = true
 topt = "sh"
 algo = "ob"
 k = 0
