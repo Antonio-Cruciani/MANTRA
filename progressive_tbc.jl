@@ -27,7 +27,7 @@ for gn in datasets
     println("Running Bernstein ONBRA")
     flush(stdout)
     for i in 1:trials
-        result = progressive_onbra_bernstein_prefix_foremost_temporal_betweenness(tg,ss,epsilon,delta,geo,10000)
+        result = progressive_bernstein(tg,ss,epsilon,delta,geo,10000,false,"ob","pfm")
         save_results_progressive_sampling(nn,"b_onbra_pfm",result[1],result[2][end],result[4],ss,result[3])
     end
     #=
