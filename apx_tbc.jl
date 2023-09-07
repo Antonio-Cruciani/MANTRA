@@ -1,4 +1,5 @@
-@everywhere include("src/APXTBC.jl")
+#@everywhere include("src/APXTBC.jl")
+include("src/APXTBC.jl")
 path = "graphs/"
 
 
@@ -29,7 +30,7 @@ for gn in datasets
     tg = load_temporal_graph(path*gn," ")
     print_stats(tg, graph_name= gn)
     flush(stdout)
-    result = distributed_temporal_shortest_betweenness(tg,1000,false)
+    result = threaded_temporal_shortest_betweenness(tg,1000,false)
     nn = String(split(gn, ".t")[1])
 
     save_results(nn,"sh",result[1],result[2])
@@ -64,7 +65,7 @@ for gn in datasets
     tg = load_temporal_graph(path*gn," ")
     print_stats(tg, graph_name= gn)
     flush(stdout)
-    result = distributed_temporal_shortest_foremost_betweenness(tg,1000,false)
+    result =threaded_temporal_shortest_foremost_betweenness(tg,1000,false)
     nn = String(split(gn, ".t")[1])
 
     save_results(nn,"sfm",result[1],result[2])
@@ -80,7 +81,7 @@ for gn in roads
     tg = load_temporal_graph(path*gn," ")
     print_stats(tg, graph_name= gn)
     flush(stdout)
-    result = distributed_temporal_prefix_foremost_betweenness(tg,1000)
+    result = threaded_temporal_prefix_foremost_betweenness(tg,1000)
     nn = String(split(gn, ".t")[1])
 
     save_results(nn,"pfm",result[1],result[2])
@@ -95,7 +96,7 @@ for gn in roads
     tg = load_temporal_graph(path*gn," ")
     print_stats(tg, graph_name= gn)
     flush(stdout)
-    result = distributed_temporal_shortest_betweenness(tg,1000,true)
+    result = threaded_temporal_shortest_betweenness(tg,1000,true)
     nn = String(split(gn, ".t")[1])
 
     save_results(nn,"sh",result[1],result[2])
@@ -109,7 +110,7 @@ for gn in roads
     tg = load_temporal_graph(path*gn," ")
     print_stats(tg, graph_name= gn)
     flush(stdout)
-    result = distributed_temporal_shortest_foremost_betweenness(tg,1000,true)
+    result = threaded_temporal_shortest_foremost_betweenness(tg,1000,true)
     nn = String(split(gn, ".t")[1])
 
     save_results(nn,"sfm",result[1],result[2])
