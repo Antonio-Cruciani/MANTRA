@@ -2,7 +2,7 @@
 using DataStructures
 using StatsBase
 using Base.Threads
-
+using Distributed
 include("graphs/temporal_graph.jl")
 # Shortest
 include("centralities/shortest_temporal/temporal_shortest_betweenness.jl")

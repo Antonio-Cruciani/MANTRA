@@ -1,3 +1,24 @@
+function distributed_temporal_prefix_foremost_betweenness(tg::temporal_graph,verbose_step::Int64)::Tuple{Array{Float64},Float64}
+    start_time::Float64 = time()
+    tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
+    #local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
+
+    betweenness = @distributed (+) for s in 1:tg.num_nodes
+        temp_betweenness = zeros(tg.num_nodes)
+        _ssptp_accumulate!(tg,tal,s,temp_betweenness)
+        if (verbose_step > 0 && s % verbose_step == 0)
+            finish_partial = string(round(time() - start_time; digits=4))
+            time_to_finish = string(round((tg.num_nodes*(time() - start_time) / processed_so_far )-(time() - start_time) ; digits=4))
+            println("TPFM. Processed " * string(s) * "/" * string(tg.num_nodes) * " nodes in " * finish_partial * " seconds | Est. remaining time : "*time_to_finish)
+            flush(stdout)
+        end
+        temp_betweenness
+    end
+
+    return betweenness,time()-start_time
+end
+
+
 function threaded_temporal_prefix_foremost_betweenness(tg::temporal_graph,verbose_step::Int64)::Tuple{Array{Float64},Float64}
     start_time::Float64 = time()
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
