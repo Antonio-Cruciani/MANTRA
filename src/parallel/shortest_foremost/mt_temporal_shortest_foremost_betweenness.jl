@@ -50,7 +50,7 @@ function _ssftp_accumulate!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,Int6
     if (bigint)
         bfs_ds = BI_BFS_SFM_DS(tg.num_nodes, length(keys(tn_index)))
     else
-        bfs_ds = BI_BFS_SFM_DS(tg.num_nodes, length(keys(tn_index)))
+        bfs_ds = BFS_SFM_DS(tg.num_nodes, length(keys(tn_index)))
     end
     u::Int64 = -1
     w::Int64 = -1
