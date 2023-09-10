@@ -8,8 +8,8 @@ end
 # PFM
 
 datasets = [
-"20_askubuntu.txt",
-"22_superuser.txt"
+    "11_slashdot_reply.txt"
+
 
 ]
 
@@ -21,11 +21,11 @@ datasets = [
 =#
 path = "graphs/"
 sample_step = 96
-epsilon_list = [0.01]
+epsilon_list = [0.005]
 #epsilon = 0.05
 delta = 0.1
 trials = 10
-sample_list = [1000]
+sample_list = [1500]
 #starting_ss = 750
 geo = 1.2
 big_int = false
@@ -62,19 +62,6 @@ sample_list = [1500]
 
 
 datasets = [
-"16_brain_100206_90.txt",
-"17_brain_100206_70.txt",
-"01_hypertext.txt",
-"02_highschool.txt",
-"03_hospital_ward.txt",
-"04_college_msg.txt",
-"05_wiki_elections.txt",
-"06_highschool.txt",
-"07_digg_reply.txt",
-"08_infectious.txt",
-"09_primary_school.txt",
-"10_facebook_wall.txt",
-"11_slashdot_reply.txt",
 "12_highschool.txt",
 "13_topology.txt",
 "14_SMS.txt",
