@@ -8,8 +8,9 @@ end
 # PFM
 
 datasets = [
-    "11_slashdot_reply.txt"
-
+    "21_mathoverflow.txt",
+    "20_askubuntu.txt",
+    "22_superuser.txt"
 
 ]
 
@@ -56,7 +57,7 @@ for i in 1:lastindex(epsilon_list)
     end
 end
 
-
+#=
 epsilon_list = [0.005]
 sample_list = [1500]
 
@@ -136,6 +137,7 @@ for i in 1:lastindex(epsilon_list)
 
     end
 end
+=#
 #SH
 
 topt = "sh"
