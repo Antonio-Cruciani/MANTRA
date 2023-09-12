@@ -6,7 +6,7 @@ function print_samplig_stats(epsilon,delta,trials,ss)
 end
 
 # PFM
-
+#=
 datasets = [
     "21_mathoverflow.txt",
     "20_askubuntu.txt",
@@ -14,7 +14,7 @@ datasets = [
 
 ]
 
-#=
+
 datasets = [
     "18_venice.txt",
     "19_bordeaux.txt"
@@ -33,6 +33,7 @@ big_int = false
 topt = "pfm"
 algo = "ob"
 k = 0
+#=
 for i in 1:lastindex(epsilon_list)
     epsilon = epsilon_list[i]
     starting_ss = sample_list[i]
@@ -57,7 +58,7 @@ for i in 1:lastindex(epsilon_list)
     end
 end
 
-#=
+
 epsilon_list = [0.005]
 sample_list = [1500]
 
@@ -139,7 +140,9 @@ for i in 1:lastindex(epsilon_list)
 end
 =#
 #SH
+epsilon_list = [0.05,0.01,0.005]
 
+sample_list = [750,1000.1500]
 topt = "sh"
 datasets = [
     "16_brain_100206_90.txt",

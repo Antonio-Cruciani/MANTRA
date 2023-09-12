@@ -166,6 +166,119 @@ end
 
 
 
+function _trk_sh_accumulate_bidirectinak!(tg::temporal_graph,al::Array{Array{Int64}},tal::Array{Array{Tuple{Int64,Int64}}},tn_index::Dict{Tuple{Int64,Int64},Int64},bigint::Bool,s::Int64,z::Int64,temporal_betweenness_centrality::Vector{Float64})
+    indexes::Int64 = length(keys(tn_index))
+    if (bigint)
+        bfs_ds = BI_BFS_SRTP_DS(tg.num_nodes, indexes)
+    else
+        bfs_ds = BFS_SRTP_DS(tg.num_nodes, indexes)
+    end
+    t_z::Int64 = tg.temporal_edges[lastindex(tg.temporal_edges)][3]+1
+    index_z::Int64 = tn_index[(z,t_z)]
+    u::Int64 = -1
+    w::Int64 = -1
+    t::Int64 = -1
+    t_w::Int64 = -1
+    tni::Int64 = -1
+    tni_w::Int64 = -1
+    temporal_node::Tuple{Int64,Int64,Int64} = (-1, -1,-1)
+    totalWeight,randomEdge,curWeight,curEdge = initialize_weights(bigint)
+    cur_w::Tuple{Int64,Int64} = (-1,-1)
+    for u in 1:tg.num_nodes
+        bfs_ds.dist[u] = -1
+        bfs_ds.sigma[u] = 0
+    end
+    for tn in 1:lastindex(bfs_ds.dist_t)
+        bfs_ds.sigma_t[tn] = 0
+        bfs_ds.dist_t[tn] = -1
+        bfs_ds.predecessors[tn] = Set{Tuple{Int64,Int64,Int64}}()
+    end
+    tni = tn_index[(s, 0)]
+    bfs_ds.sigma[s] = 1
+    bfs_ds.sigma_t[tni] = 1
+    bfs_ds.dist[s] = 0
+    bfs_ds.dist_t[tni] = 0
+    enqueue!(bfs_ds.forward_queue, (s, 0,tni))
+    d_z_min = Inf
+    while length(bfs_ds.forward_queue) != 0
+        temporal_node = dequeue!(bfs_ds.forward_queue)
+        u = temporal_node[1]
+        t = temporal_node[2]
+        tni = temporal_node[3]
+        if bfs_ds.dist_t[tni] < d_z_min
+            for neig in next_temporal_neighbors(tal, u, t)
+                w = neig[1]
+                t_w = neig[2]
+                tni_w = tn_index[(w, t_w)]
+                if bfs_ds.dist_t[tni_w] == -1
+                    bfs_ds.dist_t[tni_w] = bfs_ds.dist_t[tni] + 1
+                    if bfs_ds.dist[w] == -1
+                        bfs_ds.dist[w] = bfs_ds.dist_t[tni] + 1
+                        if w == z
+                            d_z_min = bfs_ds.dist[w]
+                        end
+                    end
+                    enqueue!(bfs_ds.forward_queue, (w,t_w,tni_w))
+                end
+                if bfs_ds.dist_t[tni_w] == bfs_ds.dist_t[tni] + 1
+                    if (!bigint && bfs_ds.sigma_t[tni] > typemax(UInt128) - bfs_ds.sigma_t[tni_w])
+                        println("Overflow occurred with sample (", s, ",", z, ")")
+                        return [], 0.0
+                    end
+                    bfs_ds.sigma_t[tni_w] += bfs_ds.sigma_t[tni]
+                    push!(bfs_ds.predecessors[tni_w], (temporal_node[1],temporal_node[2],tni))
+                    if bfs_ds.dist_t[tni_w] == bfs_ds.dist[w]
+                        if (!bigint && bfs_ds.sigma_t[tni] > typemax(UInt128) - bfs_ds.sigma[w])
+                            println("Overflow occurred with sample (", s, ",", z, ")")
+                            return [], 0.0
+                        end
+                        bfs_ds.sigma[w] += bfs_ds.sigma_t[tni]
+                    end
+                    if w == z
+                        push!(bfs_ds.predecessors[index_z], (neig[1],neig[2],tni_w))
+                    end
+                end
+            end
+        end
+    end
+    if bfs_ds.dist[z] > 0
+       
+        totalWeight = 0
+        randomEdge = 0
+        curWeight = 0
+        totalWeight = bfs_ds.sigma[z]
+        cur_w = (z,t_z)
+        tni = index_z
+        while cur_w[1] != s
+            if cur_w == (z,t_z)
+                totalWeight = bfs_ds.sigma[z]
+            else
+                totalWeight = bfs_ds.sigma_t[tni]
+            end
+            randomEdge = rand(0:totalWeight-1)
+            curEdge = 0
+            for pred in bfs_ds.predecessors[tni]
+                pred_i = pred[3]
+                curEdge += bfs_ds.sigma_t[pred_i]
+                cur_w = (pred[1],pred[2])
+                tni = pred_i
+                if curEdge > randomEdge
+                    if pred[1]!= s && pred[1] != z
+                        temporal_betweenness_centrality[pred[1]] += 1
+                    end
+                    break
+                end
+            end
+            
+        end
+       
+        
+    end
+    return nothing
+
+end
+
+
 
 function threaded_progressive_trk(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,bigint::Bool,algo::String = "trk",diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
     @assert (algo == "trk") || (algo == "ob") || (algo == "rtb") "Illegal algorithm, use: trk , ob , or rtb"
