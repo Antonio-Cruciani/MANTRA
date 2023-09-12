@@ -140,9 +140,79 @@ for i in 1:lastindex(epsilon_list)
 end
 =#
 #SH
-epsilon_list = [0.05,0.01,0.005]
+epsilon_list = [0.05]
 
-sample_list = [750,1000,1500]
+sample_list = [750]
+topt = "sh"
+datasets = [
+   
+    "13_topology.txt",
+   
+]
+
+
+for i in 1:lastindex(epsilon_list)
+    epsilon = epsilon_list[i]
+    starting_ss = sample_list[i]
+    for gn in datasets
+        nn = String(split(gn, ".t")[1])
+        tg = load_temporal_graph(path*gn," ")
+        print_samplig_stats(epsilon,delta,trials,starting_ss)
+        print_stats(tg, graph_name= gn)
+       
+        println("Running WUB")
+        flush(stdout)
+        for i in 1:trials
+            result = progressive_wub(tg,epsilon,delta,k,10000,big_int,algo,topt,-1,100,sample_step)
+            save_results_progressive_sampling(nn,"wub_"*algo*"_"*topt,result[1],result[4],result[6],starting_ss,epsilon)
+        end
+        println("Runnin CMCERA")
+        flush(stdout)
+        for i in 1:trials
+            result = progressive_cmcera(tg,epsilon,delta,0,big_int,algo,topt,2.0,sample_step)
+            save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt,result[1],result[2],result[4],starting_ss,epsilon)
+        end
+
+    end
+end
+
+
+
+
+for i in 1:lastindex(epsilon_list)
+    epsilon = epsilon_list[i]
+    starting_ss = sample_list[i]
+    for gn in datasets
+        nn = String(split(gn, ".t")[1])
+        tg = load_temporal_graph(path*gn," ")
+        print_samplig_stats(epsilon,delta,trials,starting_ss)
+        print_stats(tg, graph_name= gn)
+        println("Running Bernstein")
+        flush(stdout)
+        for i in 1:trials
+            result = progressive_bernstein(tg,starting_ss,epsilon,delta,geo,1000, big_int,algo,topt)
+            save_results_progressive_sampling(nn,"b_"*algo*"_"*topt,result[1],result[2][end],result[4],starting_ss,result[3])
+        end
+        println("Running WUB")
+        flush(stdout)
+        for i in 1:trials
+            result = progressive_wub(tg,epsilon,delta,k,10000,big_int,algo,topt,-1,100,sample_step)
+            save_results_progressive_sampling(nn,"wub_"*algo*"_"*topt,result[1],result[4],result[6],starting_ss,epsilon)
+        end
+        println("Runnin CMCERA")
+        flush(stdout)
+        for i in 1:trials
+            result = progressive_cmcera(tg,epsilon,delta,0,big_int,algo,topt,2.0,sample_step)
+            save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt,result[1],result[2],result[4],starting_ss,epsilon)
+        end
+
+    end
+end
+
+
+epsilon_list = [0.01,0.005]
+
+sample_list = [1000,1500]
 topt = "sh"
 datasets = [
     "16_brain_100206_90.txt",
@@ -159,7 +229,6 @@ datasets = [
     "10_facebook_wall.txt",
     "11_slashdot_reply.txt",
     "12_highschool.txt",
-    "13_topology.txt",
     "14_SMS.txt",
     "21_mathoverflow.txt",
     "20_askubuntu.txt",
