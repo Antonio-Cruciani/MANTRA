@@ -142,7 +142,7 @@ end
 #SH
 epsilon_list = [0.05,0.01,0.005]
 
-sample_list = [750,1000.1500]
+sample_list = [750,1000,1500]
 topt = "sh"
 datasets = [
     "16_brain_100206_90.txt",
