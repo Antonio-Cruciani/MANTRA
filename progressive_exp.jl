@@ -144,6 +144,7 @@ epsilon_list = [0.05]
 
 sample_list = [750]
 topt = "sh"
+#=
 datasets = [
    
     "13_topology.txt",
@@ -175,7 +176,13 @@ for i in 1:lastindex(epsilon_list)
 
     end
 end
-
+=#
+datasets = [
+    "14_SMS.txt",
+    "21_mathoverflow.txt",
+    "20_askubuntu.txt",
+    "22_superuser.txt"
+]
 
 
 
