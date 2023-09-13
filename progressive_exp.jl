@@ -173,7 +173,7 @@ for i in 1:lastindex(epsilon_list)
     end
 end
 =#
-dataset = [
+datasets = [
     "22_superuser.txt"
 ]
 trials = 6
