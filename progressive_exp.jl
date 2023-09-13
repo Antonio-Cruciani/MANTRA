@@ -136,9 +136,9 @@ for i in 1:lastindex(epsilon_list)
 end
 =#
 #SH
-epsilon_list = [0.05]
+epsilon_list = [0.01]
 
-sample_list = [750]
+sample_list = [1000]
 topt = "sh"
 #=
 datasets = [
@@ -174,9 +174,9 @@ for i in 1:lastindex(epsilon_list)
 end
 =#
 datasets = [
-    "22_superuser.txt"
+    "02_highschool.txt",
 ]
-trials = 6
+trials = 5
 
 for i in 1:lastindex(epsilon_list)
     epsilon = epsilon_list[i]
@@ -220,10 +220,6 @@ epsilon_list = [0.01,0.005]
 sample_list = [1000,1500]
 topt = "sh"
 datasets = [
-    "16_brain_100206_90.txt",
-    "17_brain_100206_70.txt",
-    "01_hypertext.txt",
-    "02_highschool.txt",
     "03_hospital_ward.txt",
     "04_college_msg.txt",
     "05_wiki_elections.txt",
@@ -416,4 +412,28 @@ for i in 1:lastindex(epsilon_list)
         end
 
     end
+end
+
+
+println("Computing Groun Truth values for the shortest-foremost temporal betweenness")
+
+datasets = [
+    "20_askubuntu.txt",
+    "22_superuser.txt"
+]
+
+for gn in datasets
+
+    tg = load_temporal_graph(path*gn," ")
+    print_stats(tg, graph_name= gn)
+    flush(stdout)
+    result = threaded_temporal_shortest_betweenness(tg,1000,false)
+    nn = String(split(gn, ".t")[1])
+
+    save_results(nn,"sh",result[1],result[2])
+    
+    result =threaded_temporal_shortest_foremost_betweenness(tg,1000,false)
+    nn = String(split(gn, ".t")[1])
+
+    save_results(nn,"sfm",result[1],result[2])
 end
