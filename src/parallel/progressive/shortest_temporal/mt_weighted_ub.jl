@@ -56,7 +56,7 @@ function distributed_progressive_wub(tg::temporal_graph,eps::Float64,delta::Floa
     delta_ub_guess::Array{Float64} = zeros(tg.num_nodes)
     _compute_δ_guess!(betweenness,eps,delta,balancing_factor,eps_lb,eps_ub,delta_lb_min_guess,delta_ub_min_guess,delta_lb_guess,delta_ub_guess) 
     println("Bootstrap completed ")
-
+    overall_betweenness::Array{Float64} = zeros(tg.num_nodes)
     #local_temporal_betweenness = [zeros(tg.num_nodes) for i in 1:nthreads()]
     betweenness = zeros(tg.num_nodes)
     betweenness_tmp = zeros(tg.num_nodes)
@@ -82,8 +82,8 @@ function distributed_progressive_wub(tg::temporal_graph,eps::Float64,delta::Floa
             betweenness_tmp =  betweenness_tmp.*[1/(tg.num_nodes-1)]
         end
         betweenness = betweenness+ betweenness_tmp
-
-        _compute_finished!(stop,omega,betweenness,sampled_so_far,eps,eps_lb,eps_ub,delta_lb_guess,delta_ub_guess,delta_lb_min_guess[1],delta_ub_min_guess[1])   
+        overall_betweenness = copy(betweenness)
+        _compute_finished!(stop,omega,overall_betweenness,sampled_so_far,eps,eps_lb,eps_ub,delta_lb_guess,delta_ub_guess,delta_lb_min_guess[1],delta_ub_min_guess[1])   
         if (verbose_step > 0 && sampled_so_far % verbose_step == 0)
             finish_partial = string(round(time() - start_time; digits=4))
             println("P-WUB-"*algo*"-SH. Processed " * string(sampled_so_far) * " pairs in " * finish_partial * " seconds ")

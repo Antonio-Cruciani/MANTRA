@@ -7,12 +7,14 @@ function distributed_temporal_shortest_foremost_betweenness(tg::temporal_graph,v
     betweenness = @distributed (+) for s in 1:tg.num_nodes
         temp_betweenness = zeros(tg.num_nodes)
         _ssftp_accumulate!(tg,tal,tn_index,s,bigint,temp_betweenness)
+        #=
         if (verbose_step > 0 && s % verbose_step == 0)
             finish_partial = string(round(time() - start_time; digits=4))
             time_to_finish = string(round((tg.num_nodes*(time() - start_time) / processed_so_far )-(time() - start_time) ; digits=4))
             println("TSFM. Processed " * string(s) * "/" * string(tg.num_nodes) * " nodes in " * finish_partial * " seconds | Est. remaining time : "*time_to_finish)
             flush(stdout)
         end
+        =#
         temp_betweenness
     end
 
