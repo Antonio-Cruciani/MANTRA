@@ -3,6 +3,7 @@ using DataStructures
 using StatsBase
 using Base.Threads
 using Distributed
+
 include("graphs/temporal_graph.jl")
 # Shortest
 include("centralities/shortest_temporal/temporal_shortest_betweenness.jl")
@@ -76,7 +77,7 @@ include("parallel/TOP-K/prefix_foremost/mt_onbra_prefix_foremost_topk.jl")
 
 
 
-# SILVAN
+# CM-ERA
 
 include("parallel/shortest_temporal/mt_silvan.jl")
 include("parallel/shortest_foremost/mt_silvan_shortest_foremost.jl")
@@ -85,3 +86,7 @@ include("parallel/prefix_foremost/mt_silvan_prefix_foremost.jl")
 include("parallel/TOP-K/shortest_temporal/mt_silvan_shortest_topk.jl")
 
 include("parallel/TOP-K/prefix_foremost/mt_silvan_prefix_foremost_topk.jl")
+
+
+# DET-ERA
+include("parallel/progressive/prefix_foremost/mt_det_era_prefix_foremost.jl")

@@ -62,9 +62,11 @@ function threaded_progressive_bernstein(tg::temporal_graph,initial_sample::Int64
        
         sampled_so_far+= sample_size_schedule[j]-sample_size_schedule[j-1]
         _reduce_arrays!(local_temporal_betweenness,reduced_betweenness)
-
-        xi = theoretical_error_bound(reduced_betweenness,reduce(+,t_bc),sample_size_schedule[j],delta/2^k)
-
+        if algo == "rtb"
+            xi = theoretical_error_bound(reduced_betweenness,reduce(+,t_bc).*[1/(tg.num_nodes-1)],sample_size_schedule[j],delta/2^k)
+        else
+            xi = theoretical_error_bound(reduced_betweenness,reduce(+,t_bc),sample_size_schedule[j],delta/2^k)
+        end
 
      
         finish_partial = string(round(time() - start_time; digits=4))
