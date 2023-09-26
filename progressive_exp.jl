@@ -87,12 +87,12 @@ end
 
 #SH
 topt = "sh"
-trials = 9
+trials = 5
 
-epsilon_list = [0.1]
-sample_list = [100]
+epsilon_list = [0.07]
+sample_list = [350]
 datasets = [
-    "22_superuser.txt"
+    "21_mathoverflow.txt",
 ]
 
 for i in 1:lastindex(epsilon_list)
@@ -116,23 +116,7 @@ end
 
 
 datasets = [
-    "16_brain_100206_90.txt",
-    "17_brain_100206_70.txt",
-    "01_hypertext.txt",
-    "02_highschool.txt",
-    "03_hospital_ward.txt",
-    "04_college_msg.txt",
-    "05_wiki_elections.txt",
-    "06_highschool.txt",
-    "07_digg_reply.txt",
-    "08_infectious.txt",
-    "09_primary_school.txt",
-    "10_facebook_wall.txt",
-    "11_slashdot_reply.txt",
-    "12_highschool.txt",
-    "13_topology.txt",
-    "14_SMS.txt",
-    "21_mathoverflow.txt",
+    
     "20_askubuntu.txt",
     "22_superuser.txt"
 ]

@@ -161,9 +161,44 @@ function _trk_sh_accumulate!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,Int
     return nothing
 
 end
+# Bidirectional work in progress
+#=
+function _trk_sh_bidirectional_accumulate!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,Int64}}},tn_index::Dict{Tuple{Int64,Int64},Int64},bigint::Bool,s::Int64,z::Int64,temporal_betweenness_centrality::Vector{Float64},al::Array{Array{Int64}},il::Array{Array{Int64}})
+    indexes::Int64 = length(keys(tn_index))
+    if (bigint)
+        bfs_ds = BI_BFS_SRTP_DS(tg.num_nodes, indexes)
+    else
+        bfs_ds = BFS_SRTP_DS(tg.num_nodes, indexes)
+    end
+    t_z::Int64 = tg.temporal_edges[lastindex(tg.temporal_edges)][3]+1
+    index_z::Int64 = tn_index[(z,t_z)]
+    u::Int64 = -1
+    w::Int64 = -1
+    t::Int64 = -1
+    t_w::Int64 = -1
+    tni::Int64 = -1
+    tni_w::Int64 = -1
+    temporal_node::Tuple{Int64,Int64,Int64} = (-1, -1,-1)
+    totalWeight,randomEdge,curWeight,curEdge = initialize_weights(bigint)
+    cur_w::Tuple{Int64,Int64} = (-1,-1)
+    for u in 1:tg.num_nodes
+        bfs_ds.dist[u] = -1
+        bfs_ds.sigma[u] = 0
+    end
+    for tn in 1:lastindex(bfs_ds.dist_t)
+        bfs_ds.sigma_t[tn] = 0
+        bfs_ds.dist_t[tn] = -1
+        bfs_ds.predecessors[tn] = Set{Tuple{Int64,Int64,Int64}}()
+    end
+    tni = tn_index[(s, 0)]
+    bfs_ds.sigma[s] = 1
+    bfs_ds.sigma_t[tni] = 1
+    bfs_ds.dist[s] = 0
+    bfs_ds.dist_t[tni] = 0
 
 
-
+end
+=#
 function threaded_progressive_trk(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,bigint::Bool,algo::String = "trk",diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
     @assert (algo == "trk") || (algo == "ob") || (algo == "rtb") "Illegal algorithm, use: trk , ob , or rtb"
     start_time = time()
