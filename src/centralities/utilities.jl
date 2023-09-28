@@ -554,3 +554,24 @@ function progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Float64,verbo
         println("Error: set the number of threads > 1 julia --threads <thread_number>")
     end
 end
+
+
+function temporal_distance_based_metrics(tg::temporal_graph,topt::String = "sh",sample_size::Int64 = 0,verbose_step::Int64 = 0,threshold::Float64 = 0.9)
+    @assert (topt == "sh") || (topt == "sfm") || (topt == "pfm") "Illegal temporal-path optimality, use: sh for shortest , sfm for shortest foremost , or pfm for prefix foremost"
+    if nthreads() > 1
+        println("Computing temporal distance-based metrics | Temporal path optimality "*topt)
+        flush(stdout)
+        
+        if topt == "sh"
+            return  threaded_temporal_shortest_diameter(tg,sample_size,verbose_step,threshold)
+        elseif topt == "sfm"
+            return threaded_temporal_shortest_foremost_diameter(tg,sample_size,verbose_step,threshold)
+        else
+            return threaded_temporal_prefix_foremost_diameter(tg,sample_size,verbose_step,threshold)
+        end
+
+    else
+        println("Error: set the number of threads > 1 julia --threads <thread_number>")
+    end
+
+end
