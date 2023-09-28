@@ -19,6 +19,8 @@ for gn in datasets
     flush(stdout)
     result = threaded_temporal_prefix_foremost_betweenness(tg,1000)
     nn = String(split(gn, ".t")[1])
+    save_results(nn,"pfm",result[1],result[2])
+
 
 end
 datasets = [
