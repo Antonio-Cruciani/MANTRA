@@ -137,6 +137,10 @@ function _ssftp_accumulate!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,Int6
             temporal_betweenness_centrality[v] += (bfs_ds.sigma_t[tni_v] / bfs_ds.sigma_t[tni_w]) * bfs_ds.delta_fm[tni_w]
         end
     end
-    bfs_ds = nothing
+    if (bigint)
+        bfs_ds = BI_BFS_SFM_DS(0,0)
+    else
+        bfs_ds = BFS_SFM_DS(0,0)
+    end
     return nothing
 end

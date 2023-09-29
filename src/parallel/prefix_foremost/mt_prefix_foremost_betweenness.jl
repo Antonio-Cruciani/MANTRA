@@ -91,7 +91,7 @@ function _ssptp_accumulate!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,Int6
             temporal_betweenness_centrality[v] += summand
         end
     end
-    bfs_ds = nothing
+    bfs_ds = BFS_prefix_foremost_betweenness(0)
     return nothing
 
 end

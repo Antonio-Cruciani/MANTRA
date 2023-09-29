@@ -319,7 +319,7 @@ function _p_trk_pfm_bernstein_accumulate!(tg::temporal_graph,tal::Array{Array{Tu
 
         end    
     end
-    bfs_ds = nothing
+    bfs_ds = undef
 
     return nothing
     
