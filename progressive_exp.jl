@@ -14,7 +14,7 @@ sample_list = [100,350,750,1000]
 path = "graphs/"
 sample_step = 32
 delta = 0.1
-trials = 10
+trials = 5
 geo = 1.2
 big_int = false
 #topt = "pfm"
@@ -87,7 +87,7 @@ end
 
 #SH
 topt = "sh"
-trials = 10
+trials = 5
 
 datasets = [
     "16_brain_100206_90.txt",
