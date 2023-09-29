@@ -445,6 +445,8 @@ function _p_onbra_pfm_bernstein_accumulate!(tg::temporal_graph,tal::Array{Array{
             end
         end               
     end
+    bfs_ds = nothing
+
     return nothing
 
 

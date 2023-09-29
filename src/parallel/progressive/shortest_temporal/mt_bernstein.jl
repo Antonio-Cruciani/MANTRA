@@ -265,6 +265,8 @@ function _p_onbra_sh_bernstein_accumulate!(tg::temporal_graph,tal::Array{Array{T
             end
         end
     end
+    bfs_ds = nothing
+
     return nothing
 
 end
@@ -382,6 +384,8 @@ function _p_trk_sh_accumulate_bernstein!(tg::temporal_graph,tal::Array{Array{Tup
        
         
     end
+    bfs_ds = nothing
+
     return nothing
 
 end
@@ -477,6 +481,7 @@ function _sstp_accumulate_bernstein!(tg::temporal_graph,tal::Array{Array{Tuple{I
             B_2[v] += (bfs_ds.sigma_t[tni_v] / bfs_ds.sigma_t[tni_w]) * bfs_ds.delta_sh[tni_w] 
         end
     end
+    bfs_ds = nothing
 
     return nothing
 end

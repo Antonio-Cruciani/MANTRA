@@ -520,6 +520,8 @@ function _sh_accumulate_trk!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,Int
         end
         
     end
+    bfs_ds = nothing
+
     return nothing
 
 end
@@ -661,6 +663,8 @@ function _sh_accumulate_onbra!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,I
             end
         end
     end
+    bfs_ds = nothing
+
     return nothing
 
 end
@@ -770,6 +774,7 @@ function _sh_accumulate_rtb!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,Int
             end
         end
     end
+    bfs_ds = nothing
 
     return nothing
 end

@@ -185,5 +185,7 @@ function _ssftp_accumulate_bernstein!(tg::temporal_graph,tal::Array{Array{Tuple{
             B_2[v] += (bfs_ds.sigma_t[tni_v] / bfs_ds.sigma_t[tni_w]) * bfs_ds.delta_fm[tni_w]
         end
     end
+    bfs_ds = nothing
+
     return nothing
 end

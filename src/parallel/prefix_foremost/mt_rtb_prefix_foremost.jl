@@ -139,6 +139,8 @@ function _ssptp_accumulate_bernstein!(tg::temporal_graph,tal::Array{Array{Tuple{
             B_2[v] += summand
         end
     end
+    bfs_ds = nothing
+
     return nothing
 
 end

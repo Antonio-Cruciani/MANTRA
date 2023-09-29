@@ -159,6 +159,8 @@ function _sstp_accumulate_prova!(tg::temporal_graph,tal::Array{Array{Tuple{Int64
             temporal_betweenness_centrality[v] += (bfs_ds.sigma_t[tni_v] / bfs_ds.sigma_t[tni_w]) * bfs_ds.delta_sh[tni_w]
         end
     end
+    bfs_ds = nothing
+
     return nothing
 end
 
@@ -245,6 +247,7 @@ function _sstp_accumulate!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,Int64
             temporal_betweenness_centrality[v] += (bfs_ds.sigma_t[tni_v] / bfs_ds.sigma_t[tni_w]) * bfs_ds.delta_sh[tni_w]
         end
     end
+    bfs_ds = nothing
 
     return nothing
 end

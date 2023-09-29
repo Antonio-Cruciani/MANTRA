@@ -99,6 +99,8 @@ function _trk_pfm_accumulate!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,In
 
         end    
     end
+    bfs_ds = nothing
+
     return nothing
 end
 
@@ -346,5 +348,7 @@ function _p_trk_pfm_bernstein_accumulate!(tg::temporal_graph,tal::Array{Array{Tu
 
         end    
     end
+    bfs_ds = nothing
+
     return nothing
 end

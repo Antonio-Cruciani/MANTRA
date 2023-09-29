@@ -184,6 +184,8 @@ function _p_onbra_pfm_det_era_accumulate!(tg::temporal_graph,tal::Array{Array{Tu
             end
         end               
     end
+    bfs_ds = nothing
+
     return nothing
 
 

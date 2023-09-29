@@ -158,6 +158,8 @@ function _trk_sh_accumulate!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,Int
        
         
     end
+    bfs_ds = nothing
+
     return nothing
 
 end
@@ -541,6 +543,8 @@ function _p_trk_sh_accumulate_bernstein!(tg::temporal_graph,tal::Array{Array{Tup
        
         
     end
+    bfs_ds = nothing
+
     return nothing
 
 end

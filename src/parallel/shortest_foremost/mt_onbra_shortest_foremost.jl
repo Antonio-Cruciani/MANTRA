@@ -149,6 +149,8 @@ function _onbra_sfm_accumulate!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,
             end
         end
     end
+    bfs_ds = nothing
+
     return nothing
 
 end
@@ -362,6 +364,8 @@ function _p_onbra_sfm_accumulate!(tg::temporal_graph,tal::Array{Array{Tuple{Int6
             end
         end
     end
+    bfs_ds = nothing
+
     return nothing
 end
 
@@ -583,5 +587,7 @@ function _p_onbra_sfm_bernstein_accumulate!(tg::temporal_graph,tal::Array{Array{
             end
         end
     end
+    bfs_ds = nothing
+
     return nothing
 end
