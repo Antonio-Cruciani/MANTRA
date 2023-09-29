@@ -174,7 +174,7 @@ function _p_onbra_pfm_bernstein_accumulate!(tg::temporal_graph,tal::Array{Array{
             end
         end               
     end
-    bfs_ds = nothing
+    bfs_ds = BFS_ONBRA_PFM_DS(0)
 
     return nothing
 
@@ -236,7 +236,7 @@ function _ssptp_accumulate_bernstein!(tg::temporal_graph,tal::Array{Array{Tuple{
             B_2[v] += summand
         end
     end
-    bfs_ds = nothing
+    bfs_ds = BFS_ONBRA_PFM_DS(0)
     return nothing
 
 end
@@ -319,7 +319,7 @@ function _p_trk_pfm_bernstein_accumulate!(tg::temporal_graph,tal::Array{Array{Tu
 
         end    
     end
-    bfs_ds = undef
+    bfs_ds = BFS_ONBRA_PFM_DS(0)
 
     return nothing
     
