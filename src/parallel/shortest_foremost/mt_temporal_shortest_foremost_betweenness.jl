@@ -26,12 +26,27 @@ function threaded_temporal_shortest_foremost_betweenness(tg::temporal_graph,verb
     start_time::Float64 = time()
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
     tn_index::Dict{Tuple{Int64,Int64},Int64}  = temporal_node_index(tg)
-    local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
     processed_so_far::Int64 = 0
     println("Using ",nthreads()," Trheads")
-
+    vs_active = [i for i in 1:tg.num_nodes]
+    d, r = divrem(tg.num_nodes, nthreads())
+    ntasks = d == 0 ? r : nthreads()
+    local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    task_size = cld(tg.num_nodes, ntasks)
+    @sync for (t, task_range) in enumerate(Iterators.partition(1:tg.num_nodes, task_size))
+        Threads.@spawn for s in @view(vs_active[task_range])
+            _ssftp_accumulate!(tg,tal,tn_index,s,bigint,local_temporal_betweenness[t])
+            processed_so_far = processed_so_far + 1
+            if (verbose_step > 0 && processed_so_far % verbose_step == 0)
+                finish_partial::String = string(round(time() - start_time; digits=4))
+                time_to_finish::String = string(round((tg.num_nodes*(time() - start_time) / processed_so_far )-(time() - start_time) ; digits=4))
+                println("TSFM. Processed " * string(processed_so_far) * "/" * string(tg.num_nodes) * " nodes in " * finish_partial * " seconds | Est. remaining time : "*time_to_finish)
+                flush(stdout)
+            end
+        end
+    end
  
-
+    #=
     Base.Threads.@threads for s in 1:tg.num_nodes
         _ssftp_accumulate!(tg,tal,tn_index,s,bigint,local_temporal_betweenness[Base.Threads.threadid()])
         processed_so_far = processed_so_far + 1
@@ -42,6 +57,7 @@ function threaded_temporal_shortest_foremost_betweenness(tg::temporal_graph,verb
             flush(stdout)
         end
     end
+    =#
     betweenness = reduce(+, local_temporal_betweenness)
     return betweenness,time()-start_time
 end
