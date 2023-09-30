@@ -68,23 +68,18 @@ inputList = [
     "22_superuser.txt"
 
 ]
-
+'''
 inputList = [
     "20_askubuntu.txt",
     "22_superuser.txt"
 
 ]
-'''
-inputList = [
-    "21_mathoverflow.txt"
 
 
-]
 
 epsilon = [0.1,0.07,0.05,0.01]
 sample_list = [100,350,750,1000]
-#topt = ["pfm","sh","sfm"]
-topt = ["sh","sfm"]
+topt = ["pfm","sh","sfm"]
 sampler = ["bernstein","wub","cmcera"]
 
 #estimations_sampling(inputList,epsilon,sample_list,topt,sampler)
