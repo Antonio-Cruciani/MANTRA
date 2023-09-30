@@ -6,11 +6,13 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
         norm = 1/(tg.num_nodes-1)
     end
     start_time = time()
+    ntasks = nthreads()
+
     mc_trials::Int64 = 25
     # Temoral Graph structures
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
     # Wimpy variance
-    local_wv::Array{Array{Float64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
+    local_wv::Array{Array{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
     wv::Array{Float64} = Array{Float64}([])
     emp_w_node::Float64 = 0.0
     min_inv_w_node::Float64 = 0.0
@@ -22,9 +24,9 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
     part_idx::Int64 = 1
     # TBC
     tmp_has_to_stop::Array{Bool} = Array{Bool}([false])
-    local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
-    mcrade::Array{Array{Float64}} = [zeros(tg.num_nodes*mc_trials) for i in 1:nthreads()]
-    local_sp_lengths::Array{Array{Int64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
+    local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    mcrade::Array{Array{Float64}} = [zeros(tg.num_nodes*mc_trials) for _ in 1:ntasks]
+    local_sp_lengths::Array{Array{Int64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
     omega::Float64 = 1000
     t_diam::Float64 = 0.0
     max_num_samples::Float64 = 0.0
@@ -34,6 +36,7 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
         _,_,_,_,_,diam_v,t_diam = threaded_temporal_prefix_foremost_diameter(tg,64,verbose_step,0.9)
         diam = trunc(Int,diam_v)
         println("Task completed in "*string(round(t_diam;digits = 4))*". Δ = "*string(diam))
+        flush(stdout)
         
     end
     
@@ -43,6 +46,24 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
     z::Int64 = 0
 
     println("Bootstrap phase "*string(tau)*" iterations")
+    flush(stdout)
+    task_size = cld(tau, ntasks)
+    vs_active = [i for i in 1:tau]
+    @sync for (t, task_range) in enumerate(Iterators.partition(1:tau, task_size))
+        Threads.@spawn for _ in @view(vs_active[task_range])
+            sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+            s = sample[1][1]
+            z = sample[1][2]
+            if algo == "trk"
+                _pfm_accumulate_trk!(tg,tal,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+            elseif algo == "ob"
+                _pfm_accumulate_onbra!(tg,tal,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+            else
+                _pfm_accumulate_rtb!(tg,tal,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+            end
+        end
+    end
+    #=
     Base.Threads.@threads for i in 1:tau
         sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
         s = sample[1][1]
@@ -55,6 +76,7 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
             _pfm_accumulate_rtb!(tg,tal,s,z,mc_trials,true,local_temporal_betweenness[Base.Threads.threadid()],local_wv[Base.Threads.threadid()],mcrade[Base.Threads.threadid()],local_sp_lengths[Base.Threads.threadid()])
         end
     end
+    =#
     betweenness = reduce(+, local_temporal_betweenness)
     betweenness = betweenness .* [1/tau]
     wv = reduce(+,local_wv)
@@ -106,10 +128,10 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
     flush(stdout)
     iteration_index::Int64 =1 
     
-    local_wv = [zeros(tg.num_nodes) for i in 1:nthreads()]
-    local_temporal_betweenness = [zeros(tg.num_nodes) for i in 1:nthreads()]
-    mcrade = [zeros((tg.num_nodes+1)*mc_trials) for i in 1:nthreads()]
-    local_sp_lengths = [zeros(tg.num_nodes) for i in 1:nthreads()]
+    local_wv = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    local_temporal_betweenness = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    mcrade = [zeros((tg.num_nodes+1)*mc_trials) for _ in 1:ntasks]
+    local_sp_lengths = [zeros(tg.num_nodes) for _ in 1:ntasks]
     omega = 10^15
     if max_num_samples > 0
         omega = max_num_samples
@@ -138,10 +160,30 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
     end
     flush(stdout)
     next_stopping_samples::Float64 = first_stopping_samples
-    
+    prev_stopping_samples::Float64 = 0.0
     has_to_stop::Bool = false
     num_samples = 0
+    sample_i::Int64 = 0
     while !has_to_stop
+        sample_i = trunc(Int,next_stopping_samples-prev_stopping_samples)
+        task_size = cld(sample_i, ntasks)
+        vs_active = [i for i in 1:sample_i]
+        @sync for (t, task_range) in enumerate(Iterators.partition(1:sample_i, task_size))
+            Threads.@spawn for _ in @view(vs_active[task_range])
+                sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+                s = sample[1][1]
+                z = sample[1][2]
+                if algo == "trk"
+                    _pfm_accumulate_trk!(tg,tal,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                elseif algo == "ob"
+                    _pfm_accumulate_onbra!(tg,tal,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                else
+                    _pfm_accumulate_rtb!(tg,tal,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                end
+
+            end
+        end
+        #=
         Base.Threads.@threads for i in 1:sample_step
             sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
             s = sample[1][1]
@@ -154,7 +196,8 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
                 _pfm_accumulate_rtb!(tg,tal,s,z,mc_trials,false,local_temporal_betweenness[Base.Threads.threadid()],local_wv[Base.Threads.threadid()],mcrade[Base.Threads.threadid()],local_sp_lengths[Base.Threads.threadid()])
             end
         end
-        num_samples += sample_step
+        =#
+        num_samples += sample_i
        
         if num_samples >= omega
             println("Num samples/ω : "*string(num_samples)*"/"*string(omega))
@@ -172,6 +215,7 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
             sp_lengths = reduce(+,local_sp_lengths) 
             r_mcrade = reduce(+,mcrade)
             println("Checking stopping condition")
+            flush(stdout)
             #println(" num_samples ",num_samples," last_stopping_samples ",last_stopping_samples)
             #println(" num_samples ",num_samples,"  ",next_stopping_samples)
             tmp_omega = Vector{Float64}([omega])
@@ -182,11 +226,13 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
             has_to_stop = tmp_has_to_stop[1]
             if has_to_stop
                 println("Progressive sampler converged!")
+                flush(stdout)
             else
+                prev_stopping_samples = next_stopping_samples
                 next_stopping_samples,iteration_index = get_next_stopping_sample(next_stopping_samples,iteration_index )
                 println("Increasing sample size to "*string(next_stopping_samples))
+                flush(stdout)      
             end
-            flush(stdout)      
         end
 
 
@@ -293,7 +339,7 @@ function _pfm_accumulate_trk!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,In
 
         end    
     end
-    bfs_ds = nothing
+    bfs_ds = BFS_PFM_SRTP_DS(0)
 
     return nothing
 
@@ -404,7 +450,7 @@ function _pfm_accumulate_onbra!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,
             end
         end
     end
-    bfs_ds = nothing
+    bfs_ds = BFS_ONBRA_PFM_DS(0)
 
     return nothing
 
@@ -485,7 +531,7 @@ function _pfm_accumulate_rtb!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,In
             end
         end
     end
-    bfs_ds = nothing
+    bfs_ds = BFS_prefix_foremost_betweenness(0)
 
     return nothing
 end

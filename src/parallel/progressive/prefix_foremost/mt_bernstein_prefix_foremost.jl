@@ -6,10 +6,14 @@ function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph
     print_algorithm_status("ONBRA","Bernstein",true)
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
 
-    local_temporal_betweenness::Vector{Vector{Vector{Float64}}} = [[] for i in 1:nthreads()]
-    t_bc::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
+
     reduced_betweenness::Vector{Float64} = Vector{Float64}([])
     betweenness::Vector{Float64} = zeros(tg.num_nodes)
+
+    ntasks = nthreads()
+    local_temporal_betweenness::Vector{Vector{Vector{Float64}}} = [[] for _ in 1:ntasks]
+    t_bc::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+
 
     s::Int64 = 0
     z::Int64 = 0
@@ -43,7 +47,26 @@ function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph
             new_sample = trunc(Int,geo^k*sample_size_schedule[2])
             push!(sample_size_schedule,new_sample)
         end
+        task_size = cld(sample_size_schedule[j]-sample_size_schedule[j-1], ntasks)
+        vs_active = [i for i in 1:sample_size_schedule[j]-sample_size_schedule[j-1]]
 
+        @sync for (t, task_range) in enumerate(Iterators.partition(1:sample_size_schedule[j]-sample_size_schedule[j-1], task_size))
+            Threads.@spawn for _ in @view(vs_active[task_range])
+                sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+                s = sample[1][1]
+                z = sample[1][2]
+                if algo == "ob"
+                    _p_onbra_pfm_bernstein_accumulate!(tg,tal,s,z,local_temporal_betweenness[t],t_bc[t])
+                elseif algo == "trk"
+                    _p_trk_pfm_bernstein_accumulate!(tg,tal,s,z,local_temporal_betweenness[t],t_bc[t])
+                elseif algo == "rtb"
+                    _ssptp_accumulate_bernstein!(tg,tal,s,local_temporal_betweenness[t],t_bc[t])
+                end        
+
+            end
+        end
+    
+        #=
         Base.Threads.@threads for i in 1:(sample_size_schedule[j]-sample_size_schedule[j-1])
             #sampled_so_far+=1
             sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
@@ -57,6 +80,7 @@ function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph
                 _ssptp_accumulate_bernstein!(tg,tal,s,local_temporal_betweenness[Base.Threads.threadid()],t_bc[Base.Threads.threadid()])
             end        
         end
+        =#
         sampled_so_far += sample_size_schedule[j]-sample_size_schedule[j-1]
       
         _reduce_arrays!(local_temporal_betweenness,reduced_betweenness)

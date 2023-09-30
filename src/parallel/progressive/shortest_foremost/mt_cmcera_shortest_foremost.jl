@@ -6,6 +6,7 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
         norm = 1/(tg.num_nodes-1)
     end
     start_time = time()
+    ntasks = nthreads()
     mc_trials::Int64 = 25
     # Temoral Graph structures
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
@@ -15,7 +16,7 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
     else
         tn_index = temporal_node_index(tg)
     end    # Wimpy variance
-    local_wv::Array{Array{Float64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
+    local_wv::Array{Array{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
     wv::Array{Float64} = Array{Float64}([])
     emp_w_node::Float64 = 0.0
     min_inv_w_node::Float64 = 0.0
@@ -27,9 +28,9 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
     part_idx::Int64 = 1
     # TBC
     tmp_has_to_stop::Array{Bool} = Array{Bool}([false])
-    local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
-    mcrade::Array{Array{Float64}} = [zeros(tg.num_nodes*mc_trials) for i in 1:nthreads()]
-    local_sp_lengths::Array{Array{Int64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
+    local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    mcrade::Array{Array{Float64}} = [zeros(tg.num_nodes*mc_trials) for _ in 1:ntasks]
+    local_sp_lengths::Array{Array{Int64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
     omega::Float64 = 1000
     t_diam::Float64 = 0.0
     max_num_samples::Float64 = 0.0
@@ -39,6 +40,7 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
         diam,avg_dist,_,_,_,t_diam = threaded_temporal_shortest_foremost_diameter(tg,64,verbose_step,0.9)
         println("Task completed in "*string(round(t_diam;digits = 4))*". Δ = "*string(diam)*" ρ = "*string(avg_dist))
         diam+=1
+        flush(stdout)
     end
     
     tau::Int64 = trunc(Int64,max(1. / eps * (log(1. / delta)) , 100.))
@@ -47,6 +49,25 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
     z::Int64 = 0
 
     println("Bootstrap phase "*string(tau)*" iterations")
+    flush(stdout)
+    task_size = cld(tau, ntasks)
+    vs_active = [i for i in 1:tau]
+    @sync for (t, task_range) in enumerate(Iterators.partition(1:tau, task_size))
+        Threads.@spawn for _ in @view(vs_active[task_range])
+            sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+            s = sample[1][1]
+            z = sample[1][2]
+            if algo == "trk"
+                _sh_accumulate_trk!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+            elseif algo == "ob"
+                _sh_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+            elseif algo == "rtb"
+                _sh_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+            end
+        end
+    end
+
+    #=
     Base.Threads.@threads for i in 1:tau
         sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
         s = sample[1][1]
@@ -59,11 +80,13 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
             _sh_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[Base.Threads.threadid()],local_wv[Base.Threads.threadid()],mcrade[Base.Threads.threadid()],local_sp_lengths[Base.Threads.threadid()])
         end
     end
+    =#
     betweenness = reduce(+, local_temporal_betweenness)
     betweenness = betweenness .* [1/tau]
     wv = reduce(+,local_wv)
     sp_lengths = reduce(+,local_sp_lengths) 
     println("Empirical peeling phase:")
+    flush(stdout)
     max_tbc::Float64 = 0.0
     max_wv::Float64 = 0.0
 
@@ -91,7 +114,7 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
     for key in keys(non_empty_partitions)
         println(" Part w. index "*string(key)*" has "*string(non_empty_partitions[key])*" elements, map to "*string(partitions_ids_map[key]))
     end
-   
+    flush(stdout)
     # Upper bound on the average distance
     avg_diam_ub::Float64 = upper_bound_average_diameter(delta/8,diam,sp_lengths,tau,true,norm)
     # Upper bound on the top-1 temporal betweenness
@@ -105,12 +128,13 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
     println("Maximum number of samples "*string(max_num_samples)*" VC Bound "*string(omega))
     println("Sup tbc est "*string(max_tbc))
     println("Sup emp wimpy variance "*string(max_wv/tau))
+    flush(stdout)
     iteration_index::Int64 =1 
     
-    local_wv = [zeros(tg.num_nodes) for i in 1:nthreads()]
-    local_temporal_betweenness = [zeros(tg.num_nodes) for i in 1:nthreads()]
-    mcrade = [zeros((tg.num_nodes+1)*mc_trials) for i in 1:nthreads()]
-    local_sp_lengths = [zeros(tg.num_nodes) for i in 1:nthreads()]
+    local_wv = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    local_temporal_betweenness = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    mcrade = [zeros((tg.num_nodes+1)*mc_trials) for _ in 1:ntasks]
+    local_sp_lengths = [zeros(tg.num_nodes) for _ in 1:ntasks]
     omega = 10^15
     if max_num_samples > 0
         omega = max_num_samples
@@ -137,11 +161,32 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
         first_stopping_samples = last_stopping_samples/4
         println("First stopping samples dropped to "*string(first_stopping_samples))
     end
+    flush(stdout)
     next_stopping_samples::Float64 = first_stopping_samples
-    
+    prev_stopping_samples::Float64 = 0.0
     has_to_stop::Bool = false
     num_samples = 0
+    sample_i::Int64 = 0
     while !has_to_stop
+        sample_i = trunc(Int,next_stopping_samples-prev_stopping_samples)
+        task_size = cld(sample_i, ntasks)
+        vs_active = [i for i in 1:sample_i]
+        @sync for (t, task_range) in enumerate(Iterators.partition(1:sample_i, task_size))
+            Threads.@spawn for _ in @view(vs_active[task_range])
+                sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+                s = sample[1][1]
+                z = sample[1][2]
+                if algo == "trk"
+                    _sh_accumulate_trk!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                elseif algo == "ob"
+                    _sh_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                elseif algo == "rtb"
+                    _sh_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                end
+            end
+        end
+
+        #=
         Base.Threads.@threads for i in 1:sample_step
             sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
             s = sample[1][1]
@@ -154,11 +199,13 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
                 _sh_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[Base.Threads.threadid()],local_wv[Base.Threads.threadid()],mcrade[Base.Threads.threadid()],local_sp_lengths[Base.Threads.threadid()])
             end
         end
-        num_samples += sample_step
+        =#
+        num_samples += sample_i
        
         if num_samples >= omega
             println("Num samples/ω : "*string(num_samples)*"/"*string(omega))
             has_to_stop = true
+            flush(stdout)
         end
         #println("Checking stopping condition")
         #println(" num_samples ",num_samples," last_stopping_samples ",last_stopping_samples)
@@ -171,6 +218,7 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
             sp_lengths = reduce(+,local_sp_lengths) 
             r_mcrade = reduce(+,mcrade)
             println("Checking stopping condition")
+            flush(stdout)
             #println(" num_samples ",num_samples," last_stopping_samples ",last_stopping_samples)
             #println(" num_samples ",num_samples,"  ",next_stopping_samples)
             tmp_omega = Vector{Float64}([omega])
@@ -181,9 +229,12 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
             has_to_stop = tmp_has_to_stop[1]
             if has_to_stop
                 println("Progressive sampler converged!")
+                flush(stdout)
             else
+                prev_stopping_samples = next_stopping_samples
                 next_stopping_samples,iteration_index = get_next_stopping_sample(next_stopping_samples,iteration_index )
                 println("Increasing sample size to "*string(next_stopping_samples))
+                flush(stdout)
             end
                     
         end
@@ -192,7 +243,7 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
     end
 
     println("(SFM)-Temporal Betweenness estimated in "*string(round(time() - start_time; digits=4)))
-
+    flush(stdout)
     betweenness = reduce(+, local_temporal_betweenness)
     return betweenness.*[1/num_samples],num_samples,max_num_samples,time()-start_time
 
@@ -332,8 +383,11 @@ function _sfm_accumulate_trk!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,In
         end
         
     end
-    bfs_ds = nothing
-
+    if (bigint)
+        bfs_ds = BI_BFS_SFM_SRTP_DS(0,0)
+    else
+        bfs_ds = BFS_SFM_SRTP_DS(0,0)
+    end
     return nothing
 
 end
@@ -484,8 +538,11 @@ function _sfm_accumulate_onbra!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,
             end
         end
     end
-    bfs_ds = nothing
-
+    if (bigint)
+        bfs_ds = BI_BFS_SFM_ONBRA_DS(0,0)
+    else
+        bfs_ds = BFS_ONBRA_SFM_DS(0,0)
+    end
     return nothing
 
 end
@@ -602,7 +659,10 @@ function _sfm_accumulate_rtb!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,In
             end
         end
     end
-    bfs_ds = nothing
-
+    if (bigint)
+        bfs_ds = BI_BFS_SFM_DS(0,0)
+    else
+        bfs_ds = BI_BFS_SFM_DS(0,0)
+    end
     return nothing
 end

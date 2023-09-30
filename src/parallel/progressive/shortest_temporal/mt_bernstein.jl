@@ -11,8 +11,10 @@ function threaded_progressive_bernstein(tg::temporal_graph,initial_sample::Int64
     else
         tn_index = temporal_node_index(tg)
     end
-    local_temporal_betweenness::Vector{Vector{Vector{Float64}}} = [[] for i in 1:nthreads()]
-    t_bc::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
+    ntasks = nthreads()
+
+    local_temporal_betweenness::Vector{Vector{Vector{Float64}}} = [[] for _ in 1:ntasks]
+    t_bc::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
     reduced_betweenness::Vector{Float64} = Vector{Float64}([])
     betweenness::Vector{Float64} = zeros(tg.num_nodes)
 
@@ -46,7 +48,24 @@ function threaded_progressive_bernstein(tg::temporal_graph,initial_sample::Int64
             new_sample = trunc(Int,geo^k*sample_size_schedule[2])
             push!(sample_size_schedule,new_sample)
         end
+        task_size = cld(sample_size_schedule[j]-sample_size_schedule[j-1], ntasks)
+        vs_active = [i for i in 1:sample_size_schedule[j]-sample_size_schedule[j-1]]
+        @sync for (t, task_range) in enumerate(Iterators.partition(1:sample_size_schedule[j]-sample_size_schedule[j-1], task_size))
+            Threads.@spawn for _ in @view(vs_active[task_range])
+                sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+                s = sample[1][1]
+                z = sample[1][2]
+                if algo == "ob"
+                    _p_onbra_sh_bernstein_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[t],t_bc[t])
+                elseif algo == "trk"
+                    _p_trk_sh_accumulate_bernstein!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[t],t_bc[t])
+                elseif algo == "rtb"
+                    _sstp_accumulate_bernstein!(tg,tal,tn_index,s,bigint,local_temporal_betweenness[t],t_bc[t])
+                end
 
+            end
+        end
+        #=
         Base.Threads.@threads for i in 1:(sample_size_schedule[j]-sample_size_schedule[j-1])
             sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
             s = sample[1][1]
@@ -59,6 +78,7 @@ function threaded_progressive_bernstein(tg::temporal_graph,initial_sample::Int64
                 _sstp_accumulate_bernstein!(tg,tal,tn_index,s,bigint,local_temporal_betweenness[Base.Threads.threadid()],t_bc[Base.Threads.threadid()])
             end
         end
+        =#
        
         sampled_so_far+= sample_size_schedule[j]-sample_size_schedule[j-1]
         _reduce_arrays!(local_temporal_betweenness,reduced_betweenness)
@@ -265,8 +285,11 @@ function _p_onbra_sh_bernstein_accumulate!(tg::temporal_graph,tal::Array{Array{T
             end
         end
     end
-    bfs_ds = nothing
-
+    if (bigint)
+        bfs_ds = BI_BFS_ONBRA_DS(0,0)
+    else
+        bfs_ds = BFS_ONBRA_DS(0,0)
+    end
     return nothing
 
 end
@@ -384,8 +407,11 @@ function _p_trk_sh_accumulate_bernstein!(tg::temporal_graph,tal::Array{Array{Tup
        
         
     end
-    bfs_ds = nothing
-
+    if (bigint)
+        bfs_ds = BI_BFS_SRTP_DS(0,0)
+    else
+        bfs_ds = BFS_SRTP_DS(0,0)
+    end
     return nothing
 
 end
@@ -481,7 +507,10 @@ function _sstp_accumulate_bernstein!(tg::temporal_graph,tal::Array{Array{Tuple{I
             B_2[v] += (bfs_ds.sigma_t[tni_v] / bfs_ds.sigma_t[tni_w]) * bfs_ds.delta_sh[tni_w] 
         end
     end
-    bfs_ds = nothing
-
+    if (bigint)
+        bfs_ds = BI_BFS_DS(0,0)
+    else
+        bfs_ds = BFS_DS(0,0)
+    end
     return nothing
 end

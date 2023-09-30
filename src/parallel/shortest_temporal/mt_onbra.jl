@@ -12,6 +12,7 @@ function threaded_onbra(tg::temporal_graph,sample_size::Int64,verbose_step::Int6
     vs_active = [i for i in 1:sample_size]
     d, r = divrem(sample_size, nthreads())
     ntasks = d == 0 ? r : nthreads()
+    println("ntask ",ntasks, " d ",d, " r ",r)
     local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
     task_size = cld(sample_size, ntasks)
 
