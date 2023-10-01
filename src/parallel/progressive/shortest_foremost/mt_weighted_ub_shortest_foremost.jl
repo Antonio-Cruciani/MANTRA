@@ -1,4 +1,4 @@
-function threaded_progressive_wub_shortest_foremost(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,bigint::Bool,algo::String="trk",diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
+function threaded_progressive_wub_shortest_foremost(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,bigint::Bool,algo::String="trk",vc_upper_bund::Bool = true,diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
     @assert (algo == "trk") || (algo == "ob") || (algo == "rtb") "Illegal algorithm, use: trk , ob , or rtb"
     start_time = time()
     ntasks = nthreads()
@@ -11,9 +11,13 @@ function threaded_progressive_wub_shortest_foremost(tg::temporal_graph,eps::Floa
     end
 
     balancing_factor::Float64 = 0.001
-
-    local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
     omega::Int64 = 1000
+    mc_trials::Int64 = 25
+    local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    local_wv::Array{Array{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    wv::Array{Float64} = Array{Float64}([])
+    local_sp_lengths::Array{Array{Int64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    mcrade::Array{Array{Float64}} = [zeros(tg.num_nodes*mc_trials) for _ in 1:ntasks]
     t_diam::Float64 = 0.0
     if (diam == -1) && (!hb)
         println("Approximating diameter ")
@@ -35,17 +39,42 @@ function threaded_progressive_wub_shortest_foremost(tg::temporal_graph,eps::Floa
     flush(stdout)
     task_size = cld(tau, ntasks)
     vs_active = [i for i in 1:tau]
-    @sync for (t, task_range) in enumerate(Iterators.partition(1:tau, task_size))
-        Threads.@spawn for _ in @view(vs_active[task_range])
-            sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
-            s = sample[1][1]
-            z = sample[1][2]
-            if algo == "trk"
-                _trk_sfm_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[t])
-            elseif algo == "ob"
-                _onbra_sfm_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[t])
-            elseif algo == "rtb"
-                _ssftp_accumulate!(tg,tal,tn_index,s,bigint,local_temporal_betweenness[t])
+    if vc_upper_bund == true
+        println("Bootstrap phase "*string(tau)*" iterations")
+        println("Bootstrap using VC dimension")
+        flush(stdout)
+        @sync for (t, task_range) in enumerate(Iterators.partition(1:tau, task_size))
+            Threads.@spawn for _ in @view(vs_active[task_range])
+                sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+                s = sample[1][1]
+                z = sample[1][2]
+                if algo == "trk"
+                    _trk_sfm_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[t])
+                elseif algo == "ob"
+                    _onbra_sfm_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[t])
+                elseif algo == "rtb"
+                    _ssftp_accumulate!(tg,tal,tn_index,s,bigint,local_temporal_betweenness[t])
+                end
+            end
+        end
+    else
+        tau = trunc(Int64,max(1. / eps * (log(1. / delta)) , 100.))
+        tau = trunc(Int64,max(tau,2*(diam -1) * (log(1. / delta))) )
+        println("Bootstrap phase "*string(tau)*" iterations")
+        println("Bootstrap using Variance")
+        flush(stdout)
+        @sync for (t, task_range) in enumerate(Iterators.partition(1:tau, task_size))
+            Threads.@spawn for _ in @view(vs_active[task_range])
+                sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+                s = sample[1][1]
+                z = sample[1][2]
+                if algo == "trk"
+                    _sh_accumulate_trk!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                elseif algo == "ob"
+                    _sh_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                elseif algo == "rtb"
+                    _sh_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                end
             end
         end
     end
@@ -67,6 +96,31 @@ function threaded_progressive_wub_shortest_foremost(tg::temporal_graph,eps::Floa
     betweenness = betweenness .* [1/tau]
     if algo == "rtb"
         betweenness =  betweenness.*[1/(tg.num_nodes-1)]
+    end
+    if !vc_upper_bund 
+        norm::Float64 = 1.0
+        if algo == "rtb"
+            norm = 1/(tg.num_nodes-1)
+        end
+        wv = reduce(+,local_wv)
+        sp_lengths = reduce(+,local_sp_lengths) 
+        max_tbc = maximum(betweenness)
+        max_wv = maximum(wv)/tau
+        avg_diam_ub::Float64 = upper_bound_average_diameter(delta/8,trunc(Int,diam),sp_lengths,tau,true,norm)
+        top1bc_upper_bound::Float64 = upper_bound_top_1_tbc(max_tbc,delta/8,tau)
+        wimpy_var_upper_bound::Float64 = upper_bound_top_1_tbc(max_wv,delta/8,tau)
+        println("AVERAGE DIAM UB "*string(avg_diam_ub))
+        max_num_samples = upper_bound_samples(top1bc_upper_bound,wimpy_var_upper_bound,avg_diam_ub,eps,delta/2 ,false)
+        println("Maximum number of samples "*string(max_num_samples)*" VC Bound "*string(omega))
+        println("Sup tbc est "*string(max_tbc))
+        println("Sup emp wimpy variance "*string(max_wv/tau))
+        omega = trunc(Int,max_num_samples)
+        flush(stdout)
+        local_wv = [[]]
+        wv = []
+        local_sp_lengths = [[]]
+        mcrade = [[]]
+      
     end
     eps_lb::Array{Float64} = zeros(tg.num_nodes)
     eps_ub::Array{Float64} = zeros(tg.num_nodes)
@@ -139,7 +193,7 @@ end
 
 
 
-function threaded_progressive_wub_shortest_foremost_topk(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64,verbose_step::Int64,bigint::Bool,algo::String = "trk",diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
+function threaded_progressive_wub_shortest_foremost_topk(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64,verbose_step::Int64,bigint::Bool,algo::String = "trk",vc_upper_bund::Bool = true,diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
     @assert (algo == "trk") || (algo == "ob") || (algo == "rtb") "Illegal algorithm, use: trk , ob , or rtb"
     start_time = time()
     ntasks = nthreads()
@@ -150,8 +204,12 @@ function threaded_progressive_wub_shortest_foremost_topk(tg::temporal_graph,eps:
         tn_index = temporal_node_index(tg)
     end
     balancing_factor::Float64 = 0.001
-
+    mc_trials::Int64 = 25
     local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    local_wv::Array{Array{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    wv::Array{Float64} = Array{Float64}([])
+    local_sp_lengths::Array{Array{Int64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    mcrade::Array{Array{Float64}} = [zeros(tg.num_nodes*mc_trials) for _ in 1:ntasks]
     approx_top_k::Array{Tuple{Int64,Float64}} =  Array{Tuple{Int64,Float64}}([])
     omega::Int64 = 1000
     t_diam::Float64 = 0.0
@@ -173,21 +231,47 @@ function threaded_progressive_wub_shortest_foremost_topk(tg::temporal_graph,eps:
     tau::Int64 = trunc(Int64,omega/start_factor)
     s::Int64 = 0
     z::Int64 = 0
-    println("Bootstrap phase "*string(tau)*" iterations")
-    flush(stdout)
     task_size = cld(tau, ntasks)
     vs_active = [i for i in 1:tau]
-    @sync for (t, task_range) in enumerate(Iterators.partition(1:tau, task_size))
-        Threads.@spawn for _ in @view(vs_active[task_range])
-            sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
-            s = sample[1][1]
-            z = sample[1][2]
-            if algo == "trk"
-                _trk_sfm_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[t])
-            elseif algo == "ob"
-                _onbra_sfm_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[t])
-            elseif algo == "rtb"
-                _ssftp_accumulate!(tg,tal,tn_index,s,bigint,local_temporal_betweenness[t])
+    if vc_upper_bund == true
+        println("Bootstrap phase "*string(tau)*" iterations")
+        println("Bootstrap using VC dimension")
+        flush(stdout)
+
+        @sync for (t, task_range) in enumerate(Iterators.partition(1:tau, task_size))
+            Threads.@spawn for _ in @view(vs_active[task_range])
+                sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+                s = sample[1][1]
+                z = sample[1][2]
+                if algo == "trk"
+                    _trk_sfm_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[t])
+                elseif algo == "ob"
+                    _onbra_sfm_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[t])
+                elseif algo == "rtb"
+                    _ssftp_accumulate!(tg,tal,tn_index,s,bigint,local_temporal_betweenness[t])
+                end
+            end
+        end
+    else
+        tau = trunc(Int64,max(1. / eps * (log(1. / delta)) , 100.))
+        tau = trunc(Int64,max(tau,2*(diam -1) * (log(1. / delta))) )
+        task_size = cld(tau, ntasks)
+        vs_active = [i for i in 1:tau]
+        println("Bootstrap phase "*string(tau)*" iterations")
+        println("Bootstrap using Variance")
+        flush(stdout)
+        @sync for (t, task_range) in enumerate(Iterators.partition(1:tau, task_size))
+            Threads.@spawn for _ in @view(vs_active[task_range])
+                sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+                s = sample[1][1]
+                z = sample[1][2]
+                if algo == "trk"
+                    _sfm_accumulate_trk!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                elseif algo == "ob"
+                    _sfm_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                elseif algo == "rtb"
+                    _sfm_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                end
             end
         end
     end
@@ -210,6 +294,32 @@ function threaded_progressive_wub_shortest_foremost_topk(tg::temporal_graph,eps:
         betweenness =  betweenness.*[1/(tg.num_nodes-1)]
     end
     betweenness = betweenness .* [1/tau]
+    if !vc_upper_bund 
+        norm::Float64 = 1.0
+        if algo == "rtb"
+            norm = 1/(tg.num_nodes-1)
+        end
+        wv = reduce(+,local_wv)
+        sp_lengths = reduce(+,local_sp_lengths) 
+        max_tbc = maximum(betweenness)
+        max_wv = maximum(wv)/tau
+        avg_diam_ub::Float64 = upper_bound_average_diameter(delta/8,trunc(Int,diam),sp_lengths,tau,true,norm)
+        top1bc_upper_bound::Float64 = upper_bound_top_1_tbc(max_tbc,delta/8,tau)
+        wimpy_var_upper_bound::Float64 = upper_bound_top_1_tbc(max_wv,delta/8,tau)
+        println("AVERAGE DIAM UB "*string(avg_diam_ub))
+        max_num_samples = upper_bound_samples(top1bc_upper_bound,wimpy_var_upper_bound,avg_diam_ub,eps,delta/2 ,false)
+        println("Maximum number of samples "*string(max_num_samples)*" VC Bound "*string(omega))
+        println("Sup tbc est "*string(max_tbc))
+        println("Sup emp wimpy variance "*string(max_wv/tau))
+        omega = trunc(Int,max_num_samples)
+        flush(stdout)
+        local_wv = [[]]
+        wv = []
+        local_sp_lengths = [[]]
+        mcrade = [[]]
+
+      
+    end
     for u in 1:tg.num_nodes
         if algo == "rtb"
             push!(approx_top_k,(u,betweenness[u]/(tg.num_nodes-1)))
