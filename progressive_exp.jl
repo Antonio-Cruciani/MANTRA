@@ -21,7 +21,7 @@ big_int = false
 algo = "ob"
 k = 0
 topt = "pfm"
-
+#=
 datasets = [
     "16_brain_100206_90.txt",
     "17_brain_100206_70.txt",
@@ -82,13 +82,12 @@ for i in 1:lastindex(epsilon_list)
 end
 
 
-
+=#
 
 
 #SH
-#=
+
 topt = "sh"
-trials = 5
 
 datasets = [
     "16_brain_100206_90.txt",
@@ -151,7 +150,7 @@ end
 
 
 
-
+#=
 
 # SFM
 
