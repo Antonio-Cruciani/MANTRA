@@ -58,11 +58,11 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
             s = sample[1][1]
             z = sample[1][2]
             if algo == "trk"
-                _sh_accumulate_trk!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                _sfm_accumulate_trk!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
             elseif algo == "ob"
-                _sh_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                _sfm_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
             elseif algo == "rtb"
-                _sh_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                _sfm_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
             end
         end
     end
@@ -177,11 +177,11 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
                 s = sample[1][1]
                 z = sample[1][2]
                 if algo == "trk"
-                    _sh_accumulate_trk!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                    _sfm_accumulate_trk!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
                 elseif algo == "ob"
-                    _sh_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                    _sfm_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
                 elseif algo == "rtb"
-                    _sh_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                    _sfm_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
                 end
             end
         end
