@@ -152,7 +152,6 @@ end
 
 
 
-#=
 # SFM
 
 topt = "sfm"
@@ -212,6 +211,7 @@ for i in 1:lastindex(epsilon_list)
 end
 
 
+#=
 datasets = [
     "18_venice.txt",
     "19_bordeaux.txt"
@@ -251,7 +251,6 @@ for i in 1:lastindex(epsilon_list)
     end
 end
 
-=#
 epsilon_list = [0.1,0.07,0.05,0.01]
 sample_list = [100,350,750,1000]
 datasets = [
@@ -295,3 +294,4 @@ for i in 1:lastindex(epsilon_list)
 end
 
 
+=#
