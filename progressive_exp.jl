@@ -67,7 +67,7 @@ for i in 1:lastindex(epsilon_list)
         println("Running WUB")
         flush(stdout)
         for i in 1:trials
-            result = progressive_wub(tg,epsilon,delta,k,10000,big_int,algo,topt,-1,100,sample_step)
+            result = progressive_wub(tg,epsilon,delta,k,10000,big_int,algo,topt,true,-1,100,sample_step)
             save_results_progressive_sampling(nn,"wub_"*algo*"_"*topt,result[1],result[4],result[6],starting_ss,epsilon)
             clean_gc()
         end
@@ -134,7 +134,7 @@ for i in 1:lastindex(epsilon_list)
         println("Running WUB")
         flush(stdout)
         for i in 1:trials
-            result = progressive_wub(tg,epsilon,delta,k,10000,big_int,algo,topt,-1,100,sample_step)
+            result = progressive_wub(tg,epsilon,delta,k,10000,big_int,algo,topt,true,-1,100,sample_step)
             save_results_progressive_sampling(nn,"wub_"*algo*"_"*topt,result[1],result[4],result[6],starting_ss,epsilon)
             clean_gc()
         end
@@ -196,7 +196,7 @@ for i in 1:lastindex(epsilon_list)
         println("Running WUB")
         flush(stdout)
         for i in 1:trials
-            result = progressive_wub(tg,epsilon,delta,k,10000,big_int,algo,topt,-1,100,sample_step)
+            result = progressive_wub(tg,epsilon,delta,k,10000,big_int,algo,topt,true,-1,100,sample_step)
             save_results_progressive_sampling(nn,"wub_"*algo*"_"*topt,result[1],result[4],result[6],starting_ss,epsilon)
             clean_gc()
         end
@@ -236,7 +236,7 @@ for i in 1:lastindex(epsilon_list)
         println("Running WUB")
         flush(stdout)
         for i in 1:trials
-            result = progressive_wub(tg,epsilon,delta,k,10000,big_int,algo,topt,-1,100,sample_step)
+            result = progressive_wub(tg,epsilon,delta,k,10000,big_int,algo,topt,true,-1,100,sample_step)
             save_results_progressive_sampling(nn,"wub_"*algo*"_"*topt,result[1],result[4],result[6],starting_ss,epsilon)
             clean_gc()
         end
@@ -279,7 +279,7 @@ for i in 1:lastindex(epsilon_list)
         println("Running WUB")
         flush(stdout)
         for i in 1:trials
-            result = progressive_wub(tg,epsilon,delta,k,10000,big_int,algo,topt,-1,100,sample_step)
+            result = progressive_wub(tg,epsilon,delta,k,10000,big_int,algo,topt,true,-1,100,sample_step)
             save_results_progressive_sampling(nn,"wub_"*algo*"_"*topt,result[1],result[4],result[6],starting_ss,epsilon)
             clean_gc()
         end
