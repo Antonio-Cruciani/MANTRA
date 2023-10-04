@@ -8,7 +8,8 @@ function clean_gc()
     GC.gc()
 end
 # PFM
-
+#epsilon_list = [0.005]
+#sample_list = [1500]
 epsilon_list = [0.1,0.07,0.05,0.01]
 sample_list = [100,350,750,1000]
 path = "graphs/"
@@ -20,7 +21,7 @@ big_int = false
 #topt = "pfm"
 algo = "ob"
 k = 0
-topt = "pfm"
+#topt = "pfm"
 #=
 datasets = [
     "16_brain_100206_90.txt",
@@ -82,7 +83,7 @@ for i in 1:lastindex(epsilon_list)
 end
 
 
-=#
+
 
 
 #SH
@@ -147,16 +148,13 @@ for i in 1:lastindex(epsilon_list)
 
     end
 end
+=#
 
 
 
 #=
-
 # SFM
 
-big_int = false
-epsilon_list = [0.1,0.07,0.05,0.01]
-sample_list = [100,350,750,1000]
 topt = "sfm"
 datasets = [
     "16_brain_100206_90.txt",
@@ -213,6 +211,7 @@ for i in 1:lastindex(epsilon_list)
     end
 end
 
+
 datasets = [
     "18_venice.txt",
     "19_bordeaux.txt"
@@ -252,8 +251,9 @@ for i in 1:lastindex(epsilon_list)
     end
 end
 
-
-
+=#
+epsilon_list = [0.1,0.07,0.05,0.01]
+sample_list = [100,350,750,1000]
 datasets = [
     "18_venice.txt",
     "19_bordeaux.txt"
@@ -295,4 +295,3 @@ for i in 1:lastindex(epsilon_list)
 end
 
 
-=#
