@@ -52,8 +52,9 @@ datasets = [
 for i in 1:lastindex(epsilon_list)
     epsilon = epsilon_list[i]
     starting_ss = sample_list[i]
-    for k in k_list
-        for gn in datasets
+    for gn in datasets
+        for k in k_list
+
             nn = String(split(gn, ".t")[1])
             tg = load_temporal_graph(path*gn," ")
             print_samplig_stats(epsilon,delta,trials,starting_ss)
