@@ -10,8 +10,8 @@ end
 # PFM
 #epsilon_list = [0.005]
 #sample_list = [1500]
-epsilon_list = [0.1,0.07,0.05,0.01]
-sample_list = [100,350,750,1000]
+epsilon_list = [0.01]
+sample_list = [1000]
 path = "graphs/"
 sample_step = 32
 delta = 0.1
