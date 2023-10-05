@@ -79,7 +79,9 @@ function threaded_progressive_wub_shortest_foremost(tg::temporal_graph,eps::Floa
     delta_lb_guess::Array{Float64} = zeros(tg.num_nodes)
     delta_ub_guess::Array{Float64} = zeros(tg.num_nodes)
     _compute_δ_guess!(betweenness,eps,delta,balancing_factor,eps_lb,eps_ub,delta_lb_min_guess,delta_ub_min_guess,delta_lb_guess,delta_ub_guess) 
-    println("Bootstrap completed ")
+    finish_partial = string(round(time() - start_time; digits=4))
+    time_to_finish::String = string(round((omega*(time() - start_time) / tau )-(time() - start_time) ; digits=4))
+    println("Bootstrap completed in "*finish_partial*" estimated time "*time_to_finish)
     flush(stdout)
     local_temporal_betweenness = [zeros(tg.num_nodes) for _ in 1:ntasks]
     betweenness = zeros(tg.num_nodes)

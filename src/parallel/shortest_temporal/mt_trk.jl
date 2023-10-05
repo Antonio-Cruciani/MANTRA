@@ -189,13 +189,48 @@ function _trk_sh_accumulate!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,Int
 end
 # Bidirectional work in progress
 #=
-function _trk_sh_bidirectional_accumulate!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,Int64}}},tn_index::Dict{Tuple{Int64,Int64},Int64},bigint::Bool,s::Int64,z::Int64,temporal_betweenness_centrality::Vector{Float64},al::Array{Array{Int64}},il::Array{Array{Int64}})
-    indexes::Int64 = length(keys(tn_index))
-    if (bigint)
-        bfs_ds = BI_BFS_SRTP_DS(tg.num_nodes, indexes)
-    else
-        bfs_ds = BFS_SRTP_DS(tg.num_nodes, indexes)
+struct BI_BFS_SRTP_DS_BID
+    sigma::Array{BigInt}
+    dist::Array{Int64}
+    sigma_t::Array{BigInt}
+    sigma_z::Array{BigInt}
+    dist_t::Array{Int64}
+    predecessors::Array{Set{Tuple{Int64,Int64,Int64}}}
+    boolean_array::Array{Bool}
+    forward_queue::Queue{Tuple{Int64,Int64,Int64}}
+    backward_queue::Queue{Tuple{Int64,Int64,Int64}}
+    function BI_BFS_SRTP_DS(nn::Int64, ntn::Int64)
+        return new(Array{BigInt}(undef, nn), Array{Int64}(undef, nn), Array{BigInt}(undef, ntn), zeros(Int64, ntn), Array{Int64}(undef, ntn), Array{Set{Tuple{Int64,Int64}}}(undef, ntn+1), falses(ntn), Queue{Tuple{Int64,Int64,Int64}}(),Queue{Tuple{Int64,Int64,Int64}}())
     end
+end
+macro visited_s()
+    return 1
+end
+macro visited_z()
+    return 2
+end
+function next_temporal_neighbors_backward(til::Array{Array{Tuple{Int64,Int64}}}, u::Int64, t::Int64)::Array{Tuple{Int64,Int64}}
+    neig::Array{Tuple{Int64,Int64}} = til[u]
+    left::Int64 = 1
+    right::Int64 = length(neig)
+    pos::Int64 = length(neig) + 1
+    mid::Int64 = -1
+    while (left <= right)
+        mid = (left + right) ÷ 2
+        if (neig[mid][2] < t)
+            pos = mid
+            left = mid + 1 
+        else
+            right = mid - 1
+        end
+    end
+    return neig[begin:pos]
+end
+
+function _trk_sh_bidirectional_accumulate!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,Int64}}},til::Array{Array{Tuple{Int64,Int64}}},al,il,tn_index::Dict{Tuple{Int64,Int64},Int64},bigint::Bool,s::Int64,z::Int64,temporal_betweenness_centrality::Vector{Float64},al::Array{Array{Int64}},il::Array{Array{Int64}})
+    indexes::Int64 = length(keys(tn_index))
+    bfs_ds = BI_BFS_SRTP_DS_BID(tg.num_nodes, indexes)
+   
     t_z::Int64 = tg.temporal_edges[lastindex(tg.temporal_edges)][3]+1
     index_z::Int64 = tn_index[(z,t_z)]
     u::Int64 = -1
@@ -216,15 +251,108 @@ function _trk_sh_bidirectional_accumulate!(tg::temporal_graph,tal::Array{Array{T
         bfs_ds.dist_t[tn] = -1
         bfs_ds.predecessors[tn] = Set{Tuple{Int64,Int64,Int64}}()
     end
+    t_max::Int64 = lastindex(tg.file_time)+1
     tni = tn_index[(s, 0)]
     bfs_ds.sigma[s] = 1
     bfs_ds.sigma_t[tni] = 1
     bfs_ds.dist[s] = 0
     bfs_ds.dist_t[tni] = 0
+    tni = tn_index[(z, t_max)]
+    bfs_ds.sigma[z] = 1
+    bfs_ds.sigma_t[tni] = 1
+    bfs_ds.dist[z] = 0
+    bfs_ds.dist_t[tni] = 0
+    ball_indicator::Array{Int8} = zeros(tg.num_nodes)
+    ball_indicator[s] = @visited_s
+    ball_indicator[z] = @visited_z
+    sum_degs_s::Int64 = 0
+    sum_degs_z::Int64 = 0
+    sum_degs_cur::Int64 = 0
+    have_to_stop::Bool = false
+    start_q_s::Int64 = 1
+    end_q_s::Int64 = 1
+    start_q_z::Int64 = 1
+    end_q_z::Int64 = 1
+    start_cur::Int64 = 0
+    end_cur::Int64 = 0
+    method::Int8 = 0
+    new_end_cur::Int64 = 0
+    new_start_cur::Int64 = 0
+    sp_edges = []
+    # 1 forward in time 2 backward in time
+    while (!have_to_stop)
+        if sum_degs_s <= sum_degs_z
+            sum_degs_s = 0
+            sum_degs_cur = 0
+            start_cur = start_q_s
+            end_cur = end_q_s
+            method = 1
+            new_start_cur = end_q_s
+        else
+            sum_degs_z = 0
+            sum_degs_cur = 0
+            start_cur = start_q_z
+            end_cur = end_q_z
+            method = 2
+            new_start_cur = end_q_z
+
+        end
+        while (start_cur < end_cur)
+            if method == 1
+                temporal_node = dequeue!(bfs_ds.forward_queue)
+            else
+                temporal_node = dequeue!(bfs_ds.backward_queue)
+            end
+            u = temporal_node[1]
+            t = temporal_node[2]
+            tni = temporal_node[3]
+            neighbors = []
+            if method == 1
+                neighbors = next_temporal_neighbors(tal, u, t)
+            else
+                neighbors = next_temporal_neighbors_backward(til,u,t)
+            end
+            for neig in neighbors
+                w = neig[1]
+                t_w = neig[2]
+                tni_w = tn_index[(w, t_w)]
+                if bfs_ds.dist_t[tni_w] == -1
+                    bfs_ds.dist_t[tni_w] = bfs_ds.dist_t[tni] + 1
+                    ball_indicator[(w, t_w)] = method
+                    new_end_cur += 1 
+                    if bfs_ds.dist[w] == -1
+                        bfs_ds.dist[w] = bfs_ds.dist_t[tni] + 1
+                        if method == 1
+                            sum_degs_cur += lastindex(al[w])
+                        else
+                            sum_degs_cur += lastindex(il[w])
+                        end
+                    end
+                    if method == 1
+                        enqueue!(bfs_ds.forward_queue, (w,t_w,tni_w))
+                    else
+                        enqueue!(bfs_ds.backward_queue, (w,t_w,tni_w))
+                    end
+                elseif ball_indicator[tni_w] != ball_indicator[tni]
+                    have_to_stop = true
+                    push!(sp_edges, [[tni,(u,t)],[tni_w,(w, t_w)]])
+                end
+            end
+            if bfs_ds.dist_t[tni_w] == bfs_ds.dist_t[tni] + 1
+                bfs_ds.sigma_t[tni_w] += bfs_ds.sigma_t[tni]
+                push!(bfs_ds.predecessors[tni_w], (temporal_node[1],temporal_node[2],tni))
+                if bfs_ds.dist_t[tni_w] == bfs_ds.dist[w]
+                    bfs_ds.sigma[w] += bfs_ds.sigma_t[tni]
+                end
+            end
+        end
+
+    end
 
 
 end
 =#
+
 function threaded_progressive_trk(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,bigint::Bool,algo::String = "trk",diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
     @assert (algo == "trk") || (algo == "ob") || (algo == "rtb") "Illegal algorithm, use: trk , ob , or rtb"
     start_time = time()

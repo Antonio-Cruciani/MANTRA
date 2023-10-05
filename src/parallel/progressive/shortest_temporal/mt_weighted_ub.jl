@@ -286,7 +286,9 @@ function threaded_progressive_wub_topk(tg::temporal_graph,eps::Float64,delta::Fl
     delta_lb_guess::Array{Float64} = zeros(tg.num_nodes)
     delta_ub_guess::Array{Float64} = zeros(tg.num_nodes)
     _compute_δ_guess_topk!(betweenness,eps,delta,balancing_factor,eps_lb,eps_ub,delta_lb_min_guess,delta_ub_min_guess,delta_lb_guess,delta_ub_guess,k,approx_top_k,start_factor,union_sample) 
-    println("Bootstrap completed ")
+    finish_partial = string(round(time() - start_time; digits=4))
+    time_to_finish::String = string(round((omega*(time() - start_time) / tau )-(time() - start_time) ; digits=4))
+    println("Bootstrap completed in "*finish_partial*" estimated time "*time_to_finish)
     local_temporal_betweenness = [zeros(tg.num_nodes) for _ in 1:ntasks]
     betweenness = zeros(tg.num_nodes)
     sampled_so_far::Int64 = 0

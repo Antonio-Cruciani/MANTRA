@@ -34,7 +34,13 @@ function append_centrality_values(file_name::String, centrality::Array{Float64})
     close(f)
 end
 
-
+function append_centrality_values_topk(file_name::String, centrality::Array{Tuple{Int64,Float64}})::Nothing
+    f::IOStream = open(file_name, "a")
+    for u in 1:lastindex(centrality)
+        write(f, string(centrality[u][1])*" "*string(centrality[u][2]) * "\n")
+    end
+    close(f)
+end
 
 function read_time(file_name::String)::Float64
     @assert isfile(file_name) "The time value file does not exist"
@@ -132,8 +138,21 @@ function save_results_progressive_sampling(nn::String, cn::String,c::Array{Float
     end
 end
 
-
-
+function save_results_topk(nn::String,cn::String,c::Array{Tuple{Int64,Float64}},k::Int64,ss::Int64,t::Float64,starting_ss::Int64,xi::Float64 = -1.0)
+    if (length(c) > 0)
+        mkpath("scores/" * nn * "/")
+        append_centrality_values_topk("scores/" * nn * "/"*cn*"_"*string(starting_ss)*"top_"*string(k)*".txt", c)
+        mkpath("times/" * nn * "/")
+        f = open("times/" * nn * "/"*cn*"_"*string(starting_ss)*".txt", "a")
+        write(f, string(round(t; digits=4)) * " " * string(ss) *" "*string(xi) *" "*string(k)*"\n")
+        close(f)
+    else
+        mkpath("times/" * nn * "/")
+        f = open("times/" * nn * "/"*cn*"_"*string(starting_ss)*".txt", "a")
+        write(f, "-1.0 -1.0 -1.0 -1.0,-1.0,-1.0")
+        close(f)
+    end
+end
 function save_results_diameter(nn::String,diameter::Int64,vertex_diameter::Int64,avg_distance::Float64,number_of_pairs::Float64,eff_diam::Float64,zeta::Float64,tt::Float64,path_optimality::String)
     mkpath("diameter/" * nn * "/")
     f::IOStream = open("diameter/" * nn * "/"*path_optimality*".txt", "a")

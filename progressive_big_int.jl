@@ -28,7 +28,7 @@ datasets = [
     "18_venice.txt"
 ]
 big_int = true
-topt = "sh"
+topt = "sfm"
 
 for i in 1:lastindex(epsilon_list)
     epsilon = epsilon_list[i]
