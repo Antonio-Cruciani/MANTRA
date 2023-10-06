@@ -115,6 +115,7 @@ function threaded_progressive_bernstein(tg::temporal_graph,eps::Float64,delta::F
      end
      first_stopping_samples = num_samples
      last_stopping_samples = omega
+     println("Maximum number of iterations "*string(omega))
      println("Initial sample size "*string(first_stopping_samples))
      if first_stopping_samples >= last_stopping_samples/4
          first_stopping_samples = last_stopping_samples/4
