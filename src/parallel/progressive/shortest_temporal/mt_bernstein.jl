@@ -91,6 +91,7 @@ function threaded_progressive_bernstein(tg::temporal_graph,initial_sample::Int64
      
         finish_partial = string(round(time() - start_time; digits=4))
         println("P-"*algo*" (Bernstein). Processed " * string(sampled_so_far) * " pairs in " * finish_partial * " seconds | Est. ξ = ",xi)
+        flush(stdout)
         if xi <= epsilon || sampled_so_far >= omega
             keep_sampling = false
         else
