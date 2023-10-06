@@ -165,7 +165,8 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
     num_samples = 0
     sample_i::Int64 = 0
     while !has_to_stop
-        sample_i = trunc(Int,next_stopping_samples-prev_stopping_samples)
+        sample_i = trunc(Int,next_stopping_samples)-trunc(Int,prev_stopping_samples)
+        #println("Iteration "*string(iteration_index)*" Sample size "*string(sample_i))
         task_size = cld(sample_i, ntasks)
         vs_active = [i for i in 1:sample_i]
         @sync for (t, task_range) in enumerate(Iterators.partition(1:sample_i, task_size))
@@ -183,20 +184,7 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
 
             end
         end
-        #=
-        Base.Threads.@threads for i in 1:sample_step
-            sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
-            s = sample[1][1]
-            z = sample[1][2]
-            if algo == "trk"
-                _pfm_accumulate_trk!(tg,tal,s,z,mc_trials,false,local_temporal_betweenness[Base.Threads.threadid()],local_wv[Base.Threads.threadid()],mcrade[Base.Threads.threadid()],local_sp_lengths[Base.Threads.threadid()])
-            elseif algo == "ob"
-                _pfm_accumulate_onbra!(tg,tal,s,z,mc_trials,false,local_temporal_betweenness[Base.Threads.threadid()],local_wv[Base.Threads.threadid()],mcrade[Base.Threads.threadid()],local_sp_lengths[Base.Threads.threadid()])
-            else
-                _pfm_accumulate_rtb!(tg,tal,s,z,mc_trials,false,local_temporal_betweenness[Base.Threads.threadid()],local_wv[Base.Threads.threadid()],mcrade[Base.Threads.threadid()],local_sp_lengths[Base.Threads.threadid()])
-            end
-        end
-        =#
+        
         num_samples += sample_i
        
         if num_samples >= omega
@@ -208,7 +196,7 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
         #println(" num_samples ",num_samples," last_stopping_samples ",last_stopping_samples)
         #println(" num_samples ",num_samples,"  ",next_stopping_samples)
         # & (num_samples >= next_stopping_samples)
-        if !has_to_stop & (num_samples < last_stopping_samples)&(num_samples >= next_stopping_samples)
+        if !has_to_stop & (num_samples < trunc(Int,last_stopping_samples))&(num_samples >= trunc(Int,next_stopping_samples))
             betweenness = reduce(+, local_temporal_betweenness)
      
             wv = reduce(+,local_wv)

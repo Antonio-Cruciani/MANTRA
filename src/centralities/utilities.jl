@@ -374,7 +374,35 @@ end
 # TO CHANGE
 #-------| KADABRA's progressive sampling |-------
 
-function progressive_wub(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64 = 0,verbose_step::Int64 = 0,bigint::Bool = false,algo::String = "trk",topt::String = "sh",vc_upper_bund::Bool = true,diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
+function progressive_wub(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64 = 0,bigint::Bool = false,algo::String = "trk",topt::String = "sh",vc_upper_bund::Bool = true,geo::Float64 = 1.2,diam::Int64 = -1,start_factor::Int64 = 100)
+    @assert (topt == "sh") || (topt == "sfm") || (topt == "pfm") "Illegal temporal-path optimality, use: sh for shortest , sfm for shortest foremost , or pfm for prefix foremost"
+    if nthreads() > 1
+        println("Algorithm "*algo* " Temporal path optimality "*topt)
+        flush(stdout)
+        if k > 0
+            if topt == "sh"
+                return threaded_progressive_wub_topk(tg,eps,delta,k,verbose_step,bigint,algo,vc_upper_bund,diam,start_factor,sample_step,hb)
+            elseif topt == "sfm"
+                return threaded_progressive_wub_shortest_foremost_topk(tg,eps,delta,k,verbose_step,bigint,algo,vc_upper_bund,diam,start_factor,sample_step,hb)
+            else
+                return threaded_progressive_wub_prefix_foremost_topk(tg,eps,delta,k,verbose_step,algo,vc_upper_bund,diam,start_factor,sample_step,hb)
+            end
+        else
+            if topt == "sh"
+                return threaded_progressive_wub(tg,eps,delta,bigint,algo,vc_upper_bund,diam,geo,start_factor)
+            elseif topt == "sfm"
+                return threaded_progressive_wub_shortest_foremost(tg,eps,delta,bigint,algo,vc_upper_bund,diam,geo,start_factor)
+            else
+                return threaded_progressive_wub_prefix_foremost(tg,eps,delta,algo,vc_upper_bund,diam,geo,start_factor)
+            end
+        end
+    else
+        println("Error: set the number of threads > 1 julia --threads <thread_number>")
+    end
+end
+
+
+function progressive_wub_dep(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64 = 0,verbose_step::Int64 = 0,bigint::Bool = false,algo::String = "trk",topt::String = "sh",vc_upper_bund::Bool = true,diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
     @assert (topt == "sh") || (topt == "sfm") || (topt == "pfm") "Illegal temporal-path optimality, use: sh for shortest , sfm for shortest foremost , or pfm for prefix foremost"
     if nthreads() > 1
         println("Algorithm "*algo* " Temporal path optimality "*topt)
@@ -446,7 +474,26 @@ end
 # ONBRA
 
 
-function progressive_bernstein(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64,verbose_step::Int64, bigint::Bool = false,algo::String = "trk",topt::String = "sh")
+function progressive_bernstein(tg::temporal_graph,epsilon::Float64,delta::Float64,geo::Float64, bigint::Bool = false,algo::String = "trk",topt::String = "sh",vc_upper_bound::Bool = true)
+    @assert (topt == "sh") || (topt == "sfm") || (topt == "pfm") "Illegal temporal-path optimality, use: sh for shortest , sfm for shortest foremost , or pfm for prefix foremost"
+    if nthreads() > 1
+        println("Algorithm "*algo* " Temporal path optimality "*topt)
+        flush(stdout)
+        
+        if topt == "sh"
+            return  threaded_progressive_bernstein(tg,epsilon,delta,bigint, algo,vc_upper_bound,-1,geo)
+        elseif topt == "sfm"
+            return threaded_progressive_bernstein_shortest_foremost(tg,epsilon,delta,bigint, algo,vc_upper_bound,-1,geo)
+        else
+            return threaded_progressive_onbra_prefix_foremost_bernstein(tg,epsilon,delta, algo,vc_upper_bound,-1,geo)
+        end
+        
+    else
+        println("Error: set the number of threads > 1 julia --threads <thread_number>")
+    end
+end
+
+function progressive_bernstein_dep(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64,verbose_step::Int64, bigint::Bool = false,algo::String = "trk",topt::String = "sh")
     @assert (topt == "sh") || (topt == "sfm") || (topt == "pfm") "Illegal temporal-path optimality, use: sh for shortest , sfm for shortest foremost , or pfm for prefix foremost"
     if nthreads() > 1
         println("Algorithm "*algo* " Temporal path optimality "*topt)

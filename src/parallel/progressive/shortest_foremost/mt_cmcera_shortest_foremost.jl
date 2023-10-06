@@ -67,20 +67,7 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
         end
     end
 
-    #=
-    Base.Threads.@threads for i in 1:tau
-        sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
-        s = sample[1][1]
-        z = sample[1][2]
-        if algo == "trk"
-            _sh_accumulate_trk!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[Base.Threads.threadid()],local_wv[Base.Threads.threadid()],mcrade[Base.Threads.threadid()],local_sp_lengths[Base.Threads.threadid()])
-        elseif algo == "ob"
-            _sh_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[Base.Threads.threadid()],local_wv[Base.Threads.threadid()],mcrade[Base.Threads.threadid()],local_sp_lengths[Base.Threads.threadid()])
-        elseif algo == "rtb"
-            _sh_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[Base.Threads.threadid()],local_wv[Base.Threads.threadid()],mcrade[Base.Threads.threadid()],local_sp_lengths[Base.Threads.threadid()])
-        end
-    end
-    =#
+
     betweenness = reduce(+, local_temporal_betweenness)
     betweenness = betweenness .* [1/tau]
     wv = reduce(+,local_wv)

@@ -12,10 +12,16 @@ function upper_bound_average_diameter(delta::Float64,diam::Int64,tdd::Array{Int6
     var_estimate_diam::Float64 = 0.0
     # Upper bound using Empirical Bernstein bound
     for i in 1:diam
+        var_estimate_diam+= (tdd[i] - avg_dist)^2
+    end
+    var_estimate_diam = var_estimate_diam/(sample_size-1) * norm
+    #=
+    for i in 1:diam
         for j in (i+1):diam
             var_estimate_diam += ((i-1)-(j-1))^2 * tdd[i]/sample_size * tdd[j]/(sample_size-1) * norm
         end
     end
+    =#
     log_term_avg_dist = log(2/delta)
     average_diam_ub_eb::Float64 = avg_dist + 7/3 * (diam -2) * log_term_avg_dist/sample_size + sqrt(2*var_estimate_diam*log_term_avg_dist / sample_size)
     avg_diam_upperbound = min(average_diam_ub_b,average_diam_ub_eb)
@@ -420,6 +426,7 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
         #println(" num_samples ",num_samples,"  ",next_stopping_samples)
         # & (num_samples >= next_stopping_samples)
         if !has_to_stop & (num_samples < last_stopping_samples)&(num_samples >= next_stopping_samples)
+            #=
             betweenness = reduce(+, local_temporal_betweenness)
      
             wv = reduce(+,local_wv)
@@ -431,7 +438,10 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
             #println(" num_samples ",num_samples,"  ",next_stopping_samples)
             tmp_omega = Vector{Float64}([omega])
             tmp_has_to_stop = Vector{Bool}([false])
-            _check_stopping_condition!(betweenness,wv,last_stopping_samples,num_samples,eps,delta,iteration_index,true,diam,sp_lengths,num_samples,mc_trials,partition_index,partitions_ids_map,wv,r_mcrade,number_of_non_empty_partitions,tmp_omega,norm,tmp_has_to_stop)
+            #_check_stopping_condition!(betweenness,wv,last_stopping_samples,num_samples,eps,delta,iteration_index,true,diam,sp_lengths,num_samples,mc_trials,partition_index,partitions_ids_map,wv,r_mcrade,number_of_non_empty_partitions,tmp_omega,norm,tmp_has_to_stop)
+            =#
+            tmp_omega = Vector{Float64}([omega])
+            tmp_has_to_stop = Vector{Bool}([false])
             omega = tmp_omega[1]
             has_to_stop = tmp_has_to_stop[1]
             if has_to_stop
