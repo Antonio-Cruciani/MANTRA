@@ -381,7 +381,7 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
             betweenness = reduce(+, local_temporal_betweenness)
      
             wv = reduce(+,local_wv)
-            sp_lengths = reduce(+,local_sp_lengths) 
+            #sp_lengths = reduce(+,local_sp_lengths) 
             r_mcrade = reduce(+,mcrade)
                 
             tmp_omega = Vector{Float64}([omega])
