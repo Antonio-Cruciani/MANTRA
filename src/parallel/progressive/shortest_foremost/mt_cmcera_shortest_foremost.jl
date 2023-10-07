@@ -190,7 +190,7 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
             betweenness = reduce(+, local_temporal_betweenness)
      
             wv = reduce(+,local_wv)
-            sp_lengths = reduce(+,local_sp_lengths) 
+            #sp_lengths = reduce(+,local_sp_lengths) 
             r_mcrade = reduce(+,mcrade)
             
             tmp_omega = Vector{Float64}([omega])
