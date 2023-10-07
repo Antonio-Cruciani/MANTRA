@@ -29,7 +29,7 @@ function threaded_progressive_det_era_prefix_foremost(tg::temporal_graph,initial
         flush(stdout)
     end
     
-    omega_max = trunc(Int,(0.5/epsilon^2) * ((floor(log2(diam-2)))+log(1/delta)))
+    omega_max = trunc(Int,(0.5/epsilon^2) * ((floor(log2(diam-1)))+log(2/delta)))
     println("ω = ",omega_max)
     
     println("Maximum sample size "*string(omega_max))

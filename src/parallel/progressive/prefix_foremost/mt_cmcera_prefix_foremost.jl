@@ -32,19 +32,20 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
     max_num_samples::Float64 = 0.0
 
     if (diam == -1)
-        println("Approximating diameter ")
+        println("Approximating (pfm)-Temporal Diameter ")
         _,_,_,_,_,diam_v,t_diam = threaded_temporal_prefix_foremost_diameter(tg,64,verbose_step,0.9)
         diam = trunc(Int,diam_v)
         println("Task completed in "*string(round(t_diam;digits = 4))*". Δ = "*string(diam))
         flush(stdout)
         
     end
-    
+    start_time_bootstrap = time()
+
     tau::Int64 = trunc(Int64,max(1. / eps * (log(1. / delta)) , 100.))
     tau =  trunc(Int64,max(tau,2*(diam -1) * (log(1. / delta))) )
     s::Int64 = 0
     z::Int64 = 0
-
+    println("Bootstrap using Variance")
     println("Bootstrap phase "*string(tau)*" iterations")
     flush(stdout)
     task_size = cld(tau, ntasks)
@@ -63,20 +64,7 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
             end
         end
     end
-    #=
-    Base.Threads.@threads for i in 1:tau
-        sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
-        s = sample[1][1]
-        z = sample[1][2]
-        if algo == "trk"
-            _pfm_accumulate_trk!(tg,tal,s,z,mc_trials,true,local_temporal_betweenness[Base.Threads.threadid()],local_wv[Base.Threads.threadid()],mcrade[Base.Threads.threadid()],local_sp_lengths[Base.Threads.threadid()])
-        elseif algo == "ob"
-            _pfm_accumulate_onbra!(tg,tal,s,z,mc_trials,true,local_temporal_betweenness[Base.Threads.threadid()],local_wv[Base.Threads.threadid()],mcrade[Base.Threads.threadid()],local_sp_lengths[Base.Threads.threadid()])
-        else
-            _pfm_accumulate_rtb!(tg,tal,s,z,mc_trials,true,local_temporal_betweenness[Base.Threads.threadid()],local_wv[Base.Threads.threadid()],mcrade[Base.Threads.threadid()],local_sp_lengths[Base.Threads.threadid()])
-        end
-    end
-    =#
+   
     betweenness = reduce(+, local_temporal_betweenness)
     betweenness = betweenness .* [1/tau]
     wv = reduce(+,local_wv)
@@ -105,20 +93,21 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
         part_idx+=1
         number_of_non_empty_partitions+=1
     end
+    #=
     println("Number of non empty partitions "*string(number_of_non_empty_partitions))
     println("Bootstrap completed in "*string(round(time() - start_time; digits=4)))
     for key in keys(non_empty_partitions)
         println(" Part w. index "*string(key)*" has "*string(non_empty_partitions[key])*" elements, map to "*string(partitions_ids_map[key]))
     end
     flush(stdout)
-
+    =#
     # Upper bound on the average distance
     avg_diam_ub::Float64 = upper_bound_average_diameter(delta/8,diam,sp_lengths,tau,true,norm)
     # Upper bound on the top-1 temporal betweenness
     top1bc_upper_bound::Float64 = upper_bound_top_1_tbc(max_tbc,delta/8,tau)
     wimpy_var_upper_bound::Float64 = upper_bound_top_1_tbc(max_wv/tau,delta/8,tau)
     # define delta_for_progressive_bound
-    println("AVERAGE DIAM UB "*string(avg_diam_ub))
+    println("Average (sfm)-temporal path (upper bound) "*string(avg_diam_ub))
     # Upper limit on number of samples
     max_num_samples = upper_bound_samples(top1bc_upper_bound,wimpy_var_upper_bound,avg_diam_ub,eps,delta/2 ,false)
     omega = 0.5/eps/eps * (log2(diam-1)+1+log(2/delta))
@@ -141,7 +130,10 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
     first_sample_lower::Float64 = 1/eps *log(2/delta)
     first_sample_upper::Float64 = omega
     sup_emp_wimpy_var_norm::Float64  = max_wv/tau +1/tau
-
+    finish_bootstrap = string(round(time() - start_time_bootstrap; digits=4))
+    println("Bootstrap completed in "*finish_bootstrap)
+    println("Inferring initial sample size for the geometric sampler")
+    flush(stdout)
     while first_sample_upper - first_sample_lower> 10
         num_samples = (first_sample_upper+first_sample_lower)÷2
         eps_guess = sqrt(2*sup_emp_wimpy_var_norm*log(2/delta) /num_samples) + log(2/delta)/num_samples/3
@@ -153,10 +145,10 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
     end
     first_stopping_samples = num_samples
     last_stopping_samples = omega
-    println("First stopping samples "*string(first_stopping_samples))
+    println("Initial sample size "*string(first_stopping_samples))
     if first_stopping_samples >= last_stopping_samples/4
         first_stopping_samples = last_stopping_samples/4
-        println("First stopping samples dropped to "*string(first_stopping_samples))
+        println("Initial sample size dropped to "*string(first_stopping_samples))
     end
     flush(stdout)
     next_stopping_samples::Float64 = first_stopping_samples
@@ -188,24 +180,19 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
         num_samples += sample_i
        
         if num_samples >= omega
-            println("Num samples/ω : "*string(num_samples)*"/"*string(omega))
             has_to_stop = true
-            flush(stdout)
+            finish_partial = string(round(time() - start_time; digits=4))
+            println("Completed, sampled "*string(num_samples)*"/"*string(omega)* " couples in "*finish_partial)
+            flush(stdout)        
         end
-        #println("Checking stopping condition")
-        #println(" num_samples ",num_samples," last_stopping_samples ",last_stopping_samples)
-        #println(" num_samples ",num_samples,"  ",next_stopping_samples)
-        # & (num_samples >= next_stopping_samples)
+        
         if !has_to_stop & (num_samples < trunc(Int,last_stopping_samples))&(num_samples >= trunc(Int,next_stopping_samples))
             betweenness = reduce(+, local_temporal_betweenness)
      
             wv = reduce(+,local_wv)
             sp_lengths = reduce(+,local_sp_lengths) 
             r_mcrade = reduce(+,mcrade)
-            println("Checking stopping condition")
-            flush(stdout)
-            #println(" num_samples ",num_samples," last_stopping_samples ",last_stopping_samples)
-            #println(" num_samples ",num_samples,"  ",next_stopping_samples)
+            
             tmp_omega = Vector{Float64}([omega])
             tmp_has_to_stop = Vector{Bool}([false])
 

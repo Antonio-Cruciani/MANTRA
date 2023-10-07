@@ -118,7 +118,7 @@ function upper_bound_samples(max_tbc::Float64,max_var::Float64, avg_dist::Float6
 end
 
 
-function _check_stopping_condition!(betweenness::Array{Float64},wv::Array{Float64},last_stopping_samples::Float64,num_samples::Int64,eps::Float64,delta::Float64,iteration::Int64,second_phase::Bool,diam::Int64,tdd::Array{Int64},sample_size::Int64,mc_trials::Int64,partition_index::Array{Int64},partitions_ids_map::Dict{Int64,Int64},emp_wimpy_vars::Array{Float64},mcrade::Array{Float64},number_of_non_empty_partitions::Int64,omega::Vector{Float64},norm::Float64,has_to_stop::Vector{Bool})
+function _check_stopping_condition_dep!(betweenness::Array{Float64},wv::Array{Float64},last_stopping_samples::Float64,num_samples::Int64,eps::Float64,delta::Float64,iteration::Int64,second_phase::Bool,diam::Int64,tdd::Array{Int64},sample_size::Int64,mc_trials::Int64,partition_index::Array{Int64},partitions_ids_map::Dict{Int64,Int64},emp_wimpy_vars::Array{Float64},mcrade::Array{Float64},number_of_non_empty_partitions::Int64,omega::Vector{Float64},norm::Float64,has_to_stop::Vector{Bool})
     n::Int64 = lastindex(betweenness)
     num_samples_d::Float64 = num_samples
     delta_for_progressive_bound::Float64 = delta/2^iteration

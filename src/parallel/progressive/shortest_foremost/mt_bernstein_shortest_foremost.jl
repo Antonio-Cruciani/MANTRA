@@ -26,7 +26,7 @@ function threaded_progressive_bernstein_shortest_foremost(tg::temporal_graph,eps
         println("Task completed in "*string(round(t_diam;digits = 4))*". Δ = "*string(diam))
         flush(stdout)
     end
-    omega = trunc(Int,(0.5/eps^2) * ((floor(log2(diam-1)))+1+log(1/delta)))
+    omega = trunc(Int,(0.5/eps^2) * ((floor(log2(diam-1)))+1+log(2/delta)))
     start_time_bootstrap = time()
     tau::Int64 = trunc(Int64,max(1. / eps * (log(1. / delta)) , 100.))
     tau = trunc(Int64,max(tau,2*(diam -1) * (log(1. / delta))) )
