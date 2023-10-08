@@ -395,6 +395,7 @@ function threaded_progressive_wub(tg::temporal_graph,eps::Float64,delta::Float64
             iteration+=1
             finish_partial = string(round(time() - start_time; digits=4))
             println("P-WUB-"*algo*"-SH. Processed " * string(sampled_so_far) * " pairs in " * finish_partial * " seconds | Increasing sample size to "*string(next_stopping_samples))
+            flush(stdout)
         end
     end
     if stop[1]

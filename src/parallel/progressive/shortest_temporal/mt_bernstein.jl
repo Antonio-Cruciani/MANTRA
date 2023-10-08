@@ -22,7 +22,7 @@ function threaded_progressive_bernstein(tg::temporal_graph,eps::Float64,delta::F
         tn_index = temporal_node_index(tg)
     end
     if (diam == -1)
-        println("Approximating (pfm)-Temporal Diameter ")
+        println("Approximating (sfm)-Temporal Diameter ")
         diam,_,_,_,_,t_diam = threaded_temporal_shortest_diameter(tg,64,0)
         println("Task completed in "*string(round(t_diam;digits = 4))*". Δ = "*string(diam))
         flush(stdout)
@@ -169,7 +169,7 @@ function threaded_progressive_bernstein(tg::temporal_graph,eps::Float64,delta::F
             next_stopping_samples = trunc(Int,prev_stopping_samples*geo)
             iteration+=1
             finish_partial = string(round(time() - start_time; digits=4))
-            println("P-Bernstein-"*algo*"-PFM. Processed " * string(sampled_so_far) * " pairs in " * finish_partial * " seconds | Est. ξ = "*string(xi)*" | Increasing sample size to "*string(next_stopping_samples))
+            println("P-Bernstein-"*algo*"-SH. Processed " * string(sampled_so_far) * " pairs in " * finish_partial * " seconds | Est. ξ = "*string(xi)*" | Increasing sample size to "*string(next_stopping_samples))
             flush(stdout)
         end
      end
