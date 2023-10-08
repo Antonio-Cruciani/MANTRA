@@ -111,8 +111,6 @@ datasets = [
     "12_highschool.txt",
     "13_topology.txt",
     "14_SMS.txt",
-    "18_venice.txt",
-    "19_bordeaux.txt",
     "20_askubuntu.txt",
     "21_mathoverflow.txt",
     "22_superuser.txt"
