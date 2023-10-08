@@ -21,9 +21,9 @@ vc_upper_bound = true
 #topt = "pfm"
 algo = "ob"
 k = 0
-topt = "pfm"
+topt = "sh"
 upperbound_sample = "vc"
-
+#=
 epsilon_list = [0.01]
 sample_list = [1000]
 datasets = [
@@ -62,7 +62,7 @@ for i in 1:lastindex(epsilon_list)
         end
     end
 end
-
+=#
 #=
 upperbound_sample = "rho"
 vc_upper_bound = false
