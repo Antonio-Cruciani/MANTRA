@@ -158,7 +158,7 @@ end
 
 
 # SFM
-#=
+
 topt = "sfm"
 datasets = [
     "16_brain_100206_90.txt",
@@ -181,6 +181,7 @@ datasets = [
     "22_superuser.txt"
 ]
 
+topt = "sfm"
 
 for i in 1:lastindex(epsilon_list)
     epsilon = epsilon_list[i]
@@ -193,15 +194,15 @@ for i in 1:lastindex(epsilon_list)
         println("Running Bernstein")
         flush(stdout)
         for i in 1:trials
-            result = progressive_bernstein(tg,starting_ss,epsilon,delta,geo,1000, big_int,algo,topt)
-            save_results_progressive_sampling(nn,"b_"*algo*"_"*topt,result[1],result[2][end],result[4],starting_ss,result[3])
+            result = progressive_bernstein(tg,epsilon,delta,geo, big_int,algo,topt,vc_upper_bound)
+            save_results_progressive_sampling(nn,"wub_"*algo*"_"*topt*"_"*upperbound_sample,result[1],result[4],result[6],starting_ss,epsilon)
             clean_gc()
         end
         println("Running WUB")
         flush(stdout)
         for i in 1:trials
-            result = progressive_wub(tg,epsilon,delta,k,10000,big_int,algo,topt,true,-1,100,sample_step)
-            save_results_progressive_sampling(nn,"wub_"*algo*"_"*topt,result[1],result[4],result[6],starting_ss,epsilon)
+            result = progressive_wub(tg,epsilon,delta,k,big_int,algo,topt,vc_upper_bound,geo)
+            save_results_progressive_sampling(nn,"wub_"*algo*"_"*topt*"_"*upperbound_sample,result[1],result[4],result[6],starting_ss,epsilon)
             clean_gc()
         end
         println("Runnin CMCERA")
@@ -217,4 +218,3 @@ end
 
 
 
-=#
