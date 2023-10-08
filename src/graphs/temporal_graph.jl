@@ -99,10 +99,8 @@ function temporal_incidency_list(tg::temporal_graph)::Array{Array{Tuple{Int64,In
 end
 
 function adjacency_list(sg::static_graph)::Array{Array{Int64}}
-    al::Array{Int64} = Array{Array{Int64}}(undef, sg.num_nodes)
-    for u in 1:sg.num_nodes
-        al[u] = Array{Int64}([])
-    end
+    al = [[] for _ in 1:sg.num_nodes]
+    
     for i in 1:lastindex(sg.edges)
         push!(al[sg.edges[i][1]], sg.edges[i][2])
     end
@@ -110,10 +108,8 @@ function adjacency_list(sg::static_graph)::Array{Array{Int64}}
 end
 
 function incidency_list(sg::static_graph)::Array{Array{Int64}}
-    al::Array{Int64} = Array{Array{Int64}}(undef, sg.num_nodes)
-    for u in 1:sg.num_nodes
-        al[u] = Array{Int64}([])
-    end
+    al = [[] for _ in 1:sg.num_nodes]
+   
     for i in 1:lastindex(sg.edges)
         push!(al[sg.edges[i][2]], sg.edges[i][1])
     end

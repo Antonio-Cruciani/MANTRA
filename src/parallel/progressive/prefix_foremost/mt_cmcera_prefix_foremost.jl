@@ -107,7 +107,7 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
     top1bc_upper_bound::Float64 = upper_bound_top_1_tbc(max_tbc,delta/8,tau)
     wimpy_var_upper_bound::Float64 = upper_bound_top_1_tbc(max_wv/tau,delta/8,tau)
     # define delta_for_progressive_bound
-    println("Average (sfm)-temporal path (upper bound) "*string(avg_diam_ub))
+    println("Average (pfm)-temporal path (upper bound) "*string(avg_diam_ub))
     # Upper limit on number of samples
     max_num_samples = upper_bound_samples(top1bc_upper_bound,wimpy_var_upper_bound,avg_diam_ub,eps,delta/2 ,false)
     omega = 0.5/eps/eps * (log2(diam-1)+1+log(2/delta))
