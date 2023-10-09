@@ -94,55 +94,12 @@ end
 =#
 epsilon_list = [0.07]
 sample_list = [350]
-trials = 1
-datasets = [    "13_topology.txt"]
-for i in 1:lastindex(epsilon_list)
-    epsilon = epsilon_list[i]
-    starting_ss = sample_list[i]
-    for gn in datasets
-        nn = String(split(gn, ".t")[1])
-        tg = load_temporal_graph(path*gn," ")
-        print_samplig_stats(epsilon,delta,trials,starting_ss)
-        print_stats(tg, graph_name= gn)
-   
 
-        println("Running WUB")
-        flush(stdout)
-        for i in 1:trials
-            result = progressive_wub(tg,epsilon,delta,k,big_int,algo,topt,vc_upper_bound,geo)
-            save_results_progressive_sampling(nn,"wub_"*algo*"_"*topt*"_"*upperbound_sample,result[1],result[4],result[6],starting_ss,epsilon)
-            clean_gc()
-        end
-   
-
-    end
-end
-trials = 5
-
-for i in 1:lastindex(epsilon_list)
-    epsilon = epsilon_list[i]
-    starting_ss = sample_list[i]
-    for gn in datasets
-        nn = String(split(gn, ".t")[1])
-        tg = load_temporal_graph(path*gn," ")
-        print_samplig_stats(epsilon,delta,trials,starting_ss)
-        print_stats(tg, graph_name= gn)
-        println("Runnin CMCERA")
-        flush(stdout)
-        for i in 1:trials
-            result = progressive_cmcera(tg,epsilon,delta,0,big_int,algo,topt)
-            save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt,result[1],result[2],result[4],starting_ss,epsilon)
-            clean_gc()
-        end
-
-    end
-end
 
 #epsilon_list = [0.1,0.07,0.05,0.01]
 #sample_list = [100,350,750,1000]
 
 datasets = [
-    "14_SMS.txt",
     "20_askubuntu.txt",
     "21_mathoverflow.txt",
     "22_superuser.txt"
