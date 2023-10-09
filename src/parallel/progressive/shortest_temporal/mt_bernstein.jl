@@ -22,7 +22,7 @@ function threaded_progressive_bernstein(tg::temporal_graph,eps::Float64,delta::F
         tn_index = temporal_node_index(tg)
     end
     if (diam == -1)
-        println("Approximating (sfm)-Temporal Diameter ")
+        println("Approximating (sh)-Temporal Diameter ")
         diam,_,_,_,_,t_diam = threaded_temporal_shortest_diameter(tg,64,0)
         println("Task completed in "*string(round(t_diam;digits = 4))*". Δ = "*string(diam))
         flush(stdout)
