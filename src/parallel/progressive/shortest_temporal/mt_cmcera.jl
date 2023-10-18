@@ -298,6 +298,7 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
     # Upper limit on number of samples
     max_num_samples = upper_bound_samples(top1bc_upper_bound,wimpy_var_upper_bound,avg_diam_ub,eps,delta/2 ,false)
     omega = 0.5/eps/eps * (log2(diam-1)+1+log(2/delta))
+    prov = omega
     println("Maximum number of samples "*string(max_num_samples)*" VC Bound "*string(omega))
     println("Sup tbc estimation "*string(max_tbc))
     println("Sup empirical wimpy variance "*string(max_wv/tau))
@@ -305,7 +306,7 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
     iteration_index::Int64 =1 
     
     local_wv = [zeros(tg.num_nodes) for _ in 1:ntasks]
-    local_temporal_betweenness = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    local_temporal_betwInt64eenness = [zeros(tg.num_nodes) for _ in 1:ntasks]
     mcrade = [zeros((tg.num_nodes+1)*mc_trials) for _ in 1:ntasks]
     local_sp_lengths = [zeros(tg.num_nodes) for _ in 1:ntasks]
     
@@ -335,7 +336,6 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
     end
     first_stopping_samples = num_samples
     last_stopping_samples = omega
-    
     println("Initial sample size "*string(first_stopping_samples))
     if first_stopping_samples >= last_stopping_samples/4
         first_stopping_samples = last_stopping_samples/4
@@ -839,47 +839,48 @@ function _sh_accumulate_onbra!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,I
         end
         tni = tn_index[(s, 0)]
         bfs_ds.sigma_z[tni] = 1
-    end
-    for t in 1:lastindex(tg.file_time)
-        tni = get(tn_index, (z, t), 0)
-        if tni > 0 && bfs_ds.sigma_t[tni] > 0
-            for pred in bfs_ds.predecessors[tni]
-                tni_w = tn_index[(pred[1], pred[2])]
-                if (!bigint && bfs_ds.sigma_z[tni_w] == typemax(UInt128))
-                    println("Overflow occurred with sample (", s, ",", z, ")")
-                    return [], 0.0
-                end
-                bfs_ds.sigma_z[tni_w] += 1
-                if !bfs_ds.boolean_matrix[tni_w]
-                    enqueue!(bfs_ds.backward_queue, pred)
-                    bfs_ds.boolean_matrix[tni_w] = true
+    
+        for t in 1:lastindex(tg.file_time)
+            tni = get(tn_index, (z, t), 0)
+            if tni > 0 && bfs_ds.sigma_t[tni] > 0
+                for pred in bfs_ds.predecessors[tni]
+                    tni_w = tn_index[(pred[1], pred[2])]
+                    if (!bigint && bfs_ds.sigma_z[tni_w] == typemax(UInt128))
+                        println("Overflow occurred with sample (", s, ",", z, ")")
+                        return [], 0.0
+                    end
+                    bfs_ds.sigma_z[tni_w] += 1
+                    if !bfs_ds.boolean_matrix[tni_w]
+                        enqueue!(bfs_ds.backward_queue, pred)
+                        bfs_ds.boolean_matrix[tni_w] = true
+                    end
                 end
             end
         end
-    end
-    while length(bfs_ds.backward_queue) > 0
-        temporal_node = dequeue!(bfs_ds.backward_queue)
-        tni = tn_index[(temporal_node[1], temporal_node[2])]
-        if temporal_node[1] != s
-            temporal_betweenness_centrality[temporal_node[1]] += (bfs_ds.sigma_z[tni] * (bfs_ds.sigma_t[tni] / bfs_ds.sigma[z]))
-            wimpy_variance[temporal_node[1]] += (bfs_ds.sigma_z[tni] * (bfs_ds.sigma_t[tni] / bfs_ds.sigma[z]))^2
-            if !boostrap_phase
-                #mcrade deve essere usato da ogni thread in modo indipendente
-                v_idx = temporal_node[1]*mc_trials
-                for j in 1:mc_trials
-                    mcrade[v_idx + j] += lambdas[j] * (bfs_ds.sigma_z[tni] * (bfs_ds.sigma_t[tni] / bfs_ds.sigma[z]))
+        while length(bfs_ds.backward_queue) > 0
+            temporal_node = dequeue!(bfs_ds.backward_queue)
+            tni = tn_index[(temporal_node[1], temporal_node[2])]
+            if temporal_node[1] != s
+                temporal_betweenness_centrality[temporal_node[1]] += (bfs_ds.sigma_z[tni] * (bfs_ds.sigma_t[tni] / bfs_ds.sigma[z]))
+                wimpy_variance[temporal_node[1]] += (bfs_ds.sigma_z[tni] * (bfs_ds.sigma_t[tni] / bfs_ds.sigma[z]))^2
+                if !boostrap_phase
+                    #mcrade deve essere usato da ogni thread in modo indipendente
+                    v_idx = temporal_node[1]*mc_trials
+                    for j in 1:mc_trials
+                        mcrade[v_idx + j] += lambdas[j] * (bfs_ds.sigma_z[tni] * (bfs_ds.sigma_t[tni] / bfs_ds.sigma[z]))
+                    end
                 end
-            end
-            for pred in bfs_ds.predecessors[tni]
-                tni_w = tn_index[(pred[1], pred[2])]
-                if (!bigint && bfs_ds.sigma_z[tni_w] > typemax(UInt128) - bfs_ds.sigma_z[tni])
-                    println("Overflow occurred with sample (", s, ",", z, ")")
-                    return [], 0.0
-                end
-                bfs_ds.sigma_z[tni_w] += bfs_ds.sigma_z[tni]
-                if !bfs_ds.boolean_matrix[tni_w]
-                    enqueue!(bfs_ds.backward_queue, pred)
-                    bfs_ds.boolean_matrix[tni_w] = true
+                for pred in bfs_ds.predecessors[tni]
+                    tni_w = tn_index[(pred[1], pred[2])]
+                    if (!bigint && bfs_ds.sigma_z[tni_w] > typemax(UInt128) - bfs_ds.sigma_z[tni])
+                        println("Overflow occurred with sample (", s, ",", z, ")")
+                        return [], 0.0
+                    end
+                    bfs_ds.sigma_z[tni_w] += bfs_ds.sigma_z[tni]
+                    if !bfs_ds.boolean_matrix[tni_w]
+                        enqueue!(bfs_ds.backward_queue, pred)
+                        bfs_ds.boolean_matrix[tni_w] = true
+                    end
                 end
             end
         end

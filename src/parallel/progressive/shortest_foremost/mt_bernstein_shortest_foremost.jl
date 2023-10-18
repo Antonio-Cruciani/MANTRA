@@ -419,8 +419,11 @@ function _p_onbra_sfm_bernstein_accumulate!(tg::temporal_graph,tal::Array{Array{
             end
         end
     end
-    bfs_ds = nothing
-
+    if (bigint)
+        bfs_ds = BI_BFS_SFM_ONBRA_DS(0,0)
+    else
+        bfs_ds = BFS_ONBRA_SFM_DS(0,0)
+    end
     return nothing
 end
 
@@ -547,8 +550,11 @@ function _p_trk_sfm_accumulate_bernstein!(tg::temporal_graph,tal::Array{Array{Tu
         end
        
     end
-    bfs_ds = nothing
-
+    if (bigint)
+        bfs_ds = BI_BFS_SFM_SRTP_DS(0,0)
+    else
+        bfs_ds = BFS_SFM_SRTP_DS(0,0)
+    end
     return nothing
 end
 
@@ -556,7 +562,7 @@ function _ssftp_accumulate_bernstein!(tg::temporal_graph,tal::Array{Array{Tuple{
     if (bigint)
         bfs_ds = BI_BFS_SFM_DS(tg.num_nodes, length(keys(tn_index)))
     else
-        bfs_ds = BI_BFS_SFM_DS(tg.num_nodes, length(keys(tn_index)))
+        bfs_ds = BFS_SFM_DS(tg.num_nodes, length(keys(tn_index)))
     end
     push!(B_1,zeros(tg.num_nodes))
     p::Int64 = lastindex(B_1)
@@ -646,7 +652,10 @@ function _ssftp_accumulate_bernstein!(tg::temporal_graph,tal::Array{Array{Tuple{
             B_2[v] += (bfs_ds.sigma_t[tni_v] / bfs_ds.sigma_t[tni_w]) * bfs_ds.delta_fm[tni_w]
         end
     end
-    bfs_ds = nothing
-
+    if (bigint)
+        bfs_ds = BI_BFS_SFM_DS(0,0)
+    else
+        bfs_ds = BFS_SFM_DS(0,0)
+    end
     return nothing
 end

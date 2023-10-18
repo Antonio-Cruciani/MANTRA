@@ -506,25 +506,7 @@ function threaded_progressive_wub_prefix_foremost_topk(tg::temporal_graph,eps::F
             end
         end
     end
-    #=
-    flush(stdout)
-    task_size = cld(tau, ntasks)
-    vs_active = [i for i in 1:tau]
-    @sync for (t, task_range) in enumerate(Iterators.partition(1:tau, task_size))
-        Threads.@spawn for _ in @view(vs_active[task_range])
-            sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
-            s = sample[1][1]
-            z = sample[1][2]
-            if algo == "trk"
-                _trk_pfm_accumulate!(tg,tal,s,z,local_temporal_betweenness[t])
-            elseif algo == "ob"
-                _onbra_pfm_accumulate!(tg,tal,s,z,local_temporal_betweenness[t])
-            elseif algo == "rtb"
-                _ssptp_accumulate!(tg,tal,s,local_temporal_betweenness[t])
-            end
-        end
-    end
-    =#
+   
     betweenness = reduce(+, local_temporal_betweenness)
     betweenness = betweenness .* [1/tau]
     if algo == "rtb"
@@ -599,20 +581,7 @@ function threaded_progressive_wub_prefix_foremost_topk(tg::temporal_graph,eps::F
                 end
             end
         end
-        #=
-        Base.Threads.@threads for i in 1:sample_step
-            sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
-            s = sample[1][1]
-            z = sample[1][2]
-            if algo == "trk"
-                _trk_pfm_accumulate!(tg,tal,s,z,local_temporal_betweenness[Base.Threads.threadid()])
-            elseif algo == "ob"
-                _onbra_pfm_accumulate!(tg,tal,s,z,local_temporal_betweenness[Base.Threads.threadid()])
-            elseif algo == "rtb"
-                _ssptp_accumulate!(tg,tal,s,local_temporal_betweenness[Base.Threads.threadid()])
-            end        
-        end
-        =#
+        
         sampled_so_far += ntasks
         betweenness = reduce(+, local_temporal_betweenness)
         for u in 1:tg.num_nodes

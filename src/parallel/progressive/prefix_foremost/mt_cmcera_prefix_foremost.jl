@@ -392,36 +392,37 @@ function _pfm_accumulate_onbra!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,
             bfs_ds.boolean_matrix[v] = false
         end
         #bfs_ds.sigma_z[s] = 1
-    end
-    for pred in bfs_ds.predecessors[z]
-        bfs_ds.sigma_z[pred] =1
-        if !bfs_ds.boolean_matrix[pred]
-            enqueue!(bfs_ds.backward_queue,pred)
-            bfs_ds.boolean_matrix[pred] = true
-        end
-    end
-    while length(bfs_ds.backward_queue) > 0
-        v = dequeue!(bfs_ds.backward_queue)
-        if v != s
-            temporal_betweenness_centrality[v] += (bfs_ds.sigma[v] * (bfs_ds.sigma_z[v] / bfs_ds.sigma[z]))
-            wimpy_variance[v] += ((bfs_ds.sigma[v] * (bfs_ds.sigma_z[v] / bfs_ds.sigma[z])))^2
-            if !boostrap_phase
-                #mcrade deve essere usato da ogni thread in modo indipendente
-                v_idx = v*mc_trials
-                for j in 1:mc_trials
-                    mcrade[v_idx + j] += lambdas[j] * (bfs_ds.sigma[v] * (bfs_ds.sigma_z[v] / bfs_ds.sigma[z]))
-                end
+    
+        for pred in bfs_ds.predecessors[z]
+            bfs_ds.sigma_z[pred] =1
+            if !bfs_ds.boolean_matrix[pred]
+                enqueue!(bfs_ds.backward_queue,pred)
+                bfs_ds.boolean_matrix[pred] = true
             end
-            for pred in bfs_ds.predecessors[v]
-                if (!bigint && bfs_ds.sigma_z[pred] > typemax(UInt128) - bfs_ds.sigma_z[pred])
-                    println("Overflow occurred with sample (", s, ",", z, ")")
-                    return [], 0.0
+        end
+        while length(bfs_ds.backward_queue) > 0
+            v = dequeue!(bfs_ds.backward_queue)
+            if v != s
+                temporal_betweenness_centrality[v] += (bfs_ds.sigma[v] * (bfs_ds.sigma_z[v] / bfs_ds.sigma[z]))
+                wimpy_variance[v] += ((bfs_ds.sigma[v] * (bfs_ds.sigma_z[v] / bfs_ds.sigma[z])))^2
+                if !boostrap_phase
+                    #mcrade deve essere usato da ogni thread in modo indipendente
+                    v_idx = v*mc_trials
+                    for j in 1:mc_trials
+                        mcrade[v_idx + j] += lambdas[j] * (bfs_ds.sigma[v] * (bfs_ds.sigma_z[v] / bfs_ds.sigma[z]))
+                    end
                 end
-                bfs_ds.sigma_z[pred] += bfs_ds.sigma_z[v]
-                if !bfs_ds.boolean_matrix[pred]
-                    enqueue!(bfs_ds.backward_queue, pred) 
-                    bfs_ds.boolean_matrix[pred] = true
-                end                    
+                for pred in bfs_ds.predecessors[v]
+                    if (!bigint && bfs_ds.sigma_z[pred] > typemax(UInt128) - bfs_ds.sigma_z[pred])
+                        println("Overflow occurred with sample (", s, ",", z, ")")
+                        return [], 0.0
+                    end
+                    bfs_ds.sigma_z[pred] += bfs_ds.sigma_z[v]
+                    if !bfs_ds.boolean_matrix[pred]
+                        enqueue!(bfs_ds.backward_queue, pred) 
+                        bfs_ds.boolean_matrix[pred] = true
+                    end                    
+                end
             end
         end
     end

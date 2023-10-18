@@ -99,7 +99,7 @@ function _trk_pfm_accumulate!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,In
 
         end    
     end
-    bfs_ds = nothing
+    bfs_ds = BFS_PFM_SRTP_DS(0)
 
     return nothing
 end
