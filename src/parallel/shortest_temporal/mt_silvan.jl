@@ -1,5 +1,5 @@
 
-function upper_bound_average_diameter(delta::Float64,diam::Int64,tdd::Array{Int64},sample_size::Int64,verbose::Bool=false,norm::Float64 = 1.0)::Float64
+function upper_bound_average_diameter_dep(delta::Float64,diam::Int64,tdd::Array{Int64},sample_size::Int64,verbose::Bool=false,norm::Float64 = 1.0)::Float64
     avg_dist::Float64 = 0.0
     # Diam is the vertex diameter it's already diam +1 
     for i in 1:diam

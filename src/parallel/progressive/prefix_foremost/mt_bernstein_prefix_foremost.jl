@@ -80,13 +80,6 @@ function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph
      wv = []
      local_sp_lengths = [[]]
      mcrade = [[]]
-     eps_lb::Array{Float64} = zeros(tg.num_nodes)
-     eps_ub::Array{Float64} = zeros(tg.num_nodes)
-     delta_lb_min_guess::Array{Float64} = [0.0]
-     delta_ub_min_guess::Array{Float64} = [0.0]
-     delta_lb_guess::Array{Float64} = zeros(tg.num_nodes)
-     delta_ub_guess::Array{Float64} = zeros(tg.num_nodes)
-     _compute_δ_guess!(betweenness,eps,delta,balancing_factor,eps_lb,eps_ub,delta_lb_min_guess,delta_ub_min_guess,delta_lb_guess,delta_ub_guess) 
      finish_bootstrap = string(round(time() - start_time_bootstrap; digits=4))
      println("Bootstrap completed in "*finish_bootstrap)
      println("Inferring initial sample size for the geometric sampler")
@@ -172,6 +165,190 @@ function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph
 
 end
 
+function threaded_progressive_bernstein_prefix_foremost_bernstein_topk(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64,algo::String = "trk",vc_upper_bund::Bool = true,diam::Int64 = -1,geo::Float64 = 1.2,start_factor::Int64 = 100)
+    @assert (algo == "trk") || (algo == "ob") || (algo == "rtb") "Illegal algorithm, use: trk , ob , or rtb"
+    start_time = time()
+    ntasks = nthreads()
+    tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
+    local_temporal_betweenness_bootstrap::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    reduced_betweenness::Vector{Float64} = Vector{Float64}([])
+    local_temporal_betweenness::Vector{Vector{Vector{Float64}}} = [[] for _ in 1:ntasks]
+    t_bc::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    xi::Float64 = 0
+    balancing_factor::Float64 = 0.001
+    omega::Int64 = 1000
+    mc_trials::Int64 = 25
+    local_wv::Array{Array{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    local_sp_lengths::Array{Array{Int64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    mcrade::Array{Array{Float64}} = [zeros(tg.num_nodes*mc_trials) for _ in 1:ntasks]
+    if (diam == -1) 
+        println("Approximating (pfm)-Temporal Diameter ")
+        _,_,_,_,_,diam,t_diam = threaded_temporal_prefix_foremost_diameter(tg,64,0)
+        println("Task completed in "*string(round(t_diam;digits = 4))*". Δ = "*string(diam))
+        flush(stdout)
+    end
+    omega = trunc(Int,(0.5/eps^2) * ((floor(log2(diam-1)))+1+log(2/delta)))
+    union_sample::Int64 = min(tg.num_nodes,max(trunc(Int,sqrt(lastindex(tg.temporal_edges))/ntasks),k+20))
+    start_time_bootstrap = time()
+    tau::Int64 = trunc(Int64,max(1. / eps * (log(1. / delta)) , 100.))
+    tau = trunc(Int64,max(tau,2*(diam -1) * (log(1. / delta))) )
+    tau = trunc(Int64,max(tau,omega/start_factor))
+    println("Top-k algorithm: k =  "*string(k)*"  union sample = "*string(union_sample))
+    println("Bootstrap phase "*string(tau)*" iterations")
+    flush(stdout)
+    task_size = cld(tau, ntasks)
+    vs_active = [i for i in 1:tau]
+    if vc_upper_bund == true
+        println("Bootstrap using VC dimension")
+    else
+        println("Bootstrap using Variance")
+    end
+    flush(stdout)
+    @sync for (t, task_range) in enumerate(Iterators.partition(1:tau, task_size))
+        Threads.@spawn for _ in @view(vs_active[task_range])
+            sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+            s = sample[1][1]
+            z = sample[1][2]
+            if algo == "trk"
+                _pfm_accumulate_trk!(tg,tal,s,z,mc_trials,true,local_temporal_betweenness_bootstrap[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+            elseif algo == "ob"
+                _pfm_accumulate_onbra!(tg,tal,s,z,mc_trials,true,local_temporal_betweenness_bootstrap[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+            else
+                _pfm_accumulate_rtb!(tg,tal,s,z,mc_trials,true,local_temporal_betweenness_bootstrap[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+            end
+        end
+    end
+    betweenness = reduce(+, local_temporal_betweenness_bootstrap)
+    if algo == "rtb"
+        betweenness =  betweenness.*[1/(tg.num_nodes-1)]
+    end
+    betweenness = betweenness .* [1/tau]
+    # getting maximum wimpy variance and tbc
+    wv = reduce(+,local_wv)
+    sp_lengths = reduce(+,local_sp_lengths) 
+    max_tbc = maximum(betweenness)
+    max_wv = maximum(wv)/tau
+    if !vc_upper_bund 
+        norm::Float64 = 1.0
+        if algo == "rtb"
+            norm = 1/(tg.num_nodes-1)
+        end
+        avg_diam_ub::Float64 = upper_bound_average_diameter(delta/8,trunc(Int,diam),sp_lengths,tau,true,norm)
+        top1bc_upper_bound::Float64 = upper_bound_top_1_tbc(max_tbc,delta/8,tau)
+        wimpy_var_upper_bound::Float64 = upper_bound_top_1_tbc(max_wv,delta/8,tau)
+        println("Average (pfm)-temporal path (upper bound) "*string(avg_diam_ub))
+        max_num_samples = upper_bound_samples(top1bc_upper_bound,wimpy_var_upper_bound,avg_diam_ub,eps,delta/2 ,false)
+        println("Maximum number of samples "*string(max_num_samples)*" VC Bound "*string(omega))
+        println("Sup tbc estimation "*string(max_tbc))
+        println("Sup empirical wimpy variance "*string(max_wv/tau))
+        omega = trunc(Int,max_num_samples)
+        flush(stdout)
+    end
+     # freeing memory
+     local_wv = [[]]
+     wv = []
+     local_sp_lengths = [[]]
+     mcrade = [[]]
+     finish_bootstrap = string(round(time() - start_time_bootstrap; digits=4))
+     println("Bootstrap completed in "*finish_bootstrap)
+     println("Inferring initial sample size for the geometric sampler")
+     flush(stdout)
+     first_stopping_samples::Float64 = 0.0
+     eps_guess::Float64 = 1.0
+     first_sample_lower::Float64 = 1/eps *log(2/delta)
+     first_sample_upper::Float64 = omega
+     sup_emp_wimpy_var_norm::Float64  = max_wv/tau +1/tau
+     num_samples = 0
+     while first_sample_upper - first_sample_lower> 10
+         num_samples = (first_sample_upper+first_sample_lower)÷2
+         eps_guess = sqrt(2*sup_emp_wimpy_var_norm*log(2/delta) /num_samples) + log(2/delta)/num_samples/3
+         if eps_guess > eps
+             first_sample_lower = num_samples
+         else
+             first_sample_upper = num_samples
+         end
+     end
+     first_stopping_samples = num_samples
+     last_stopping_samples = omega
+     println("Maximum number of iterations "*string(omega))
+     println("Initial sample size "*string(first_stopping_samples))
+     if first_stopping_samples >= last_stopping_samples/4
+         first_stopping_samples = last_stopping_samples/4
+         println("Initial sample size dropped to "*string(first_stopping_samples))
+     end
+     flush(stdout)
+     next_stopping_samples = trunc(Int,first_stopping_samples)
+     prev_stopping_samples::Int64 = 0
+     betweenness = zeros(tg.num_nodes)
+     sampled_so_far::Int64 = 0
+     stop::Array{Bool} = [false]
+     sample_stop::Bool = false
+     iteration::Int64 = 0
+     approx_top_k::Array{Tuple{Int64,Float64}} = Array{Tuple{Int64,Float64}}([])
+     overall_converged::Int64 = 0
+     while !sample_stop && !stop[1]
+        sample_i = next_stopping_samples-prev_stopping_samples
+        task_size = cld(sample_i, ntasks)
+        vs_active = [i for i in 1:sample_i]
+        @sync for (t, task_range) in enumerate(Iterators.partition(1:sample_i, task_size))
+            Threads.@spawn for _ in @view(vs_active[task_range])
+                sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+                s = sample[1][1]
+                z = sample[1][2]
+                if algo == "ob"
+                    _p_onbra_pfm_bernstein_accumulate!(tg,tal,s,z,local_temporal_betweenness[t],t_bc[t])
+                elseif algo == "trk"
+                    _p_trk_pfm_bernstein_accumulate!(tg,tal,s,z,local_temporal_betweenness[t],t_bc[t])
+                elseif algo == "rtb"
+                    _ssptp_accumulate_bernstein!(tg,tal,s,local_temporal_betweenness[t],t_bc[t])
+                end        
+
+            end
+        end
+        sampled_so_far += sample_i
+        if sampled_so_far >= omega
+            sample_stop = true
+            finish_partial = string(round(time() - start_time; digits=4))
+            println("Completed, sampled "*string(sampled_so_far)*"/"*string(omega)* " couples in "*finish_partial)
+            flush(stdout)
+        end     
+        _reduce_arrays!(local_temporal_betweenness,reduced_betweenness)
+        betweenness = reduce(+,t_bc)
+        if algo == "rtb"
+            betweenness = betweenness.*[1/(tg.num_nodes-1)]
+        end
+        for u in 1:tg.num_nodes
+            push!(approx_top_k,(u,betweenness[u]))
+        end
+        sort!(approx_top_k, by=approx_top_k->-approx_top_k[2])
+        stop[1],overall_converged = theoretical_error_bound_topk(reduced_betweenness,approx_top_k[begin:union_sample],sampled_so_far,delta/2^iteration,eps,tg.num_nodes)
+
+        if !sample_stop && !stop[1]
+            prev_stopping_samples = next_stopping_samples
+            next_stopping_samples = trunc(Int,prev_stopping_samples*geo)
+            iteration+=1
+            finish_partial = string(round(time() - start_time; digits=4))
+            println("P-Bernstein-"*algo*"-PFM. Processed " * string(sampled_so_far) * " pairs in " * finish_partial * " seconds | top k converged "*string(overall_converged)*"/"*string(union_sample)*" | Increasing sample size to "*string(next_stopping_samples))
+            flush(stdout)
+        end
+     end
+     if stop[1]
+        println("Progressive sampler converged at "*string(sampled_so_far)*"/"*string(omega)*" iterations")
+        flush(stdout)
+    end
+    _reduce_arrays!(local_temporal_betweenness,reduced_betweenness)
+    betweenness = reduce(+,t_bc)
+    if algo == "rtb"
+        betweenness = betweenness.*[1/(tg.num_nodes-1)]
+    end
+    approx_top_k = Array{Tuple{Int64,Float64}}([])
+    for u in 1:tg.num_nodes
+        push!(approx_top_k,(u,betweenness[u]/sampled_so_far))
+    end
+    sort!(approx_top_k, by=approx_top_k->-approx_top_k[2])
+   
+    return approx_top_k,[sampled_so_far],time()-start_time 
+end
 
 
 function threaded_progressive_onbra_prefix_foremost_bernstein_dep(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64,verbose_step::Int64,algo::String = "trk")::Tuple{Array{Float64},Array{Int64},Float64,Float64}

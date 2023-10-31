@@ -32,7 +32,10 @@ function upper_bound_average_diameter(delta::Float64,diam::Int64,tdd::Array{Int6
         println("Variance estimate average diameter "*string(var_estimate_diam))
         flush(stdout)
     end
-    return min(avg_diam_upperbound,diam-2)
+    if diam -2 >0
+        return min(avg_diam_upperbound,diam-2)
+    end
+    return avg_diam_upperbound 
 end
 function upper_bound_top_1_tbc(top1_est_bc::Float64,delta::Float64,sample_size::Int64)::Float64
     log_term_top_1_tbc::Float64 = log(1/delta)
@@ -95,7 +98,62 @@ function upper_bound_samples(max_tbc::Float64,max_var::Float64, avg_dist::Float6
     return num_samples_bound_high
 end
 
-
+function _check_stopping_condition_topk!(approx_top_k::Array{Tuple{Int64,Float64}},betweenness::Array{Float64},wv::Array{Float64},last_stopping_samples::Float64,num_samples::Int64,eps::Float64,delta::Float64,iteration::Int64,second_phase::Bool,diam::Int64,tdd::Array{Int64},sample_size::Int64,mc_trials::Int64,partition_index::Array{Int64},partitions_ids_map::Dict{Int64,Int64},emp_wimpy_vars::Array{Float64},mcrade::Array{Float64},number_of_non_empty_partitions::Int64,omega::Vector{Float64},norm::Float64,has_to_stop::Vector{Bool},conv_numb::Vector{Int64})
+    n::Int64 = lastindex(betweenness)
+    num_samples_d::Float64 = num_samples
+    delta_for_progressive_bound::Float64 = delta/2^iteration
+   
+    sup_bcest_partition::Array{Float64} = zeros(n)
+    sup_empwvar_partition::Array{Float64} = zeros(n)
+    epsilon_partition::Array{Float64} = ones(n)
+    max_mcera_partition::Array{Float64} = [-num_samples for i in 1:(mc_trials*n) ]
+    # Update MCERA
+    for i in 1:n
+        v_rade_idx = i*mc_trials
+        node_partition_idx = partition_index[i]
+        mapped_partition_index = partitions_ids_map[node_partition_idx]
+        sup_bcest_partition[mapped_partition_index] = max(sup_bcest_partition[mapped_partition_index],betweenness[i] )
+        sup_empwvar_partition[mapped_partition_index] = max(sup_empwvar_partition[mapped_partition_index],emp_wimpy_vars[i])
+        mcera_partition_index = mc_trials*mapped_partition_index
+        for j in 1:mc_trials
+            max_mcera_partition[j+mcera_partition_index] = max(max_mcera_partition[j+mcera_partition_index] ,mcrade[v_rade_idx+j])
+        end
+    end
+    mcera_partition_avg::Array{Float64} = zeros(number_of_non_empty_partitions)
+    mcera_avg::Float64 = 0.0
+    mcera_partition_index::Int64 = 0.0 
+    delta_each_partition::Float64 = delta_for_progressive_bound/number_of_non_empty_partitions
+    for i in 1:number_of_non_empty_partitions
+        mcera_avg = 0.0
+        mcera_partition_index = mc_trials *i
+        for j in 1:mc_trials
+            mcera_avg+=max_mcera_partition[mcera_partition_index+j]/mc_trials
+        end
+        mcera_avg = mcera_avg/num_samples_d
+        mcera_partition_avg[i] = mcera_avg
+        sup_emp_wimpy_var = sup_empwvar_partition[i]/num_samples_d
+        current_eps = epsilon_mcrade(sup_emp_wimpy_var,mcera_avg,delta_each_partition,num_samples_d,mc_trials)
+        epsilon_partition[i] = current_eps
+    end
+    sup_eps::Float64 = 0.0
+    converged::Bool = true
+    number_of_converged::Int64 = 0
+    for i in 1:lastindex(approx_top_k)
+        u = approx_top_k[i][1]
+        node_partition_idx = partition_index[u]
+        map_node_partition_index = partitions_ids_map[node_partition_idx]
+        eps_current_node = epsilon_partition[map_node_partition_index]
+        converged = converged & (eps_current_node <= eps)
+        #println("ξ_cur "*string(u)*" = "*string(eps_current_node))
+        if eps_current_node <= eps 
+            number_of_converged+=1
+        end
+    end
+   
+    has_to_stop[1]= converged
+    conv_numb[1] = number_of_converged
+    return nothing
+end
 function _check_stopping_condition!(betweenness::Array{Float64},wv::Array{Float64},last_stopping_samples::Float64,num_samples::Int64,eps::Float64,delta::Float64,iteration::Int64,second_phase::Bool,diam::Int64,tdd::Array{Int64},sample_size::Int64,mc_trials::Int64,partition_index::Array{Int64},partitions_ids_map::Dict{Int64,Int64},emp_wimpy_vars::Array{Float64},mcrade::Array{Float64},number_of_non_empty_partitions::Int64,omega::Vector{Float64},norm::Float64,has_to_stop::Vector{Bool})
     n::Int64 = lastindex(betweenness)
     num_samples_d::Float64 = num_samples
@@ -183,7 +241,7 @@ function get_next_stopping_sample(ss::Float64,iteration_index::Int64)
     return ss,iteration_index
 end
 
-function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,bigint::Bool,algo::String = "trk",diam::Int64 = -1,empirical_peeling_a::Float64 = 2.0,sample_step::Int64 = 10,hb::Bool = false)
+function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Float64,bigint::Bool,algo::String = "trk",vc_upper_bund::Bool = true,diam::Int64 = -1,empirical_peeling_a::Float64 = 2.0)
     @assert (algo == "trk") || (algo == "ob") || (algo == "rtb") "Illegal algorithm, use: trk , ob , or rtb"
     norm::Float64 = 1.0
     if algo == "rtb"
@@ -220,9 +278,243 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
     t_diam::Float64 = 0.0
     max_num_samples::Float64 = 0.0
 
+    if (diam == -1)
+        println("Approximating (sh)-Temporal Diameter ")
+        diam,avg_dist,_,_,_,t_diam = threaded_temporal_shortest_diameter(tg,64,0,0.9,false)
+        println("Task completed in "*string(round(t_diam;digits = 4))*". Δ = "*string(diam)*" ρ = "*string(avg_dist))
+        flush(stdout)
+    end
+    start_time_bootstrap = time()
+
+    tau::Int64 = trunc(Int64,max(1. / eps * (log(1. / delta)) , 100.))
+    tau =  trunc(Int64,max(tau,2*(diam -1) * (log(1. / delta))) )
+    s::Int64 = 0
+    z::Int64 = 0
+    println("Bootstrap using Variance")
+    println("Bootstrap phase "*string(tau)*" iterations")
+    flush(stdout)
+    task_size = cld(tau, ntasks)
+    vs_active = [i for i in 1:tau]
+    if vc_upper_bund == true
+        println("Bootstrap using VC dimension")
+    else
+        println("Bootstrap using Variance")
+    end
+    flush(stdout)
+    @sync for (t, task_range) in enumerate(Iterators.partition(1:tau, task_size))
+        Threads.@spawn for _ in @view(vs_active[task_range])
+            sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+            s = sample[1][1]
+            z = sample[1][2]
+            if algo == "trk"
+                _sh_accumulate_trk!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+            elseif algo == "ob"
+                _sh_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+            elseif algo == "rtb"
+                _sh_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+            end
+        end
+    end
+
+    betweenness = reduce(+, local_temporal_betweenness)
+    betweenness = betweenness .* [1/tau]
+    wv = reduce(+,local_wv)
+    sp_lengths = reduce(+,local_sp_lengths) 
+    println("Empirical peeling phase:")
+    flush(stdout)
+    max_tbc::Float64 = 0.0
+    max_wv::Float64 = 0.0
+
+    for i in 1:tg.num_nodes
+        max_tbc = max(max_tbc,betweenness[i])
+        max_wv = max(max_wv,wv[i])
+        emp_w_node = wv[i] * 1. /tau
+        min_inv_w_node = min(1. /emp_w_node,tau)
+        node_partition_idx = trunc(Int,log(min_inv_w_node)/log(empirical_peeling_a)+1)
+        partition_index[i] = node_partition_idx
+        if haskey(non_empty_partitions,node_partition_idx)
+            non_empty_partitions[node_partition_idx] += 1
+        else
+            non_empty_partitions[node_partition_idx] = 1
+        end
+    end
+    number_of_non_empty_partitions = 0
+    for key in keys(non_empty_partitions)
+        partitions_ids_map[key] = part_idx
+        part_idx+=1
+        number_of_non_empty_partitions+=1
+    end
+    if !vc_upper_bund
+        # Upper bound on the average distance
+        avg_diam_ub::Float64 = upper_bound_average_diameter(delta/8,diam,sp_lengths,tau,true,norm)
+        # Upper bound on the top-1 temporal betweenness
+        top1bc_upper_bound::Float64 = upper_bound_top_1_tbc(max_tbc,delta/8,tau)
+        wimpy_var_upper_bound::Float64 = upper_bound_top_1_tbc(max_wv/tau,delta/8,tau)
+        # define delta_for_progressive_bound
+        println("Average (sh)-temporal path (upper bound) "*string(avg_diam_ub))
+        # Upper limit on number of samples
+        max_num_samples = upper_bound_samples(top1bc_upper_bound,wimpy_var_upper_bound,avg_diam_ub,eps,delta/2 ,false)
+        omega = 0.5/eps/eps * (log2(diam-1)+1+log(2/delta))
+        println("Maximum number of samples "*string(max_num_samples)*" VC Bound "*string(omega))
+        println("Sup tbc estimation "*string(max_tbc))
+        println("Sup empirical wimpy variance "*string(max_wv/tau))
+        flush(stdout)
+    end
+    iteration_index::Int64 =1 
+    
+    local_wv = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    local_temporal_betweenness = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    mcrade = [zeros((tg.num_nodes+1)*mc_trials) for _ in 1:ntasks]
+    local_sp_lengths = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    
+    omega = 0.5/eps/eps * (log2(diam-1)+1+log(2/delta))
+    if max_num_samples > 0
+        omega = max_num_samples
+    end
+    
+    max_num_samples = omega
+    first_stopping_samples::Float64 = 0.0
+    eps_guess::Float64 = 1.0
+    first_sample_lower::Float64 = 1/eps *log(2/delta)
+    first_sample_upper::Float64 = omega
+    sup_emp_wimpy_var_norm::Float64  = max_wv/tau +1/tau
+    finish_bootstrap = string(round(time() - start_time_bootstrap; digits=4))
+    println("Bootstrap completed in "*finish_bootstrap)
+    println("Inferring initial sample size for the geometric sampler")
+    flush(stdout)
+    while first_sample_upper - first_sample_lower> 10
+        num_samples = (first_sample_upper+first_sample_lower)÷2
+        eps_guess = sqrt(2*sup_emp_wimpy_var_norm*log(2/delta) /num_samples) + log(2/delta)/num_samples/3
+        if eps_guess > eps
+            first_sample_lower = num_samples
+        else
+            first_sample_upper = num_samples
+        end
+    end
+    first_stopping_samples = num_samples
+    last_stopping_samples = omega
+    println("Maximum number of iterations "*string(last_stopping_samples))
+    println("Initial sample size "*string(first_stopping_samples))
+    if first_stopping_samples >= last_stopping_samples/4
+        first_stopping_samples = last_stopping_samples/4
+        println("Initial sample size dropped to "*string(first_stopping_samples))
+    end
+    flush(stdout)
+    next_stopping_samples::Float64 = first_stopping_samples
+    prev_stopping_samples::Float64 = 0.0
+    has_to_stop::Bool = false
+    num_samples = 0
+    sample_i::Int64 = 0
+    while !has_to_stop
+        sample_i = trunc(Int,next_stopping_samples-prev_stopping_samples)
+        task_size = cld(sample_i, ntasks)
+        vs_active = [i for i in 1:sample_i]
+        @sync for (t, task_range) in enumerate(Iterators.partition(1:sample_i, task_size))
+            Threads.@spawn for _ in @view(vs_active[task_range])
+                sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+                s = sample[1][1]
+                z = sample[1][2]
+                if algo == "trk"
+                    _sh_accumulate_trk!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                elseif algo == "ob"
+                    _sh_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                elseif algo == "rtb"
+                    _sh_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                end
+            end
+        end
+
+
+        num_samples += sample_i
+
+        if num_samples >= omega
+            has_to_stop = true
+            finish_partial = string(round(time() - start_time; digits=4))
+            println("Completed, sampled "*string(num_samples)*"/"*string(omega)* " couples in "*finish_partial)
+            flush(stdout)
+        end
+    
+        if !has_to_stop & (num_samples < last_stopping_samples)&(num_samples >= next_stopping_samples)
+            
+            betweenness = reduce(+, local_temporal_betweenness)
+     
+            wv = reduce(+,local_wv)
+            #sp_lengths = reduce(+,local_sp_lengths) 
+            r_mcrade = reduce(+,mcrade)
+                
+            tmp_omega = Vector{Float64}([omega])
+            tmp_has_to_stop = Vector{Bool}([false])
+            _check_stopping_condition!(betweenness,wv,last_stopping_samples,num_samples,eps,delta,iteration_index,true,diam,sp_lengths,num_samples,mc_trials,partition_index,partitions_ids_map,wv,r_mcrade,number_of_non_empty_partitions,tmp_omega,norm,tmp_has_to_stop)
+            
+            omega = tmp_omega[1]
+            has_to_stop = tmp_has_to_stop[1]
+            if has_to_stop
+                println("Progressive sampler converged!")
+                flush(stdout)
+            else
+                prev_stopping_samples = next_stopping_samples
+                next_stopping_samples,iteration_index = get_next_stopping_sample(next_stopping_samples,iteration_index )
+                println("Increasing sample size to "*string(next_stopping_samples))
+                flush(stdout)
+            end
+                    
+        end
+
+
+    end
+
+    println("(SH)-Temporal Betweenness estimated in "*string(round(time() - start_time; digits=4)))
+    flush(stdout)
+    betweenness = reduce(+, local_temporal_betweenness)
+    return betweenness.*[1/num_samples],num_samples,max_num_samples,time()-start_time
+
+
+end
+
+
+
+function threaded_progressive_cmcera_topk(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,k::Int64,bigint::Bool,algo::String = "trk",diam::Int64 = -1,empirical_peeling_a::Float64 = 2.0,sample_step::Int64 = 10,hb::Bool = false)
+    @assert (algo == "trk") || (algo == "ob") || (algo == "rtb") "Illegal algorithm, use: trk , ob , or rtb"
+    norm::Float64 = 1.0
+    if algo == "rtb"
+        norm = 1/(tg.num_nodes-1)
+    end
+    start_time = time()
+    ntasks = nthreads()
+    mc_trials::Int64 = 25
+    # Temoral Graph structures
+    tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
+    tn_index::Dict{Tuple{Int64,Int64},Int64} = Dict{Tuple{Int64,Int64},Int64}()
+    approx_top_k::Array{Tuple{Int64,Float64}} =  Array{Tuple{Int64,Float64}}([])
+    union_sample::Int64 = min(tg.num_nodes,max(trunc(Int,sqrt(lastindex(tg.temporal_edges))/ntasks),k+20))
+    if algo == "trk"
+        tn_index = temporal_node_index_srtp(tg)
+    else
+        tn_index = temporal_node_index(tg)
+    end
+    # Wimpy variance
+    local_wv::Array{Array{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    wv::Array{Float64} = Array{Float64}([])
+    emp_w_node::Float64 = 0.0
+    min_inv_w_node::Float64 = 0.0
+    # Partitions
+    number_of_non_empty_partitions::Int64 = 0.0
+    non_empty_partitions::Dict{Int64,Int64} = Dict{Int64,Int64}()
+    partitions_ids_map::Dict{Int64,Int64} = Dict{Int64,Int64}()
+    partition_index::Array{Int64} = zeros(tg.num_nodes)
+    part_idx::Int64 = 1
+    # TBC
+    tmp_has_to_stop::Array{Bool} = Array{Bool}([false])
+    local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    mcrade::Array{Array{Float64}} = [zeros(tg.num_nodes*mc_trials) for _ in 1:ntasks]
+    local_sp_lengths::Array{Array{Int64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    omega::Float64 = 1000
+    t_diam::Float64 = 0.0
+    max_num_samples::Float64 = 0.0
+
     if (diam == -1) && (!hb)
         println("Approximating (sh)-Temporal Diameter ")
-        diam,avg_dist,_,_,_,t_diam = threaded_temporal_shortest_diameter(tg,64,verbose_step,0.9,false)
+        diam,avg_dist,_,_,_,t_diam = threaded_temporal_shortest_diameter(tg,64,0,0.9,false)
         println("Task completed in "*string(round(t_diam;digits = 4))*". Δ = "*string(diam)*" ρ = "*string(avg_dist))
         flush(stdout)
     end
@@ -306,7 +598,7 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
     iteration_index::Int64 =1 
     
     local_wv = [zeros(tg.num_nodes) for _ in 1:ntasks]
-    local_temporal_betwInt64eenness = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    local_temporal_betweenness = [zeros(tg.num_nodes) for _ in 1:ntasks]
     mcrade = [zeros((tg.num_nodes+1)*mc_trials) for _ in 1:ntasks]
     local_sp_lengths = [zeros(tg.num_nodes) for _ in 1:ntasks]
     
@@ -348,6 +640,7 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
     num_samples = 0
     sample_i::Int64 = 0
     while !has_to_stop
+        approx_top_k =  Array{Tuple{Int64,Float64}}([])
         sample_i = trunc(Int,next_stopping_samples-prev_stopping_samples)
         task_size = cld(sample_i, ntasks)
         vs_active = [i for i in 1:sample_i]
@@ -386,8 +679,13 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
                 
             tmp_omega = Vector{Float64}([omega])
             tmp_has_to_stop = Vector{Bool}([false])
-            _check_stopping_condition!(betweenness,wv,last_stopping_samples,num_samples,eps,delta,iteration_index,true,diam,sp_lengths,num_samples,mc_trials,partition_index,partitions_ids_map,wv,r_mcrade,number_of_non_empty_partitions,tmp_omega,norm,tmp_has_to_stop)
-            
+            tmp_conv_number = Vector{Int64}([0])
+            for u in 1:tg.num_nodes
+                push!(approx_top_k,(u,betweenness[u]))
+            end
+            sort!(approx_top_k, by=approx_top_k->-approx_top_k[2])
+            _check_stopping_condition_topk!(approx_top_k[begin:union_sample],betweenness,wv,last_stopping_samples,num_samples,eps,delta,iteration_index,true,diam,sp_lengths,num_samples,mc_trials,partition_index,partitions_ids_map,wv,r_mcrade,number_of_non_empty_partitions,tmp_omega,norm,tmp_has_to_stop,tmp_conv_number)
+            println("Converged "*string(tmp_conv_number[1])*"/"*string(union_sample))
             omega = tmp_omega[1]
             has_to_stop = tmp_has_to_stop[1]
             if has_to_stop
@@ -404,15 +702,19 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
 
 
     end
-
+    
     println("(SH)-Temporal Betweenness estimated in "*string(round(time() - start_time; digits=4)))
     flush(stdout)
     betweenness = reduce(+, local_temporal_betweenness)
-    return betweenness.*[1/num_samples],num_samples,max_num_samples,time()-start_time
+    approx_top_k =  Array{Tuple{Int64,Float64}}([])
+    for u in 1:tg.num_nodes
+        push!(approx_top_k,(u,betweenness[u]/num_samples))
+    end
+    sort!(approx_top_k, by=approx_top_k->-approx_top_k[2])
+    return approx_top_k,num_samples,max_num_samples,time()-start_time
 
 
 end
-
 function threaded_progressive_cmcera_dep(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,bigint::Bool,algo::String = "trk",diam::Int64 = -1,empirical_peeling_a::Float64 = 2.0,sample_step::Int64 = 10,hb::Bool = false)
     @assert (algo == "trk") || (algo == "ob") || (algo == "rtb") "Illegal algorithm, use: trk , ob , or rtb"
     norm::Float64 = 1.0
