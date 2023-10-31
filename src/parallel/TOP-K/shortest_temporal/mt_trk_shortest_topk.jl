@@ -93,7 +93,7 @@ end
 
 
 
-function compute_bet_err_topk(eps::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},start_factor::Int64,k::Int64,approx_top_k::Array{Tuple{Int64,Float64}},union_sample::Int64)::Tuple{Array{Float64},Array{Float64}}
+function compute_bet_err_topk_dep(eps::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},start_factor::Int64,k::Int64,approx_top_k::Array{Tuple{Int64,Float64}},union_sample::Int64)::Tuple{Array{Float64},Array{Float64}}
     n::Int64 = lastindex(eps_lb)
     bet::Array{Float64} = zeros(n)
     max_error::Float64 = sqrt(start_factor) * eps/4
@@ -129,7 +129,7 @@ function compute_bet_err_topk(eps::Float64,eps_lb::Array{Float64},eps_ub::Array{
     return eps_lb,eps_ub
 end
 
-function _compute_δ_guess_topk!(betweenness::Array{Float64},eps::Float64,delta::Float64,balancing_factor::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},delta_lb_min_guess::Array{Float64},delta_ub_min_guess::Array{Float64},delta_lb_guess::Array{Float64},delta_ub_guess::Array{Float64},k::Int64,approx_top_k::Array{Tuple{Int64,Float64}},start_factor::Int64,union_sample::Int64) 
+function _compute_δ_guess_topk_dep!(betweenness::Array{Float64},eps::Float64,delta::Float64,balancing_factor::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},delta_lb_min_guess::Array{Float64},delta_ub_min_guess::Array{Float64},delta_lb_guess::Array{Float64},delta_ub_guess::Array{Float64},k::Int64,approx_top_k::Array{Tuple{Int64,Float64}},start_factor::Int64,union_sample::Int64) 
 
     n::Int64 = lastindex(betweenness)
     v::Int64 = -1
@@ -171,7 +171,7 @@ function _compute_δ_guess_topk!(betweenness::Array{Float64},eps::Float64,delta:
 end
 
 
-function _compute_finished_topk!(stop::Array{Bool},omega::Int64,top_k_approx::Array{Tuple{Int64,Float64}},sampled_so_far::Int64,eps::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},delta_lb_guess::Array{Float64},delta_ub_guess::Array{Float64},delta_lb_min_guess::Float64,delta_ub_min_guess::Float64,union_sample::Int64)
+function _compute_finished_topk_dep!(stop::Array{Bool},omega::Int64,top_k_approx::Array{Tuple{Int64,Float64}},sampled_so_far::Int64,eps::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},delta_lb_guess::Array{Float64},delta_ub_guess::Array{Float64},delta_lb_min_guess::Float64,delta_ub_min_guess::Float64,union_sample::Int64)
     #j::Int64 = 1
     k = lastindex(top_k_approx)
     all_finished::Bool = true

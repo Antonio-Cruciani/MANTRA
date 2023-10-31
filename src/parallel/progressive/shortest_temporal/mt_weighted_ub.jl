@@ -828,16 +828,16 @@ function compute_bet_err_topk(eps::Float64,eps_lb::Array{Float64},eps_ub::Array{
     n::Int64 = lastindex(eps_lb)
     bet::Array{Float64} = zeros(n)
     max_error::Float64 = sqrt(start_factor) * eps/4
-    Base.Threads.@threads for i in 1:union_sample 
+    for i in 1:union_sample 
         bet[i] = approx_top_k[i][2]
     end
     eps_ub[1] = max(eps,(bet[1]-bet[2])/2)
     eps_lb[1] = 10
-    Base.Threads.@threads for i in 2:k
+    for i in 2:k
         eps_lb[i] = max(eps,(bet[i-1]-bet[i])/2)
         eps_ub[i] = max(eps,(bet[i]-bet[i+1])/2)
     end
-    Base.Threads.@threads for i in (k+1):union_sample
+    for i in (k+1):union_sample
         eps_lb[i] = 10
         eps_ub[i] = max(eps,bet[k-1]+(bet[k-1]-bet[k])/2 - bet[i])
     end
@@ -887,12 +887,12 @@ function _compute_δ_guess_topk!(betweenness::Array{Float64},eps::Float64,delta:
     end
     delta_lb_min_guess[1] = exp(-b * eps_lb[union_sample-1]* eps_lb[union_sample-1] / betweenness[union_sample-1]) + delta*balancing_factor/4.0 / n
     delta_ub_min_guess[1] = exp(-b * eps_ub[union_sample-1]* eps_ub[union_sample-1] / betweenness[union_sample-1] ) + delta*balancing_factor/4.0 / n
-    Base.Threads.@threads for v in 1:n
+    for v in 1:n
         delta_lb_guess[v] = delta_lb_min_guess[1]
         delta_ub_guess[v] =  delta_ub_min_guess[1] 
     end
 
-    Base.Threads.@threads for i in 1:union_sample
+    for i in 1:union_sample
         v = approx_top_k[i][1]
         delta_lb_guess[v] = exp(-b *  eps_lb[i]*eps_lb[i]/ betweenness[i])+ delta*balancing_factor/4.0 / n
         delta_ub_guess[v] = exp(-b *  eps_ub[i]*eps_ub[i] / betweenness[i]) + delta*balancing_factor/4.0 / n
@@ -908,7 +908,7 @@ function _compute_finished_topk!(stop::Array{Bool},omega::Int64,top_k_approx::Ar
     all_finished::Bool = true
     finished::Array{Bool} = falses(union_sample)
     betweenness::Array{Float64} = zeros(union_sample)
-    Base.Threads.@threads for i in 1:(union_sample-1)
+    for i in 1:(union_sample-1)
         betweenness[i] = top_k_approx[i][2] / sampled_so_far
         eps_lb[i] = commpute_f(betweenness[i],sampled_so_far,delta_lb_guess[top_k_approx[i][1]],omega)
         eps_ub[i] = compute_g(betweenness[i],sampled_so_far,delta_ub_guess[top_k_approx[i][1]],omega)
@@ -942,16 +942,26 @@ end
 
 
 
-
+# to check well
 function commpute_f(btilde::Float64, iter_num::Int64,δ_l::Float64,ω::Int64)::Float64
     tmp::Float64 = ω/iter_num - 1.0/3.0
-    err_chern::Float64 = (log(1.0/δ_l))*1.0/iter_num*(-tmp+sqrt(tmp*tmp +2*btilde * ω/(log(1.0/δ_l))))
+    err_chern::Float64 = 0.0
+    if tmp*tmp +2*btilde * ω/(log(1.0/δ_l)) < 0
+        err_chern = (log(1.0/δ_l))*1.0/iter_num*(-tmp+sqrt(tmp*tmp +2*btilde * ω/(Inf)))
+    else
+        err_chern = (log(1.0/δ_l))*1.0/iter_num*(-tmp+sqrt(tmp*tmp +2*btilde * ω/(log(1.0/δ_l))))
+    end
     return min(err_chern,btilde)
 end
 
 function compute_g(btilde::Float64, iter_num::Int64,δ_u::Float64,ω::Int64)::Float64
     tmp::Float64 = ω/iter_num + 1.0/3.0
-    err_chern::Float64 = (log(1.0/δ_u))*1.0/iter_num*(tmp+sqrt(tmp*tmp +2*btilde * ω/(log(1.0/δ_u))))
+    err_chern::Float64 = 0.0
+    if tmp*tmp +2*btilde * ω/(log(1.0/δ_u)) < 0
+        err_chern = (log(1.0/δ_u))*1.0/iter_num*(tmp+sqrt(tmp*tmp +2*btilde * ω/(Inf)))
+    else
+     err_chern = (log(1.0/δ_u))*1.0/iter_num*(tmp+sqrt(tmp*tmp +2*btilde * ω/(log(1.0/δ_u))))
+    end
     return min(err_chern,1-btilde)
 end
 function _compute_finished!(stop::Array{Bool},omega::Int64,betweenness::Array{Float64},sampled_so_far::Int64,eps::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},delta_lb_guess::Array{Float64},delta_ub_guess::Array{Float64},delta_lb_min_guess::Float64,delta_ub_min_guess::Float64)
@@ -959,7 +969,7 @@ function _compute_finished!(stop::Array{Bool},omega::Int64,betweenness::Array{Fl
     n::Int64 = lastindex(betweenness)
     all_finished::Bool = true
     finished::Array{Bool} = falses(n)
-    Base.Threads.@threads for i in 1:(n-1)
+    for i in 1:(n-1)
         betweenness[i] = betweenness[i] / sampled_so_far
         eps_lb[i] = commpute_f(betweenness[i],sampled_so_far,delta_lb_guess[i],omega)
         eps_ub[i] = compute_g(betweenness[i],sampled_so_far,delta_ub_guess[i],omega)
@@ -978,7 +988,7 @@ end
 
 
 function compute_bet_err(eps::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},start_factor::Int64)::Tuple{Array{Float64},Array{Float64}}
-    Base.Threads.@threads for i in 1:n
+    for i in 1:n
         eps_lb[i] = eps
         eps_ub[i] = eps
     end
@@ -997,7 +1007,7 @@ function _compute_δ_guess!(betweenness::Array{Float64},eps::Float64,delta::Floa
     c::Float64 = (a+b)/2
     summation::Float64 = 0.0
     
-    Base.Threads.@threads for i in 1:n
+    for i in 1:n
         eps_lb[i] = eps
         eps_ub[i] = eps
     end
@@ -1018,7 +1028,7 @@ function _compute_δ_guess!(betweenness::Array{Float64},eps::Float64,delta::Floa
     end
     delta_lb_min_guess[1] = exp(-b * eps_lb[n-1]* eps_lb[n-1] / betweenness[n-1]) + delta*balancing_factor/4.0 / n
     delta_ub_min_guess[1] = exp(-b * eps_ub[n-1]* eps_ub[n-1] / betweenness[n-1] ) + delta*balancing_factor/4.0 / n
-    Base.Threads.@threads for i in 1:n
+    for i in 1:n
         delta_lb_guess[i] = exp(-b *  eps_lb[i]*eps_lb[i]/ betweenness[i])+ delta*balancing_factor/4.0 / n
         delta_ub_guess[i] = exp(-b *  eps_ub[i]*eps_ub[i] / betweenness[i]) + delta*balancing_factor/4.0 / n
     end

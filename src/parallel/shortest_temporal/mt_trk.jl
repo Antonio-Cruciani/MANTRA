@@ -508,18 +508,18 @@ function threaded_progressive_trk(tg::temporal_graph,eps::Float64,delta::Float64
 
 
 end
-function commpute_f(btilde::Float64, iter_num::Int64,δ_l::Float64,ω::Int64)::Float64
+function commpute_f_dep(btilde::Float64, iter_num::Int64,δ_l::Float64,ω::Int64)::Float64
     tmp::Float64 = ω/iter_num - 1.0/3.0
     err_chern::Float64 = (log(1.0/δ_l))*1.0/iter_num*(-tmp+sqrt(tmp*tmp +2*btilde * ω/(log(1.0/δ_l))))
     return min(err_chern,btilde)
 end
 
-function compute_g(btilde::Float64, iter_num::Int64,δ_u::Float64,ω::Int64)::Float64
+function compute_g_dep(btilde::Float64, iter_num::Int64,δ_u::Float64,ω::Int64)::Float64
     tmp::Float64 = ω/iter_num + 1.0/3.0
     err_chern::Float64 = (log(1.0/δ_u))*1.0/iter_num*(tmp+sqrt(tmp*tmp +2*btilde * ω/(log(1.0/δ_u))))
     return min(err_chern,1-btilde)
 end
-function _compute_finished!(stop::Array{Bool},omega::Int64,betweenness::Array{Float64},sampled_so_far::Int64,eps::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},delta_lb_guess::Array{Float64},delta_ub_guess::Array{Float64},delta_lb_min_guess::Float64,delta_ub_min_guess::Float64)
+function _compute_finished_dep!(stop::Array{Bool},omega::Int64,betweenness::Array{Float64},sampled_so_far::Int64,eps::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},delta_lb_guess::Array{Float64},delta_ub_guess::Array{Float64},delta_lb_min_guess::Float64,delta_ub_min_guess::Float64)
     #j::Int64 = 1
     n::Int64 = lastindex(betweenness)
     all_finished::Bool = true
@@ -542,7 +542,7 @@ function _compute_finished!(stop::Array{Bool},omega::Int64,betweenness::Array{Fl
 end
 
 
-function compute_bet_err(eps::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},start_factor::Int64)::Tuple{Array{Float64},Array{Float64}}
+function compute_bet_err_dep(eps::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},start_factor::Int64)::Tuple{Array{Float64},Array{Float64}}
     Base.Threads.@threads for i in 1:n
         eps_lb[i] = eps
         eps_ub[i] = eps
@@ -554,7 +554,7 @@ end
 
 
 
-function _compute_δ_guess!(betweenness::Array{Float64},eps::Float64,delta::Float64,balancing_factor::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},delta_lb_min_guess::Array{Float64},delta_ub_min_guess::Array{Float64},delta_lb_guess::Array{Float64},delta_ub_guess::Array{Float64}) 
+function _compute_δ_guess_dep!(betweenness::Array{Float64},eps::Float64,delta::Float64,balancing_factor::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},delta_lb_min_guess::Array{Float64},delta_ub_min_guess::Array{Float64},delta_lb_guess::Array{Float64},delta_ub_guess::Array{Float64}) 
 
     n::Int64 = lastindex(betweenness)
     a::Float64 = 0

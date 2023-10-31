@@ -141,14 +141,14 @@ end
 function save_results_topk(nn::String,cn::String,c::Array{Tuple{Int64,Float64}},k::Int64,ss::Int64,t::Float64,starting_ss::Int64,xi::Float64 = -1.0)
     if (length(c) > 0)
         mkpath("scores/" * nn * "/")
-        append_centrality_values_topk("scores/" * nn * "/"*cn*"_"*string(starting_ss)*"top_"*string(k)*".txt", c)
+        append_centrality_values_topk("scores/" * nn * "/"*cn*"_"*string(starting_ss)*"_top_"*string(k)*".txt", c)
         mkpath("times/" * nn * "/")
-        f = open("times/" * nn * "/"*cn*"_"*string(starting_ss)*".txt", "a")
+        f = open("times/" * nn * "/"*cn*"_"*string(starting_ss)*"_top_k.txt", "a")
         write(f, string(round(t; digits=4)) * " " * string(ss) *" "*string(xi) *" "*string(k)*"\n")
         close(f)
     else
         mkpath("times/" * nn * "/")
-        f = open("times/" * nn * "/"*cn*"_"*string(starting_ss)*".txt", "a")
+        f = open("times/" * nn * "/"*cn*"_"*string(starting_ss)*"_top_k.txt", "a")
         write(f, "-1.0 -1.0 -1.0 -1.0,-1.0,-1.0")
         close(f)
     end
@@ -376,16 +376,16 @@ end
 
 function progressive_wub(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64 = 0,bigint::Bool = false,algo::String = "trk",topt::String = "sh",vc_upper_bund::Bool = true,geo::Float64 = 1.2,diam::Int64 = -1,start_factor::Int64 = 100)
     @assert (topt == "sh") || (topt == "sfm") || (topt == "pfm") "Illegal temporal-path optimality, use: sh for shortest , sfm for shortest foremost , or pfm for prefix foremost"
-    if nthreads() > 1
+    if nthreads() >= 1
         println("Algorithm "*algo* " Temporal path optimality "*topt)
         flush(stdout)
         if k > 0
             if topt == "sh"
-                return threaded_progressive_wub_topk(tg,eps,delta,k,verbose_step,bigint,algo,vc_upper_bund,diam,start_factor,sample_step,hb)
+                return threaded_progressive_wub_topk(tg,eps,delta,k,bigint,algo,vc_upper_bund,diam)
             elseif topt == "sfm"
-                return threaded_progressive_wub_shortest_foremost_topk(tg,eps,delta,k,verbose_step,bigint,algo,vc_upper_bund,diam,start_factor,sample_step,hb)
+                return threaded_progressive_wub_shortest_foremost_topk(tg,eps,delta,k,bigint,algo,vc_upper_bund,diam)
             else
-                return threaded_progressive_wub_prefix_foremost_topk(tg,eps,delta,k,verbose_step,algo,vc_upper_bund,diam,start_factor,sample_step,hb)
+                return threaded_progressive_wub_prefix_foremost_topk(tg,eps,delta,k,algo,vc_upper_bund,diam)
             end
         else
             if topt == "sh"

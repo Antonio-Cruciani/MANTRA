@@ -426,7 +426,7 @@ function threaded_progressive_wub_prefix_foremost_2(tg::temporal_graph,eps::Floa
 end
 
 function threaded_progressive_wub_prefix_foremost_topk(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64,algo::String = "trk",vc_upper_bund::Bool = true,diam::Int64 = -1,geo::Float64 = 1.2,start_factor::Int64 = 100)
-    @assert (algo == "trk") || (algo == "ob") || (algo == "rtb") "Illegal algorithm, use: trk , ob , or rtb"
+    @assert (algo == "trk") || (algo == "ob") || (algo == "rtb") "Illegal algorithm, use: trk , ob , or rtb" 
     start_time = time()
     ntasks = nthreads()
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
@@ -455,6 +455,7 @@ function threaded_progressive_wub_prefix_foremost_topk(tg::temporal_graph,eps::F
     tau::Int64 = trunc(Int64,max(1. / eps * (log(1. / delta)) , 100.))
     tau = trunc(Int64,max(tau,2*(diam -1) * (log(1. / delta))) )
     tau = trunc(Int64,max(tau,omega/start_factor))
+    println("Top-k algorithm: k =  "*string(k)*"  union sample = "*string(union_sample))
     println("Bootstrap phase "*string(tau)*" iterations")
     flush(stdout)
     task_size = cld(tau, ntasks)
@@ -576,7 +577,6 @@ function threaded_progressive_wub_prefix_foremost_topk(tg::temporal_graph,eps::F
                 end
             end
         end
-        
         sampled_so_far += sample_i
         if sampled_so_far >= omega
             sample_stop = true
@@ -585,6 +585,7 @@ function threaded_progressive_wub_prefix_foremost_topk(tg::temporal_graph,eps::F
             flush(stdout)
         end      
         betweenness = reduce(+, local_temporal_betweenness)
+
         if algo == "rtb"
             betweenness =  betweenness.*[1/(tg.num_nodes-1)]
         end
