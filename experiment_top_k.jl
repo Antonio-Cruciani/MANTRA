@@ -23,7 +23,8 @@ algo = "ob"
 topt = "pfm"
 
 datasets = [
-    
+    "16_brain_100206_90.txt",
+    "17_brain_100206_70.txt",
     "01_hypertext.txt",
     "02_highschool.txt",
     "03_hospital_ward.txt",
