@@ -141,7 +141,7 @@ epsilon_list = [0.01]
 sample_list = [1000]
 topt = "sfm"
 
-trials = 10
+trials = 5
 
 datasets = [
     "22_superuser.txt"
