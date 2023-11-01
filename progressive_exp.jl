@@ -155,13 +155,6 @@ for i in 1:lastindex(epsilon_list)
         tg = load_temporal_graph(path*gn," ")
         print_samplig_stats(epsilon,delta,trials,starting_ss)
         print_stats(tg, graph_name= gn)
-        println("Running Bernstein")
-        flush(stdout)
-        for i in 1:trials
-            result = progressive_bernstein(tg,epsilon,delta,geo, big_int,algo,topt,vc_upper_bound)
-            save_results_progressive_sampling(nn,"b_"*algo*"_"*topt*"_"*upperbound_sample,result[1],result[2][end],result[4],starting_ss,result[3])
-            clean_gc()
-        end
         println("Running WUB")
         flush(stdout)
         for i in 1:trials
