@@ -21,7 +21,7 @@ vc_upper_bound = false
 #topt = "pfm"
 algo = "ob"
 k = 0
-topt = "pfm"
+topt = "sh"
 upperbound_sample = "var"
 
 epsilon_list = [0.1,0.07,0.05,0.01]
@@ -44,8 +44,6 @@ datasets = [
 "12_highschool.txt",
 "13_topology.txt",
 "14_SMS.txt",
-"18_venice.txt",
-"19_bordeaux.txt",
 "21_mathoverflow.txt",
 "20_askubuntu.txt",
 "22_superuser.txt"
