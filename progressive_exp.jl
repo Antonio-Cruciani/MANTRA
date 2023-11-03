@@ -28,7 +28,6 @@ upperbound_sample = "var"
 epsilon_list = [0.07,0.05,0.01]
 sample_list = [350,750,1000]
 datasets = [
-
 "16_brain_100206_90.txt",
 "17_brain_100206_70.txt",
 "01_hypertext.txt",
