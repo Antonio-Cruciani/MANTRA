@@ -231,7 +231,7 @@ end
 
 
 
-function check_stopping_condition_topk(betweenness::Array{Float64},k::Int64,union_sample::Int64,num_samples::Float64,eps::Float64,delta::Float64,iteration::Int64,mc_trials::Int64,mcrade::Array{Float64},norm::Float64,partition_index::Array{Int64},number_of_non_empty_partitions::Int64, non_empty_partitions::Dict{Int64,Int64},partitions_ids_map::Dict{Int64,Int64},emp_wimpy_vars::Array{Float64},diam,sp_lengths::Array{Float64})
+function check_stopping_condition_topk(betweenness::Array{Float64},k::Int64,union_sample::Int64,num_samples::Int64,eps::Float64,delta::Float64,iteration::Int64,mc_trials::Int64,mcrade::Array{Float64},norm::Float64,partition_index::Array{Int64},number_of_non_empty_partitions::Int64, non_empty_partitions::Dict{Int64,Int64},partitions_ids_map::Dict{Int64,Int64},emp_wimpy_vars::Array{Float64},diam,avg_diam_upperbound)
     n::Int64 = lastindex(betweenness)
     approx_top_k::Array{Tuple{Int64,Float64}} =  Array{Tuple{Int64,Float64}}([])
     for i in 1:tg.num_nodes
@@ -275,7 +275,7 @@ function check_stopping_condition_topk(betweenness::Array{Float64},k::Int64,unio
         current_eps = epsilon_mcrade(sup_emp_wimpy_var,mcera_avg,delta_each_partition,num_samples_d,mc_trials)
         epsilon_partition[i] = current_eps
     end
-    top_k_converged,top_k_result = check_top_k_convergence(approx_top_k,union_sample,num_samples,eps,delta,iteration,partition_index,partitions_ids_map,number_of_non_empty_partitions,mc_trials,sup_bcest_partition,sup_empwvar_partition,norm,emp_wimpy_vars,max_mcera_partition,mcrade,diam,sp_lengths,k)
+    top_k_converged,top_k_result = check_top_k_convergence(approx_top_k,union_sample,num_samples,eps,delta,iteration,partition_index,partitions_ids_map,number_of_non_empty_partitions,mc_trials,sup_bcest_partition,sup_empwvar_partition,norm,emp_wimpy_vars,max_mcera_partition,mcrade,avg_diam_upperbound,k)
     if top_k_converged
         println("MCRADE STOPS at iteration : "*string(iteration))
         println("MCRADE STOPS at sample size : "*string(num_samples))
@@ -327,7 +327,7 @@ function compute_relative_bound(n::Int64,bc_est::Float64,delta::Float64,avg_dist
     return lower
 end
 
-function check_top_k_convergence(approx_top_k::Array{Tuple{Int64,Float64}},union_sample::Int64,num_samples::Float64,err::Float64,delta::Float64,iteration::Int64,partition_index::Array{Int64},partitions_ids_map::Dict{Int64,Int64},number_of_non_empty_partitions::Int64,mc_trials::Int64,sup_bcest_partition::Array{Float64},sup_empwvar_partition::Array{Float64},norm::Float64,emp_wimpy_vars::Array{Float64},max_mcera_partition,mcrade::Array{Float64},diam,sp_lengths::Array{Float64},k::Int64)
+function check_top_k_convergence(approx_top_k::Array{Tuple{Int64,Float64}},union_sample::Int64,num_samples::Int64,err::Float64,delta::Float64,iteration::Int64,partition_index::Array{Int64},partitions_ids_map::Dict{Int64,Int64},number_of_non_empty_partitions::Int64,mc_trials::Int64,sup_bcest_partition::Array{Float64},sup_empwvar_partition::Array{Float64},norm::Float64,emp_wimpy_vars::Array{Float64},max_mcera_partition,mcrade::Array{Float64},avg_diam_upperbound,k::Int64)
     num_samples_d::Float64 = num_samples
     n::Int64 = lastindex(approx_top_k)
     println("Evaluating stopping condition for TOP-K relative approximation")
@@ -381,7 +381,7 @@ function check_top_k_convergence(approx_top_k::Array{Tuple{Int64,Float64}},union
         eps_current_node = epsilon_partition[map_node_partition_index]
         lowerbound_bc = approx_v-eps_current_node
         upperbound_bc = approx_v+eps_current_node
-        avg_diam_upperbound = upper_bound_average_diameter(delta_for_progressive_bound,trunc(Int,diam),sp_lengths,trunc(Int,num_samples_d),true,norm)
+        #avg_diam_upperbound = upper_bound_average_diameter(delta_for_progressive_bound,trunc(Int,diam),sp_lengths,trunc(Int,num_samples_d),true,norm)
         lb_tbc_rel = compute_relative_bound(n,approx_v,delta_for_progressive_bound,avg_diam_upperbound,num_samples_d,false)
         ub_tbc_rel = compute_relative_bound(n,approx_v,delta_for_progressive_bound,avg_diam_upperbound,num_samples_d,true)
         lowerbound_bc = max(lowerbound_bc,lb_tbc_rel)

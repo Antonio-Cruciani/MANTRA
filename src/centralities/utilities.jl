@@ -18,6 +18,8 @@ function read_centrality_values(file_name::String)::Array{Float64}
     return centrality
 end
 
+
+
 function save_centrality_values(file_name::String, centrality::Array{Float64})::Nothing
     f::IOStream = open(file_name, "w")
     for u in 1:lastindex(centrality)
@@ -42,15 +44,52 @@ function append_centrality_values_topk(file_name::String, centrality::Array{Tupl
     close(f)
 end
 
-function read_time(file_name::String)::Float64
+function read_time(file_name::String)
     @assert isfile(file_name) "The time value file does not exist"
     f = open(file_name, "r")
-    t::Float64 = 0.0
-    t = parse(Float64, split(readline(f)," ")[1])
+    t::Array{Float64} = []
+    for line in eachline(f)
+        split_line::Vector{String} = split(line, " ")
+        push!(t,parse(Float64, split_line[1]))
+    end
     close(f)
-    return t  
+    if length(t) == 1
+        return t[1]
+    else
+        return t
+    end 
 end
 
+function read_sample_size(file_name::String)
+    @assert isfile(file_name) "The time value file does not exist"
+    f = open(file_name, "r")
+    t::Array{Float64} = []
+    for line in eachline(f)
+        split_line::Vector{String} = split(line, " ")
+        push!(t,parse(Float64, split_line[2]))
+    end
+    close(f)
+    if length(t) == 1
+        return t[1]
+    else
+        return t
+    end 
+end
+function read_xi(file_name::String)
+    @assert isfile(file_name) "The time value file does not exist"
+    f = open(file_name, "r")
+    t::Array{Float64} = []
+    for line in eachline(f)
+        split_line::Vector{String} = split(line, " ")
+        push!(t,parse(Float64, split_line[3]))
+    end
+    close(f)
+    if length(t) == 1
+        return t[1]
+    else
+        return t
+    end 
+end
 function save_time(nn::String,algo::String,tt::Float64)::nothing
     mkpath("times/" * nn * "/")
     f = open("times/" * nn *"/"*algo*".txt","a")
