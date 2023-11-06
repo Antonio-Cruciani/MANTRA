@@ -641,18 +641,18 @@ end
 =#
 
 
-function progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,bigint::Bool,algo::String = "trk",topt::String = "sh",empirical_peeling_a::Float64 = 2.0,sample_step::Int64 = 10)
+function progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Float64,bigint::Bool,algo::String = "trk",topt::String = "sh",vc_upper_bound::Bool = true,geo::Float64 = 1.2,diam::Int64 = -1,empirical_peeling_a::Float64 = 2.0)
     @assert (topt == "sh") || (topt == "sfm") || (topt == "pfm") "Illegal temporal-path optimality, use: sh for shortest , sfm for shortest foremost , or pfm for prefix foremost"
     if nthreads() > 1
         println("Algorithm "*algo* " Temporal path optimality "*topt)
         flush(stdout)
         
         if topt == "sh"
-            return  threaded_progressive_cmcera(tg,eps,delta,verbose_step,bigint,algo,-1,empirical_peeling_a,sample_step,false)
+            return  threaded_progressive_cmcera(tg,eps,delta,bigint,algo,vc_upper_bound,diam,empirical_peeling_a)
         elseif topt == "sfm"
-            return threaded_progressive_cmcera_shortest_foremost(tg,eps,delta,verbose_step,bigint,algo,-1,empirical_peeling_a,sample_step,false)
+            return threaded_progressive_cmcera_shortest_foremost(tg,eps,delta,bigint,algo,vc_upper_bound,diam,empirical_peeling_a)
         else
-            return threaded_progressive_cmcera_prefix_foremost(tg,eps,delta,verbose_step,algo,-1,empirical_peeling_a,sample_step)
+            return threaded_progressive_cmcera_prefix_foremost(tg,eps,delta,algo,vc_upper_bound,diam,empirical_peeling_a)
         end
 
     else
