@@ -25,8 +25,8 @@ topt = "pfm"
 upperbound_sample = "vc"
 
 
-epsilon_list = [0.07,0.05,0.01]
-sample_list = [350,750,1000]
+epsilon_list = [0.1,0.07,0.05,0.01]
+sample_list = [100,350,750,1000]
 datasets = [
 "16_brain_100206_90.txt",
 "17_brain_100206_70.txt",
@@ -45,6 +45,8 @@ datasets = [
 "13_topology.txt",
 "14_SMS.txt",
 "21_mathoverflow.txt",
+"18_venice.txt",
+"19_bordeaux.txt",
 "20_askubuntu.txt",
 "22_superuser.txt"
 ]
