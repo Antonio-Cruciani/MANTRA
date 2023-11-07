@@ -74,7 +74,7 @@ function threaded_progressive_bernstein(tg::temporal_graph,eps::Float64,delta::F
         avg_diam_ub::Float64 = upper_bound_average_diameter(delta/8,trunc(Int,diam),sp_lengths,tau,true,norm)
         top1bc_upper_bound::Float64 = upper_bound_top_1_tbc(max_tbc,delta/8,tau)
         wimpy_var_upper_bound::Float64 = upper_bound_top_1_tbc(max_wv,delta/8,tau)
-        println("Average (sfm)-temporal path (upper bound) "*string(avg_diam_ub))
+        println("Average (sh)-temporal path (upper bound) "*string(avg_diam_ub))
         max_num_samples = upper_bound_samples(top1bc_upper_bound,wimpy_var_upper_bound,avg_diam_ub,eps,delta/2 ,false)
         println("Maximum number of samples "*string(max_num_samples)*" VC Bound "*string(omega))
         println("Sup tbc estimation "*string(max_tbc))

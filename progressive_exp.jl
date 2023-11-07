@@ -17,17 +17,34 @@ delta = 0.1
 trials = 5
 geo = 1.2
 big_int = false
-vc_upper_bound = true
+vc_upper_bound = false
 #topt = "pfm"
 algo = "ob"
 k = 0
-topt = "pfm"
-upperbound_sample = "vc"
+topt = "sfm"
+upperbound_sample = "var"
 
 
-epsilon_list = [0.01]
-sample_list = [1000]
+epsilon_list = [0.1,0.07,0.05,0.01]
+sample_list = [100,350,750,1000]
 datasets = [
+"16_brain_100206_90.txt",
+"17_brain_100206_70.txt",
+"01_hypertext.txt",
+"02_highschool.txt",
+"03_hospital_ward.txt",
+"04_college_msg.txt",
+"05_wiki_elections.txt",
+"06_highschool.txt",
+"07_digg_reply.txt",
+"08_infectious.txt",
+"09_primary_school.txt",
+"10_facebook_wall.txt",
+"11_slashdot_reply.txt",
+"12_highschool.txt",
+"13_topology.txt",
+"14_SMS.txt",
+"21_mathoverflow.txt",
 "20_askubuntu.txt",
 "22_superuser.txt"
 ]
@@ -40,7 +57,7 @@ for i in 1:lastindex(epsilon_list)
         tg = load_temporal_graph(path*gn," ")
         print_samplig_stats(epsilon,delta,trials,starting_ss)
         print_stats(tg, graph_name= gn)
-        #=
+        
         println("Running Bernstein")
         flush(stdout)
         for i in 1:trials
@@ -55,8 +72,8 @@ for i in 1:lastindex(epsilon_list)
             save_results_progressive_sampling(nn,"wub_"*algo*"_"*topt*"_"*upperbound_sample,result[1],result[4],result[6],starting_ss,epsilon)
             clean_gc()
         end
-        =#
         
+        #=
         println("Running c-MC ERA")
         flush(stdout)
         for i in 1:trials
@@ -64,6 +81,7 @@ for i in 1:lastindex(epsilon_list)
             save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt*"_"*upperbound_sample,result[1],result[2],result[4],starting_ss,epsilon)
             clean_gc()
         end
+        =#
         
     end
 end
