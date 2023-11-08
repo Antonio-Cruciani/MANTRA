@@ -178,6 +178,51 @@ function get_times(method::String,starting_sample::Int64,target_epsilon::Float64
     end
 end
 
+function get_stats_topk(method::String,tk::Int64,starting_sample::Int64,target_epsilon::Float64,datasets::Array{String},algo::String ="ob",prog_sampler::String = "wub",trials::Int64 = 5,upper_bound_samples::String = "vc",ntasks::Int64 = 10)
+    results = []
+    for graph in datasets
+        tg = load_temporal_graph("graphs/"*graph, " ")
+        gn = split(graph,".txt")[1]
+        println("Analyzing "*gn*" ε ",target_epsilon, " Algorithm ",algo," Progressive Sampler ",prog_sampler, " Path Optimality ",method, " Upper bound samples via ",upper_bound_samples)
+        exact = normalize_centrality(read_centrality_values("scores/"*gn*"/"*method*".txt"))
+        apx_path = gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*upper_bound_samples*"_"*string(starting_sample)*"_top_"*string(tk)*".txt"
+        apx_path_t = gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*upper_bound_samples*"_"*string(starting_sample)*"_top_k.txt"
+        us = min(tg.num_nodes, max(trunc(Int,sqrt(lastindex(tg.temporal_edges))/ntasks),tk+20))
+        apx_cc = read_centrality_values_topk("scores/"*apx_path)
+        times = read_time("times/"*apx_path_t)
+        samples =read_sample_size("times/"*apx_path_t)
+        top_k_exact::Array{Tuple{Int64,Float64}} = Array{Tuple{Int64,Float64}}([])
+        for u in 1:tg.num_nodes
+            push!(top_k_exact,(u,exact[u]))
+        end
+        sort!(top_k_exact, by=top_k_exact->(-top_k_exact[2],top_k_exact[1]))
+        exact_rank = [u[1] for u in top_k_exact]
+        intersection_list = []
+        for k in 1:trials
+            tmp_top_k_apx = []
+            for i in 1:tg.num_nodes
+                push!(tmp_top_k_apx,(apx_cc[i+(tg.num_nodes*(k-1))][1],apx_cc[i+(tg.num_nodes*(k-1))][2]))
+            end
+            tmp_top_k_rank = [u[1] for u in tmp_top_k_apx]
+            push!(intersection_list,length(intersect(Set(exact_rank[1:tk]), Set(tmp_top_k_rank[1:us]))))
+        end
+        push!(results,[gn,method,algo,tk,mean(intersection_list),std(intersection_list),mean(times),std(times),mean(samples),std(samples)])
+    end
+    mkpath("analysis/")
+    header = false
+    if !isfile("analysis/intersections_topk.txt")
+        header = true
+    end
+    open("analysis/intersections_topk.txt","a") do file
+        if header
+            write(file,"Graph,Method,Epsilon,Algorithm,Sampler,k,IntersectionMean,IntersectionStd,ApxTimeMean,ApxTimeStd,SampleSizeMean,SampleSizeStd,UpperBoundSampleSize\n")            
+        end
+        for res in results
+            write(file,res[1]*","*res[2]*","*string(target_epsilon)*","*res[3]*","*prog_sampler*","*string(res[4])*","*string(res[5])*","*string(res[6])*","*string(res[7])*","*string(res[8])*","*string(res[9])*","*string(res[10])*","*upper_bound_samples*"\n")
+        end
+    end
+
+end
 function get_ranking_intersections(method::String,tk::Int64,starting_sample::Int64,target_epsilon::Float64,datasets::Array{String},algo::String ="ob",prog_sampler::String = "wub",trials::Int64 = 5,upper_bound_samples::String = "vc")
     results = []
     for graph in datasets
@@ -237,7 +282,7 @@ function get_ranking_intersections(method::String,tk::Int64,starting_sample::Int
             write(file,"Graph,Method,Epsilon,Algorithm,Sampler,k,Intersection,IntersectionMean,IntersectionStd,h,hMean,hStd,Jaccard,JaccardMean,JaccardStd,UpperBoundSampleSize\n")            
         end
         for res in results
-            write(file,res[1]*","*res[2]*","*string(target_epsilon)*","*res[3]*","*prog_sampler*","*string(res[4])*","*string(res[5])*","*string(res[5])*","*string(res[7])*","*string(res[8])*","*string(res[9])*","*string(res[10])*","*string(res[11])*","*string(res[12])*","*string(res[13])*","*upper_bound_samples*"\n")
+            write(file,res[1]*","*res[2]*","*string(target_epsilon)*","*res[3]*","*prog_sampler*","*string(res[4])*","*string(res[5])*","*string(res[6])*","*string(res[7])*","*string(res[8])*","*string(res[9])*","*string(res[10])*","*string(res[11])*","*string(res[12])*","*string(res[13])*","*upper_bound_samples*"\n")
         end
     end
 end

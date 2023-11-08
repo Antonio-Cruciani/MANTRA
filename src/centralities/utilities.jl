@@ -18,6 +18,29 @@ function read_centrality_values(file_name::String)::Array{Float64}
     return centrality
 end
 
+function read_centrality_values_topk(file_name::String)::Array{Tuple{Int64,Float64}}
+    @assert isfile(file_name) "The centrality value file does not exist"
+    f::IOStream = open(file_name, "r")
+    centrality::Array{Tuple{Int64,Float64}} = []
+    value::Float64 = 0.0
+    for l in eachline(f)
+        split_line::Vector{String} = split(l, " ")
+        value = parse(Float64, split_line[2])
+        node = parse(Float64, split_line[1])
+
+        if (value < -0.1)
+            println("ERROR. There are negative values with absolute big values")
+            return Array{Float64}([])
+        end
+        if (value < 0)
+            value = 0
+        end
+        push!(centrality, (node,value))
+    end
+    close(f)
+    return centrality
+end
+
 
 
 function save_centrality_values(file_name::String, centrality::Array{Float64})::Nothing
