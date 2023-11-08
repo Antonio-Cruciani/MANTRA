@@ -14,7 +14,7 @@ end
 path = "graphs/"
 sample_step = 32
 delta = 0.1
-trials = 5
+trials = 1
 geo = 1.2
 big_int = true
 vc_upper_bound = true
