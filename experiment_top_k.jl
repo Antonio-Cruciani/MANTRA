@@ -22,48 +22,11 @@ algo = "ob"
 topt = "sh"
 
 
-trials = 3
-
-
-datasets = [
-
-
-    "13_topology.txt"
-    ]
-
-upp_bound_list = ["var"]
-vc_bound_list = [false]
-for i in 1:lastindex(epsilon_list)
-    epsilon = epsilon_list[i]
-    starting_ss = sample_list[i]
-    for gn in datasets
-        for k in k_list
-            j = 1
-            for upp_bound in upp_bound_list
-                nn = String(split(gn, ".t")[1])
-                tg = load_temporal_graph(path*gn," ")
-                print_samplig_stats(epsilon,delta,trials,starting_ss)
-                print_stats(tg, graph_name= gn)
-                vc_bound = vc_bound_list[j]
-                j+=1
-                println("Running upper bound based on "*upp_bound*" bool val "*string(vc_bound))
-                flush(stdout)
-                for i in 1:trials
-                    result = progressive_wub(tg,epsilon,delta,k,big_int,algo,topt,vc_bound)
-                    save_results_topk(nn,"wub_"*algo*"_"*topt*"_"*upp_bound,result[1],k,result[4],result[6],starting_ss,epsilon)
-                    clean_gc()
-                end
-            end
-        end
-    end
-end
 
 trials = 5
 
 datasets = [
 
-
-    "13_topology.txt",
     "14_SMS.txt",
     "21_mathoverflow.txt",
     "20_askubuntu.txt",
