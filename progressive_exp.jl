@@ -17,12 +17,12 @@ delta = 0.1
 trials = 1
 geo = 1.2
 big_int = true
-vc_upper_bound = false
+vc_upper_bound = true
 #topt = "pfm"
 algo = "ob"
 k = 0
 topt = "sh"
-upperbound_sample = "var"
+upperbound_sample = "vc"
 
 
 epsilon_list = [0.1,0.07,0.05,0.01]
