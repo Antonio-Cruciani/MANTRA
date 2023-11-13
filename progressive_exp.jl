@@ -25,8 +25,8 @@ topt = "sh"
 upperbound_sample = "vc"
 
 
-epsilon_list = [0.1,0.07,0.05,0.01]
-sample_list = [100,350,750,1000]
+epsilon_list = [0.01]
+sample_list = [1000]
 #=
 datasets = [
 "16_brain_100206_90.txt",
@@ -51,6 +51,29 @@ datasets = [
 ]=#
 datasets = [
     "18_venice.txt",
+]
+for i in 1:lastindex(epsilon_list)
+    epsilon = epsilon_list[i]
+    starting_ss = sample_list[i]
+    for gn in datasets
+        nn = String(split(gn, ".t")[1])
+        tg = load_temporal_graph(path*gn," ")
+        print_samplig_stats(epsilon,delta,trials,starting_ss)
+        print_stats(tg, graph_name= gn)
+        
+
+        println("Running c-MC ERA")
+        flush(stdout)
+        for i in 1:trials
+            result = progressive_cmcera(tg,epsilon,delta,big_int,algo,topt,vc_upper_bound)
+            save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt*"_"*upperbound_sample,result[1],result[2],result[4],starting_ss,epsilon)
+            clean_gc()
+        end
+      
+        
+    end
+end
+datasets = [
     "19_bordeaux.txt"
 ]
 for i in 1:lastindex(epsilon_list)
@@ -88,7 +111,6 @@ for i in 1:lastindex(epsilon_list)
         
     end
 end
-
 #=
 upperbound_sample = "rho"
 vc_upper_bound = false
