@@ -1,4 +1,6 @@
-
+function clean_gc()
+    GC.gc()
+end
 
 function distributed_temporal_shortest_betweenness(tg::temporal_graph,verbose_step::Int64, bigint::Bool)::Tuple{Array{Float64},Float64}
     start_time::Float64 = time()
@@ -73,7 +75,7 @@ function threaded_temporal_shortest_betweenness_prova(tg::temporal_graph,verbose
     return betweenness,time()-start_time
 end
 
-function threaded_temporal_shortest_betweenness(tg::temporal_graph,verbose_step::Int64, bigint::Bool)::Tuple{Array{Float64},Float64}
+function threaded_temporal_shortest_betweenness(tg::temporal_graph,verbose_step::Int64, bigint::Bool,force_gc::Bool= false)::Tuple{Array{Float64},Float64}
     start_time::Float64 = time()
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
     tn_index::Dict{Tuple{Int64,Int64},Int64}  = temporal_node_index(tg)
@@ -93,22 +95,13 @@ function threaded_temporal_shortest_betweenness(tg::temporal_graph,verbose_step:
                 time_to_finish::String = string(round((tg.num_nodes*(time() - start_time) / processed_so_far )-(time() - start_time) ; digits=4))
                 println("TSB. Processed " * string(processed_so_far) * "/" * string(tg.num_nodes) * " nodes in " * finish_partial * " seconds | Est. remaining time : "*time_to_finish)
                 flush(stdout)
+                # This is a debug option, it slowes down the overall execution. However, it can be useful.
+                if (force_gc) 
+                    clean_gc()
+                end
             end
         end
     end
- 
-    #=
-    Base.Threads.@threads for s in 1:tg.num_nodes
-        _sstp_accumulate!(tg,tal,tn_index,s,bigint,local_temporal_betweenness[Base.Threads.threadid()])
-        processed_so_far = processed_so_far + 1
-        if (verbose_step > 0 && processed_so_far % verbose_step == 0)
-            finish_partial::String = string(round(time() - start_time; digits=4))
-            time_to_finish::String = string(round((tg.num_nodes*(time() - start_time) / processed_so_far )-(time() - start_time) ; digits=4))
-            println("TSB. Processed " * string(processed_so_far) * "/" * string(tg.num_nodes) * " nodes in " * finish_partial * " seconds | Est. remaining time : "*time_to_finish)
-            flush(stdout)
-        end
-    end
-    =#
     betweenness = reduce(+, local_temporal_betweenness)
     return betweenness,time()-start_time
 end

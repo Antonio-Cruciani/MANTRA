@@ -4,20 +4,18 @@ path = "graphs/"
 
 
 
-
+#=
 function clean_gc()
     GC.gc()
 end
 
-
+=#
 println("Computing Groun Truth values for the shortest-foremost temporal betweenness")
 
 
 datasets = [
 
-   
-"22_superuser.txt"
-
+"20_askubuntu.txt"
    
 ]
 
@@ -30,7 +28,7 @@ for gn in datasets
     flush(stdout)
    
 
-    result = temporal_shortest_betweenness(tg,1000,false)
+    result = threaded_temporal_shortest_betweenness(tg,500,false,true)
     nn = String(split(gn, ".t")[1])
 
     save_results(nn,"sh",result[1],result[2])
