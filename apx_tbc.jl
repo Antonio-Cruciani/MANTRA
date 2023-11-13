@@ -28,7 +28,7 @@ for gn in datasets
     flush(stdout)
    
 
-    result = threaded_temporal_shortest_betweenness(tg,500,false,true)
+    result = threaded_temporal_shortest_betweenness(tg,1000,false,true)
     nn = String(split(gn, ".t")[1])
 
     save_results(nn,"sh",result[1],result[2])
