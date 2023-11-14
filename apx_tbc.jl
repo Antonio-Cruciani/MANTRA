@@ -15,8 +15,7 @@ println("Computing Groun Truth values for the shortest-foremost temporal between
 
 datasets = [
 
-"20_askubuntu.txt"
-   
+"22_superuser.txt"   
 ]
 
 
