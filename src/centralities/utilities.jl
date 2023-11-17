@@ -436,18 +436,18 @@ end
 # TO CHANGE
 #-------| KADABRA's progressive sampling |-------
 
-function progressive_wub(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64 = 0,bigint::Bool = false,algo::String = "trk",topt::String = "sh",vc_upper_bund::Bool = true,geo::Float64 = 1.2,diam::Int64 = -1,start_factor::Int64 = 100)
+function progressive_wub(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64 = 0,bigint::Bool = false,algo::String = "trk",topt::String = "sh",vc_upper_bund::Bool = true,geo::Float64 = 1.2,diam::Int64 = -1,start_factor::Int64 = 100,force_gc::Bool = false)
     @assert (topt == "sh") || (topt == "sfm") || (topt == "pfm") "Illegal temporal-path optimality, use: sh for shortest , sfm for shortest foremost , or pfm for prefix foremost"
     if nthreads() >= 1
         println("Algorithm "*algo* " Temporal path optimality "*topt)
         flush(stdout)
         if k > 0
             if topt == "sh"
-                return threaded_progressive_wub_topk(tg,eps,delta,k,bigint,algo,vc_upper_bund,diam)
+                return threaded_progressive_wub_topk(tg,eps,delta,k,bigint,algo,vc_upper_bund,diam,geo,start_factor,force_gc)
             elseif topt == "sfm"
-                return threaded_progressive_wub_shortest_foremost_topk(tg,eps,delta,k,bigint,algo,vc_upper_bund,diam)
+                return threaded_progressive_wub_shortest_foremost_topk(tg,eps,delta,k,bigint,algo,vc_upper_bund,diam,geo,start_factor,force_gc)
             else
-                return threaded_progressive_wub_prefix_foremost_topk(tg,eps,delta,k,algo,vc_upper_bund,diam)
+                return threaded_progressive_wub_prefix_foremost_topk(tg,eps,delta,k,algo,vc_upper_bund,diam,geo,start_factor,force_gc)
             end
         else
             if topt == "sh"

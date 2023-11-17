@@ -425,7 +425,7 @@ function threaded_progressive_wub_prefix_foremost_2(tg::temporal_graph,eps::Floa
 
 end
 
-function threaded_progressive_wub_prefix_foremost_topk(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64,algo::String = "trk",vc_upper_bund::Bool = true,diam::Int64 = -1,geo::Float64 = 1.2,start_factor::Int64 = 100)
+function threaded_progressive_wub_prefix_foremost_topk(tg::temporal_graph,eps::Float64,delta::Float64,k::Int64,algo::String = "trk",vc_upper_bund::Bool = true,diam::Int64 = -1,geo::Float64 = 1.2,start_factor::Int64 = 100,force_gc::Bool = false)
     @assert (algo == "trk") || (algo == "ob") || (algo == "rtb") "Illegal algorithm, use: trk , ob , or rtb" 
     start_time = time()
     ntasks = nthreads()
@@ -601,6 +601,9 @@ function threaded_progressive_wub_prefix_foremost_topk(tg::temporal_graph,eps::F
             finish_partial = string(round(time() - start_time; digits=4))
             println("P-WUB-"*algo*"-PFM. Processed " * string(sampled_so_far) * " pairs in " * finish_partial * " seconds | Increasing sample size to "*string(next_stopping_samples))
             flush(stdout)
+            if (force_gc)
+                clean_gc()
+            end
         end
     end
     if stop[1]
