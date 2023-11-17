@@ -68,7 +68,7 @@ function append_centrality_values_topk(file_name::String, centrality::Array{Tupl
 end
 
 function read_time(file_name::String)
-    @assert isfile(file_name) "The time value file does not exist"
+    @assert isfile(file_name) "The time value file does not exist: "*string(file_name)
     f = open(file_name, "r")
     t::Array{Float64} = []
     for line in eachline(f)

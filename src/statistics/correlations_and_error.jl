@@ -49,7 +49,7 @@ function get_correlations(method::String,starting_sample::Int64,target_epsilon::
     for graph in datasets
         tg = load_temporal_graph("graphs/"*graph, " ")
         gn = split(graph,".txt")[1]
-        println("Analyzing "*gn*" ε ",target_epsilon, " Algorithm ",algo," Progressive Sampler ",prog_sampler, " Path Optimality ",method, " Upper bound samples via ",upper_bound_samples)
+        #println("Analyzing "*gn*" ε ",target_epsilon, " Algorithm ",algo," Progressive Sampler ",prog_sampler, " Path Optimality ",method, " Upper bound samples via ",upper_bound_samples)
         exact = normalize_centrality(read_centrality_values("scores/"*gn*"/"*method*".txt"))
         if prog_sampler == "cm"
             apx_cc = read_centrality_values("scores/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*string(starting_sample)*".txt")
@@ -107,7 +107,7 @@ function get_errors(method::String,starting_sample::Int64,target_epsilon::Float6
     for graph in datasets
         tg = load_temporal_graph("graphs/"*graph, " ")
         gn = split(graph,".txt")[1]
-        println("Analyzing "*gn*" ε ",target_epsilon, " Algorithm ",algo," Progressive Sampler ",prog_sampler, " Path Optimality ",method, " Upper bound samples via ",upper_bound_samples)
+        #println("Analyzing "*gn*" ε ",target_epsilon, " Algorithm ",algo," Progressive Sampler ",prog_sampler, " Path Optimality ",method, " Upper bound samples via ",upper_bound_samples)
         exact = normalize_centrality(read_centrality_values("scores/"*gn*"/"*method*".txt"))
         if prog_sampler == "cm"
             apx_cc = read_centrality_values("scores/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*string(starting_sample)*".txt")
@@ -155,9 +155,14 @@ function get_times(method::String,starting_sample::Int64,target_epsilon::Float64
     
     for graph in datasets
         gn = split(graph,".txt")[1]
-        println("Analyzing "*gn*" ε ",target_epsilon, " Algorithm ",algo," Progressive Sampler ",prog_sampler, " Path Optimality ",method, " Upper bound samples via ",upper_bound_samples)
+        #println("Analyzing "*gn*" ε ",target_epsilon, " Algorithm ",algo," Progressive Sampler ",prog_sampler, " Path Optimality ",method, " Upper bound samples via ",upper_bound_samples)
         exact = read_time("times/"*gn*"/time_"*method*".txt")
-        apx_path = "times/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*upper_bound_samples*"_"*string(starting_sample)*".txt"
+        if prog_sampler == "cm"
+            apx_path = "times/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*string(starting_sample)*".txt"
+        else
+            apx_path = "times/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*upper_bound_samples*"_"*string(starting_sample)*".txt"
+
+        end
         times = read_time(apx_path)
         samples =read_sample_size(apx_path)
         xi = read_xi(apx_path)
@@ -183,7 +188,7 @@ function get_stats_topk(method::String,tk::Int64,starting_sample::Int64,target_e
     for graph in datasets
         tg = load_temporal_graph("graphs/"*graph, " ")
         gn = split(graph,".txt")[1]
-        println("Analyzing "*gn*" ε ",target_epsilon, " Algorithm ",algo," Progressive Sampler ",prog_sampler, " Path Optimality ",method, " Upper bound samples via ",upper_bound_samples)
+        #println("Analyzing "*gn*" ε ",target_epsilon, " Algorithm ",algo," Progressive Sampler ",prog_sampler, " Path Optimality ",method, " Upper bound samples via ",upper_bound_samples)
         exact = normalize_centrality(read_centrality_values("scores/"*gn*"/"*method*".txt"))
         apx_path = gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*upper_bound_samples*"_"*string(starting_sample)*"_top_"*string(tk)*".txt"
         apx_path_t = gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*upper_bound_samples*"_"*string(starting_sample)*"_top_k.txt"
@@ -228,7 +233,7 @@ function get_ranking_intersections(method::String,tk::Int64,starting_sample::Int
     for graph in datasets
         tg = load_temporal_graph("graphs/"*graph, " ")
         gn = split(graph,".txt")[1]
-        println("Analyzing "*gn*" ε ",target_epsilon, " Algorithm ",algo," Progressive Sampler ",prog_sampler, " Path Optimality ",method, " Upper bound samples via ",upper_bound_samples)
+        #println("Analyzing "*gn*" ε ",target_epsilon, " Algorithm ",algo," Progressive Sampler ",prog_sampler, " Path Optimality ",method, " Upper bound samples via ",upper_bound_samples)
         exact = normalize_centrality(read_centrality_values("scores/"*gn*"/"*method*".txt"))
         if prog_sampler == "cm"
             apx_cc = read_centrality_values("scores/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*string(starting_sample)*".txt")
