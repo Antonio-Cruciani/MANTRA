@@ -49,7 +49,7 @@ for i in 1:lastindex(epsilon_list)
                 println("Running upper bound based on "*upp_bound*" bool val "*string(vc_bound))
                 flush(stdout)
                 for i in 1:trials
-                    result = progressive_wub(tg,epsilon,delta,k,big_int,algo,topt,vc_bound,1.2,100,force_gc)
+                    result = progressive_wub(tg,epsilon,delta,k,big_int,algo,topt,vc_bound,1.2,-1,100,force_gc)
                     save_results_topk(nn,"wub_"*algo*"_"*topt*"_"*upp_bound,result[1],k,result[4],result[6],starting_ss,epsilon)
                     clean_gc()
                 end
