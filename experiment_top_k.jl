@@ -16,7 +16,7 @@ path = "graphs/"
 delta = 0.1
 geo = 1.2
 k_list = [25]
-big_int = false
+big_int = true
 #topt = "pfm"
 algo = "ob"
 topt = "sh"
@@ -26,8 +26,8 @@ force_gc = true
 trials = 5
 
 datasets = [
-    "20_askubuntu.txt",
-    "22_superuser.txt"
+    "18_venice.txt",
+    "19_bordeaux.txt"
     ]
 
 upp_bound_list = ["var"]
