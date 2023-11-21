@@ -26,13 +26,12 @@ force_gc = true
 trials = 5
 
 datasets = [
-    "21_mathoverflow.txt",
     "20_askubuntu.txt",
     "22_superuser.txt"
     ]
 
-upp_bound_list = ["vc","var"]
-vc_bound_list = [true,false]
+upp_bound_list = ["var"]
+vc_bound_list = [false]
 for i in 1:lastindex(epsilon_list)
     epsilon = epsilon_list[i]
     starting_ss = sample_list[i]

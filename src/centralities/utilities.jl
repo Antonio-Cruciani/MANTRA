@@ -1,5 +1,5 @@
 function read_centrality_values(file_name::String)::Array{Float64}
-    @assert isfile(file_name) "The centrality value file does not exist"
+    @assert isfile(file_name) "The centrality value file does not exist "*file_name
     f::IOStream = open(file_name, "r")
     centrality::Array{Float64} = []
     value::Float64 = 0.0
