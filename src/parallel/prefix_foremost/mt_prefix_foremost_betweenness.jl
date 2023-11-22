@@ -21,7 +21,7 @@ function distributed_temporal_prefix_foremost_betweenness(tg::temporal_graph,ver
 end
 
 
-function threaded_temporal_prefix_foremost_betweenness(tg::temporal_graph,verbose_step::Int64)::Tuple{Array{Float64},Float64}
+function threaded_temporal_prefix_foremost_betweenness(tg::temporal_graph,verbose_step::Int64,force_gc::Bool = false)::Tuple{Array{Float64},Float64}
     start_time::Float64 = time()
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
     processed_so_far::Int64 = 0
@@ -40,6 +40,9 @@ function threaded_temporal_prefix_foremost_betweenness(tg::temporal_graph,verbos
                 time_to_finish::String = string(round((tg.num_nodes*(time() - start_time) / processed_so_far )-(time() - start_time) ; digits=4))
                 println("TPFM. Processed " * string(processed_so_far) * "/" * string(tg.num_nodes) * " nodes in " * finish_partial * " seconds | Est. remaining time : "*time_to_finish)
                 flush(stdout)
+                if force_gc
+                    clean_gc()
+                end
             end
         end
     end
