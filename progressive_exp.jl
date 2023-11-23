@@ -14,7 +14,7 @@ end
 path = "graphs/"
 sample_step = 32
 delta = 0.1
-trials = 1
+trials = 4
 geo = 1.2
 big_int = true
 vc_upper_bound = false
@@ -53,6 +53,7 @@ datasets = [
     "18_venice.txt",
     "19_bordeaux.txt"
 ]
+
 for i in 1:lastindex(epsilon_list)
     epsilon = epsilon_list[i]
     starting_ss = sample_list[i]
@@ -65,22 +66,15 @@ for i in 1:lastindex(epsilon_list)
         println("Running Bernstein")
         flush(stdout)
         for i in 1:trials
-            result = progressive_bernstein(tg,epsilon,delta,geo, big_int,algo,topt,vc_upper_bound)
+            result = progressive_bernstein(tg,epsilon,delta,geo, big_int,algo,topt,true)
             save_results_progressive_sampling(nn,"b_"*algo*"_"*topt*"_"*upperbound_sample,result[1],result[2][end],result[4],starting_ss,result[3])
-            clean_gc()
-        end
-        println("Running WUB")
-        flush(stdout)
-        for i in 1:trials
-            result = progressive_wub(tg,epsilon,delta,k,big_int,algo,topt,vc_upper_bound,geo)
-            save_results_progressive_sampling(nn,"wub_"*algo*"_"*topt*"_"*upperbound_sample,result[1],result[4],result[6],starting_ss,epsilon)
             clean_gc()
         end
    
         println("Running c-MC ERA")
         flush(stdout)
         for i in 1:trials
-            result = progressive_cmcera(tg,epsilon,delta,big_int,algo,topt,vc_upper_bound)
+            result = progressive_cmcera(tg,epsilon,delta,big_int,algo,topt,false)
             save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt*"_"*upperbound_sample,result[1],result[2],result[4],starting_ss,epsilon)
             clean_gc()
         end
