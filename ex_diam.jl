@@ -22,10 +22,7 @@ datasets = ["01_hypertext.txt",
 ]
 =#
 datasets = [
-"21_mathoverflow.txt",
-"20_askubuntu.txt",
-"22_superuser.txt",
-"23_flickr_grow.txt"
+"23_wiki_talk.txt"
 ]
 path = "graphs/"
 
@@ -38,7 +35,7 @@ for gn in datasets
     tg = load_temporal_graph(path*gn," ")
     print_stats(tg, graph_name= gn)
     flush(stdout)
-    result = threaded_temporal_prefix_foremost_diameter(tg,0,0)
+    result = threaded_temporal_prefix_foremost_diameter(tg,0,1000)
     nn = String(split(gn, ".t")[1])
     
     save_results_diameter(nn,result[1],trunc(Int,result[6]),result[2],result[4],result[3],result[5],result[7],"pfm")
