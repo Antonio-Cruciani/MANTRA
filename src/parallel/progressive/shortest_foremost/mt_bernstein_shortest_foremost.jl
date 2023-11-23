@@ -114,6 +114,10 @@ function threaded_progressive_bernstein_shortest_foremost(tg::temporal_graph,eps
          println("Initial sample size dropped to "*string(first_stopping_samples))
      end
      flush(stdout)
+     omega = tg.num_nodes *(tg.num_nodes-1)
+     println("DEBUG EXPERIMENT")
+     println("Maximum number of iterations "*string(omega))
+     flush(stdout)
      next_stopping_samples = trunc(Int,first_stopping_samples)
      prev_stopping_samples::Int64 = 0
      local_temporal_betweenness_bootstrap = []
