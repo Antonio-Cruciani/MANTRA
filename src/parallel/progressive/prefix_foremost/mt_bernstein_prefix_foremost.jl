@@ -1,4 +1,4 @@
-function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph,eps::Float64,delta::Float64,algo::String = "trk",vc_upper_bund::Bool = true,diam::Int64 = -1,geo::Float64 = 1.2,start_factor::Int64 = 100)
+function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph,eps::Float64,delta::Float64,algo::String = "trk",vc_upper_bund::Bool = true,diam::Int64 = -1,geo::Float64 = 1.2,start_factor::Int64 = 100,force_gc::Bool = false)
     @assert (algo == "trk") || (algo == "ob") || (algo == "rtb") "Illegal algorithm, use: trk , ob , or rtb"
     start_time = time()
     ntasks = nthreads()
@@ -159,6 +159,9 @@ function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph
             finish_partial = string(round(time() - start_time; digits=4))
             println("P-Bernstein-"*algo*"-PFM. Processed " * string(sampled_so_far) * " pairs in " * finish_partial * " seconds | Est. ξ = "*string(xi)*" | Increasing sample size to "*string(next_stopping_samples))
             flush(stdout)
+            if (force_gc)
+                clean_gc()
+            end
         end
      end
      _reduce_list_of_arrays!(local_temporal_betweenness,betweenness,sampled_so_far,tg.num_nodes)

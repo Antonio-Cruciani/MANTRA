@@ -536,18 +536,18 @@ end
 # ONBRA
 
 
-function progressive_bernstein(tg::temporal_graph,epsilon::Float64,delta::Float64,geo::Float64, bigint::Bool = false,algo::String = "trk",topt::String = "sh",vc_upper_bound::Bool = true)
+function progressive_bernstein(tg::temporal_graph,epsilon::Float64,delta::Float64,geo::Float64, bigint::Bool = false,algo::String = "trk",topt::String = "sh",vc_upper_bound::Bool = true,force_gc::Bool = false)
     @assert (topt == "sh") || (topt == "sfm") || (topt == "pfm") "Illegal temporal-path optimality, use: sh for shortest , sfm for shortest foremost , or pfm for prefix foremost"
     if nthreads() > 1
         println("Algorithm "*algo* " Temporal path optimality "*topt)
         flush(stdout)
         
         if topt == "sh"
-            return  threaded_progressive_bernstein(tg,epsilon,delta,bigint, algo,vc_upper_bound,-1,geo)
+            return  threaded_progressive_bernstein(tg,epsilon,delta,bigint, algo,vc_upper_bound,-1,geo,100,force_gc)
         elseif topt == "sfm"
-            return threaded_progressive_bernstein_shortest_foremost(tg,epsilon,delta,bigint, algo,vc_upper_bound,-1,geo)
+            return threaded_progressive_bernstein_shortest_foremost(tg,epsilon,delta,bigint, algo,vc_upper_bound,-1,geo,100,force_gc)
         else
-            return threaded_progressive_onbra_prefix_foremost_bernstein(tg,epsilon,delta, algo,vc_upper_bound,-1,geo)
+            return threaded_progressive_onbra_prefix_foremost_bernstein(tg,epsilon,delta, algo,vc_upper_bound,-1,geo,force_gc)
         end
         
     else
