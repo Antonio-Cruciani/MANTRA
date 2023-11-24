@@ -14,7 +14,7 @@ end
 path = "graphs/"
 sample_step = 32
 delta = 0.1
-trials = 4
+trials = 1
 geo = 1.2
 big_int = true
 vc_upper_bound = false
@@ -25,8 +25,8 @@ topt = "sh"
 upperbound_sample = "var"
 
 
-epsilon_list = [0.1,0.07,0.05,0.01]
-sample_list = [100,350,750,1000]
+epsilon_list = [0.01]
+sample_list = [1000]
 #=
 datasets = [
 "16_brain_100206_90.txt",
@@ -50,7 +50,6 @@ datasets = [
 "22_superuser.txt"
 ]=#
 datasets = [
-    "18_venice.txt",
     "19_bordeaux.txt"
 ]
 #datasets = ["23_wiki_talk.txt"]
@@ -67,11 +66,11 @@ for i in 1:lastindex(epsilon_list)
         println("Running Bernstein")
         flush(stdout)
         for i in 1:trials
-            result = progressive_bernstein(tg,epsilon,delta,geo, big_int,algo,topt,true)
+            result = progressive_bernstein(tg,epsilon,delta,geo, big_int,algo,topt,true,true)
             save_results_progressive_sampling(nn,"b_"*algo*"_"*topt*"_"*upperbound_sample,result[1],result[2][end],result[4],starting_ss,result[3])
             clean_gc()
         end
-   
+        #=
         println("Running c-MC ERA")
         flush(stdout)
         for i in 1:trials
@@ -79,7 +78,7 @@ for i in 1:lastindex(epsilon_list)
             save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt*"_"*upperbound_sample,result[1],result[2],result[4],starting_ss,epsilon)
             clean_gc()
         end
-      
+      =#
         
     end
 end
