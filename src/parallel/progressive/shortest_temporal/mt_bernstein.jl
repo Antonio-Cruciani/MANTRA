@@ -142,14 +142,14 @@ function threaded_progressive_bernstein(tg::temporal_graph,eps::Float64,delta::F
             end
         end
         sampled_so_far += sample_i
-        #=
+        
         if sampled_so_far >= omega
             sample_stop = true
             finish_partial = string(round(time() - start_time; digits=4))
             println("Completed, sampled "*string(sampled_so_far)*"/"*string(omega)* " couples in "*finish_partial)
             flush(stdout)
         end     
-        =#
+        
         _reduce_arrays!(local_temporal_betweenness,reduced_betweenness)
         if algo == "rtb"
             xi = theoretical_error_bound(reduced_betweenness,reduce(+,t_bc).*[1/(tg.num_nodes-1)],sampled_so_far,delta/2^iteration)
