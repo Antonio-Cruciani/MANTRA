@@ -547,7 +547,7 @@ function progressive_bernstein(tg::temporal_graph,epsilon::Float64,delta::Float6
         elseif topt == "sfm"
             return threaded_progressive_bernstein_shortest_foremost(tg,epsilon,delta,bigint, algo,vc_upper_bound,-1,geo,100,force_gc)
         else
-            return threaded_progressive_onbra_prefix_foremost_bernstein(tg,epsilon,delta, algo,vc_upper_bound,-1,geo,force_gc)
+            return threaded_progressive_onbra_prefix_foremost_bernstein(tg,epsilon,delta, algo,vc_upper_bound,-1,geo,100,force_gc)
         end
         
     else
