@@ -27,6 +27,7 @@ upperbound_sample = "vc"
 #sample_list = [100,350,750,1000]
 epsilon_list = [0.005]
 sample_list = [1500]
+#=
 
 datasets = [
 "16_brain_100206_90.txt",
@@ -44,9 +45,14 @@ datasets = [
 "11_slashdot_reply.txt",
 "12_highschool.txt",
 "13_topology.txt",
-"18_venice.txt",
-"19_bordeaux.txt",
 "14_SMS.txt",
+"21_mathoverflow.txt",
+"20_askubuntu.txt",
+"22_superuser.txt",
+"23_wiki_talk.txt"
+]
+=#
+datasets = [
 "21_mathoverflow.txt",
 "20_askubuntu.txt",
 "22_superuser.txt",
@@ -66,14 +72,15 @@ for i in 1:lastindex(epsilon_list)
         tg = load_temporal_graph(path*gn," ")
         print_samplig_stats(epsilon,delta,trials,starting_ss)
         print_stats(tg, graph_name= gn)
-        
+
         println("Running Bernstein")
         flush(stdout)
         for i in 1:trials
-            result = progressive_bernstein(tg,epsilon,delta,geo, big_int,algo,topt,true,false)
+            result = progressive_bernstein(tg,epsilon,delta,geo, big_int,algo,topt,true,true)
             save_results_progressive_sampling(nn,"b_"*algo*"_"*topt*"_"*upperbound_sample,result[1],result[2][end],result[4],starting_ss,result[3])
             clean_gc()
         end
+
         
         #=
         println("Running c-MC ERA")
