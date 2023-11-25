@@ -45,7 +45,7 @@ datasets = [
 "12_highschool.txt",
 "13_topology.txt",
 "18_venice.txt",
-"19_bordeaux.txt"
+"19_bordeaux.txt",
 "14_SMS.txt",
 "21_mathoverflow.txt",
 "20_askubuntu.txt",
