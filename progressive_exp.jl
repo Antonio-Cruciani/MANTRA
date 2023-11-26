@@ -21,7 +21,7 @@ vc_upper_bound = false
 #topt = "pfm"
 algo = "ob"
 k = 0
-topt = "pfm"
+topt = "sh"
 upperbound_sample = "vc"
 #epsilon_list = [0.1,0.07,0.05,0.01]
 #sample_list = [100,350,750,1000]
@@ -53,7 +53,11 @@ datasets = [
 ]
 =#
 datasets = [
-
+"10_facebook_wall.txt",
+"11_slashdot_reply.txt",
+"13_topology.txt",
+"07_digg_reply.txt",
+"14_SMS.txt",
 "20_askubuntu.txt",
 "22_superuser.txt",
 "23_wiki_talk.txt"
