@@ -100,6 +100,28 @@ function mean_sqaured_error(x,y)
     return (1/lastindex(x)) * MSE
 end
 
+function get_max_temporal_bc(method::String,datasets::Array{String})
+    results = []
+    
+    for graph in datasets
+        gn = split(graph,".txt")[1]
+        exact = normalize_centrality(read_centrality_values("scores/"*gn*"/"*method*".txt"))
+        push!(results,[gn,method,maximum(exact)])
+    end
+    mkpath("analysis/")
+    header = false
+    if !isfile("analysis/max_tbc.txt")
+        header = true
+    end
+    open("analysis/max_tbc.txt","a") do file
+        if header
+            write(file,"Graph,Method,MaxTBC\n")            
+        end
+        for res in results
+            write(file,res[1]*","*res[2]*","*string(res[3])*"\n")
+        end
+    end
+end
 
 function get_errors(method::String,starting_sample::Int64,target_epsilon::Float64,datasets::Array{String},algo::String ="ob",prog_sampler::String = "wub",trials::Int64 = 5,upper_bound_samples::String = "vc")
     results = []

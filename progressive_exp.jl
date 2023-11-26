@@ -21,12 +21,12 @@ vc_upper_bound = false
 #topt = "pfm"
 algo = "ob"
 k = 0
-topt = "sh"
+topt = "pfm"
 upperbound_sample = "vc"
-epsilon_list = [0.1,0.07,0.05,0.01]
-sample_list = [100,350,750,1000]
-#epsilon_list = [0.005]
-#sample_list = [1500]
+#epsilon_list = [0.1,0.07,0.05,0.01]
+#sample_list = [100,350,750,1000]
+epsilon_list = [0.005]
+sample_list = [1500]
 #=
 
 datasets = [
@@ -53,8 +53,16 @@ datasets = [
 ]
 =#
 datasets = [
+
+"20_askubuntu.txt",
+"22_superuser.txt",
 "23_wiki_talk.txt"
 ]
+#=
+datasets = [
+"23_wiki_talk.txt"
+]
+=#
 #datasets = [
 #    "18_venice.txt",
 #    "19_bordeaux.txt"
