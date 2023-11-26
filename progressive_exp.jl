@@ -53,6 +53,7 @@ datasets = [
 ]
 =#
 datasets = [
+"04_college_msg.txt",
 "10_facebook_wall.txt",
 "11_slashdot_reply.txt",
 "13_topology.txt",
