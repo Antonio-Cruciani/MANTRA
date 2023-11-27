@@ -64,8 +64,8 @@ datasets = [
 "23_wiki_talk.txt"
 ]=#
 datasets = [
-"07_digg_reply.txt",
 "14_SMS.txt",
+"21_mathoverflow.txt",
 "20_askubuntu.txt",
 "22_superuser.txt",
 "23_wiki_talk.txt"
