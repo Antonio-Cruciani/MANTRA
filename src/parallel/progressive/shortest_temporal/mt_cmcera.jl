@@ -241,7 +241,7 @@ function get_next_stopping_sample(ss::Float64,iteration_index::Int64)
     return ss,iteration_index
 end
 
-function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Float64,bigint::Bool,algo::String = "trk",vc_upper_bund::Bool = true,diam::Int64 = -1,empirical_peeling_a::Float64 = 2.0)
+function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Float64,bigint::Bool,algo::String = "trk",vc_upper_bund::Bool = true,diam::Int64 = -1,empirical_peeling_a::Float64 = 2.0,force_gc::Bool = false)
     @assert (algo == "trk") || (algo == "ob") || (algo == "rtb") "Illegal algorithm, use: trk , ob , or rtb"
     norm::Float64 = 1.0
     if algo == "rtb"
@@ -456,6 +456,9 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
                 next_stopping_samples,iteration_index = get_next_stopping_sample(next_stopping_samples,iteration_index )
                 println("Increasing sample size to "*string(next_stopping_samples))
                 flush(stdout)
+                if (force_gc)
+                    clean_gc()
+                end
             end
                     
         end
