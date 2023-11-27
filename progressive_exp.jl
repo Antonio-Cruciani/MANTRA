@@ -64,7 +64,6 @@ datasets = [
 "23_wiki_talk.txt"
 ]=#
 datasets = [
-"14_SMS.txt",
 "21_mathoverflow.txt",
 "20_askubuntu.txt",
 "22_superuser.txt",
@@ -103,7 +102,7 @@ for i in 1:lastindex(epsilon_list)
         println("Running c-MC ERA")
         flush(stdout)
         for i in 1:trials
-            result = progressive_cmcera(tg,epsilon,delta,big_int,algo,topt,false)
+            result = progressive_cmcera(tg,epsilon,delta,big_int,algo,topt,false,1.2,-1,2.0,true)
             save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt,result[1],result[2],result[4],starting_ss,epsilon)
             clean_gc()
         end
