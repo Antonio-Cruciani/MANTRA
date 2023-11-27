@@ -14,9 +14,9 @@ end
 path = "graphs/"
 sample_step = 32
 delta = 0.1
-trials = 5
+trials = 1
 geo = 1.2
-big_int = false
+big_int = true
 vc_upper_bound = false
 #topt = "pfm"
 algo = "ob"
@@ -63,21 +63,22 @@ datasets = [
 "22_superuser.txt",
 "23_wiki_talk.txt"
 ]=#
+#=
 datasets = [
 "21_mathoverflow.txt",
 "20_askubuntu.txt",
 "22_superuser.txt",
 "23_wiki_talk.txt"
 ]
-#=
+
 datasets = [
 "23_wiki_talk.txt"
 ]
 =#
-#datasets = [
-#    "18_venice.txt",
-#    "19_bordeaux.txt"
-#]
+datasets = [
+    "18_venice.txt",
+    "19_bordeaux.txt"
+]
 #datasets = ["23_wiki_talk.txt"]
 
 for i in 1:lastindex(epsilon_list)
