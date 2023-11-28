@@ -60,7 +60,7 @@ datasets = [
 "07_digg_reply.txt",
 "14_SMS.txt",
 "18_venice.txt",
-"19_bordeaux.txt"
+"19_bordeaux.txt",
 "20_askubuntu.txt",
 "22_superuser.txt",
 ]
