@@ -14,7 +14,7 @@ end
 path = "graphs/"
 sample_step = 32
 delta = 0.1
-trials = 4
+trials = 5
 geo = 1.2
 big_int = false
 vc_upper_bound = false
@@ -25,8 +25,8 @@ topt = "pfm"
 upperbound_sample = "vc"
 #epsilon_list = [0.1,0.07,0.05,0.01]
 #sample_list = [100,350,750,1000]
-epsilon_list = [0.005]
-sample_list = [1500]
+epsilon_list = [0.001]
+sample_list = [2000]
 #=
 
 datasets = [
@@ -91,7 +91,7 @@ for i in 1:lastindex(epsilon_list)
         tg = load_temporal_graph(path*gn," ")
         print_samplig_stats(epsilon,delta,trials,starting_ss)
         print_stats(tg, graph_name= gn)
-        
+        #=
         println("Running Bernstein")
         flush(stdout)
         for i in 1:trials
@@ -99,9 +99,9 @@ for i in 1:lastindex(epsilon_list)
             save_results_progressive_sampling(nn,"b_"*algo*"_"*topt*"_"*upperbound_sample,result[1],result[2][end],result[4],starting_ss,result[3])
             clean_gc()
         end
+        =#
         
         
-        #=
         println("Running c-MC ERA")
         flush(stdout)
         for i in 1:trials
@@ -109,7 +109,7 @@ for i in 1:lastindex(epsilon_list)
             save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt,result[1],result[2],result[4],starting_ss,epsilon)
             clean_gc()
         end
-        =#
+        
         
         
     end
