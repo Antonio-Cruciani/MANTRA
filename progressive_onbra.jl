@@ -26,10 +26,10 @@ upperbound_sample = "vc"
 #epsilon_list = [0.1,0.07,0.05,0.01]
 #sample_list = [100,350,750,1000]
 
-epsilon_list = [0.007]
-sample_list = [1350]
-#epsilon_list = [0.005]
-#sample_list = [1500]
+#epsilon_list = [0.007]
+#sample_list = [1350]
+epsilon_list = [0.005]
+sample_list = [1500]
 #=
 
 datasets = [
@@ -118,10 +118,10 @@ datasets = [
 #"20_askubuntu.txt",
 #"22_superuser.txt",
 
-epsilon_list = [0.007]
-sample_list = [1350]
+epsilon_list = [0.005]
+sample_list = [1500]
 
-topt = "sfm"
+topt = "sh"
 
 
 for i in 1:lastindex(epsilon_list)
