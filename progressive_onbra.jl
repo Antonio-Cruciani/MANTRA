@@ -115,6 +115,13 @@ datasets = [
 "21_mathoverflow.txt"
 
 ]
+datasets = [
+"21_mathoverflow.txt",
+"20_askubuntu.txt",
+"22_superuser.txt"
+
+
+]
 #"20_askubuntu.txt",
 #"22_superuser.txt",
 
