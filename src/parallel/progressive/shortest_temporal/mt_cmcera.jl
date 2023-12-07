@@ -277,7 +277,12 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
     omega::Float64 = 1000
     t_diam::Float64 = 0.0
     max_num_samples::Float64 = 0.0
-
+    extreme_forcing::Bool = false
+    to_clean::Int64 = 10000
+    if eps <= 0.001
+        extreme_forcing = true
+        println("Extreme GC enabled, suggesting Julia to clean the GC every "*string(to_clean)*" samples ")
+    end
     if (diam == -1)
         println("Approximating (sh)-Temporal Diameter ")
         diam,avg_dist,_,_,_,t_diam = threaded_temporal_shortest_diameter(tg,64,0,0.9,false)
@@ -405,25 +410,52 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
     has_to_stop::Bool = false
     num_samples = 0
     sample_i::Int64 = 0
+    progressive_samples::Int64 = 0
+    lk = ReentrantLock()
     while !has_to_stop
         sample_i = trunc(Int,next_stopping_samples-prev_stopping_samples)
         task_size = cld(sample_i, ntasks)
         vs_active = [i for i in 1:sample_i]
-        @sync for (t, task_range) in enumerate(Iterators.partition(1:sample_i, task_size))
-            Threads.@spawn for _ in @view(vs_active[task_range])
-                sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
-                s = sample[1][1]
-                z = sample[1][2]
-                if algo == "trk"
-                    _sh_accumulate_trk!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
-                elseif algo == "ob"
-                    _sh_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
-                elseif algo == "rtb"
-                    _sh_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+        if extreme_forcing
+            @sync for (t, task_range) in enumerate(Iterators.partition(1:sample_i, task_size))
+                Threads.@spawn for _ in @view(vs_active[task_range])
+                    sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+                    s = sample[1][1]
+                    z = sample[1][2]
+                    if algo == "trk"
+                        _sh_accumulate_trk!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                    elseif algo == "ob"
+                        _sh_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                    elseif algo == "rtb"
+                        _sh_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                    end
+                    lock(lk)
+                    try 
+                        if ((progressive_samples % to_clean)== 0)
+                            clean_gc()
+                        end
+                        progressive_samples+=1
+                    finally 
+                        unlock(lk)
+                    end
+                end
+            end
+        else
+            @sync for (t, task_range) in enumerate(Iterators.partition(1:sample_i, task_size))
+                Threads.@spawn for _ in @view(vs_active[task_range])
+                    sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+                    s = sample[1][1]
+                    z = sample[1][2]
+                    if algo == "trk"
+                        _sh_accumulate_trk!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                    elseif algo == "ob"
+                        _sh_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                    elseif algo == "rtb"
+                        _sh_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                    end
                 end
             end
         end
-
 
         num_samples += sample_i
 
