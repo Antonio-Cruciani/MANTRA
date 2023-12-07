@@ -412,6 +412,7 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
     sample_i::Int64 = 0
     progressive_samples::Int64 = 0
     number_of_gc_calls::Int64 = 0
+    overall_cleaning_time::Float64 = 0.0
     lk = ReentrantLock()
     while !has_to_stop
         sample_i = trunc(Int,next_stopping_samples-prev_stopping_samples)
@@ -432,10 +433,12 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
                     end
                     lock(lk)
                     try 
+                        time_cleaning_start = time()
                         if ((progressive_samples % to_clean)== 0)
                             clean_gc()
                             number_of_gc_calls+=1
                         end
+                        overall_cleaning_time += time()-time_cleaning_start
                         progressive_samples+=1
                     finally 
                         unlock(lk)
@@ -494,7 +497,7 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
                     clean_gc()
                 end
                 if (extreme_forcing)
-                    println("Extreme GC forcing status: ACTIVATED , number of GC() calls :"*string(number_of_gc_calls))
+                    println("Extreme GC forcing status: ACTIVATED , number of GC() calls :"*string(number_of_gc_calls)*" Overall cleaning time "*string(overall_cleaning_time))
                 end
             end
                     
