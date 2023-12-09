@@ -57,6 +57,9 @@ datasets = [
 ]
 
 =#
+
+
+
 datasets = [
 "07_digg_reply.txt",
 "14_SMS.txt",
@@ -91,16 +94,7 @@ for i in 1:lastindex(epsilon_list)
         tg = load_temporal_graph(path*gn," ")
         print_samplig_stats(epsilon,delta,trials,starting_ss)
         print_stats(tg, graph_name= gn)
-        #=
-        println("Running Bernstein")
-        flush(stdout)
-        for i in 1:trials
-            result = progressive_bernstein(tg,epsilon,delta,geo, big_int,algo,topt,true,true)
-            save_results_progressive_sampling(nn,"b_"*algo*"_"*topt*"_"*upperbound_sample,result[1],result[2][end],result[4],starting_ss,result[3])
-            clean_gc()
-        end
-        
-        =#
+
         
         println("Running c-MC ERA")
         flush(stdout)
@@ -115,6 +109,76 @@ for i in 1:lastindex(epsilon_list)
     end
 end
 
+datasets = [
+"04_college_msg.txt",
+"10_facebook_wall.txt",
+"11_slashdot_reply.txt",
+"07_digg_reply.txt",
+"14_SMS.txt",
+"21_mathoverflow.txt",
+"20_askubuntu.txt",
+"22_superuser.txt",
+]
+topt = "sfm"
+
+for i in 1:lastindex(epsilon_list)
+    epsilon = epsilon_list[i]
+    starting_ss = sample_list[i]
+    for gn in datasets
+        nn = String(split(gn, ".t")[1])
+        tg = load_temporal_graph(path*gn," ")
+        print_samplig_stats(epsilon,delta,trials,starting_ss)
+        print_stats(tg, graph_name= gn)
+
+        
+        println("Running c-MC ERA")
+        flush(stdout)
+        for i in 1:trials
+            result = progressive_cmcera(tg,epsilon,delta,big_int,algo,topt,false,1.2,-1,2.0,true)
+            save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt,result[1],result[2],result[4],starting_ss,epsilon)
+            clean_gc()
+        end
+        
+        
+        
+    end
+end
+datasets = [
+"04_college_msg.txt",
+"10_facebook_wall.txt",
+"11_slashdot_reply.txt",
+"07_digg_reply.txt",
+"14_SMS.txt",
+"21_mathoverflow.txt",
+"20_askubuntu.txt",
+"22_superuser.txt",
+"18_venice.txt",
+"19_bordeaux.txt"
+]
+topt = "pfm"
+
+for i in 1:lastindex(epsilon_list)
+    epsilon = epsilon_list[i]
+    starting_ss = sample_list[i]
+    for gn in datasets
+        nn = String(split(gn, ".t")[1])
+        tg = load_temporal_graph(path*gn," ")
+        print_samplig_stats(epsilon,delta,trials,starting_ss)
+        print_stats(tg, graph_name= gn)
+
+        
+        println("Running c-MC ERA")
+        flush(stdout)
+        for i in 1:trials
+            result = progressive_cmcera(tg,epsilon,delta,big_int,algo,topt,false,1.2,-1,2.0,true)
+            save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt,result[1],result[2],result[4],starting_ss,epsilon)
+            clean_gc()
+        end
+        
+        
+        
+    end
+end
 
 
 
