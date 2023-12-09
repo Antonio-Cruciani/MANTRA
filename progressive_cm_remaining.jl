@@ -104,6 +104,24 @@ for i in 1:lastindex(epsilon_list)
         
     end
 end
+
+epsilon_list = [0.007,0.005]
+sample_list = [1350,1500]
+
+datasets = [
+"16_brain_100206_90.txt",
+"17_brain_100206_70.txt",
+"01_hypertext.txt",
+"02_highschool.txt",
+"03_hospital_ward.txt",
+"05_wiki_elections.txt",
+"06_highschool.txt",
+"08_infectious.txt",
+"09_primary_school.txt",
+"12_highschool.txt",
+]
+
+
 topt = "sfm"
 for i in 1:lastindex(epsilon_list)
     epsilon = epsilon_list[i]
