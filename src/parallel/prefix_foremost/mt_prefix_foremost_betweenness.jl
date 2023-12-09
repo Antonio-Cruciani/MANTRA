@@ -34,6 +34,10 @@ function threaded_temporal_prefix_foremost_betweenness(tg::temporal_graph,verbos
     @sync for (t, task_range) in enumerate(Iterators.partition(1:tg.num_nodes, task_size))
         Threads.@spawn for s in @view(vs_active[task_range])
             _ssptp_accumulate!(tg,tal,s,local_temporal_betweenness[t])
+            if (Sys.free_memory() / Sys.total_memory() < 0.1)
+                clean_gc()
+                sleep(0.01)
+            end
             processed_so_far = processed_so_far + 1
             if (verbose_step > 0 && processed_so_far % verbose_step == 0)
                 finish_partial::String = string(round(time() - start_time; digits=4))
