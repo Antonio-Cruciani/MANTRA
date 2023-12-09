@@ -49,7 +49,7 @@ function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph
             end
             if (Sys.free_memory() / Sys.total_memory() < 0.1)
                 clean_gc()
-                sleep(10)
+                sleep(0.01)
             end
         end
     end
@@ -137,7 +137,7 @@ function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph
                 end        
                 if (Sys.free_memory() / Sys.total_memory() < 0.1)
                     clean_gc()
-                    sleep(10)
+                    sleep(0.01)
                 end
             end
         end

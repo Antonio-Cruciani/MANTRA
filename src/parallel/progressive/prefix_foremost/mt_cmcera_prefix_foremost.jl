@@ -70,7 +70,7 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
             end
             if (Sys.free_memory() / Sys.total_memory() < 0.1)
                 clean_gc()
-                sleep(10)
+                sleep(0.01)
             end
         end
     end
@@ -181,7 +181,7 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
                 end
                 if (Sys.free_memory() / Sys.total_memory() < 0.1)
                     clean_gc()
-                    sleep(10)
+                    sleep(0.01)
                 end
             end
         end
