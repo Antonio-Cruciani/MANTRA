@@ -24,14 +24,14 @@ k = 0
 topt = "pfm"
 upperbound_sample = "vc"
 
-epsilon_list = [0.007]
-sample_list = [1350]
+epsilon_list = [0.005]
+sample_list = [1500]
 topt = "sh"
 trials = 2
 
 datasets = [
 
-"12_highschool.txt",
+"02_highschool.txt"
 ]
 
 
@@ -70,10 +70,6 @@ sample_list = [1500]
 
 
 datasets = [
-"16_brain_100206_90.txt",
-"17_brain_100206_70.txt",
-"01_hypertext.txt",
-"02_highschool.txt",
 "03_hospital_ward.txt",
 "05_wiki_elections.txt",
 "06_highschool.txt",
