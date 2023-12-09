@@ -47,6 +47,10 @@ function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph
             else
                 _pfm_accumulate_rtb!(tg,tal,s,z,mc_trials,true,local_temporal_betweenness_bootstrap[t],local_wv[t],mcrade[t],local_sp_lengths[t])
             end
+            if (Sys.free_memory() / Sys.total_memory() < 0.1)
+                clean_gc()
+                sleep(10)
+            end
         end
     end
     betweenness = reduce(+, local_temporal_betweenness_bootstrap)
@@ -131,7 +135,10 @@ function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph
                 elseif algo == "rtb"
                     _ssptp_accumulate_bernstein!(tg,tal,s,local_temporal_betweenness[t],t_bc[t])
                 end        
-
+                if (Sys.free_memory() / Sys.total_memory() < 0.1)
+                    clean_gc()
+                    sleep(10)
+                end
             end
         end
         sampled_so_far += sample_i

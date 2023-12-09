@@ -69,6 +69,10 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
             elseif algo == "rtb"
                 _sfm_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
             end
+            if (Sys.free_memory() / Sys.total_memory() < 0.1)
+                clean_gc()
+                sleep(10)
+            end
         end
     end
 
@@ -174,6 +178,10 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
                     _sfm_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
                 elseif algo == "rtb"
                     _sfm_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                end
+                if (Sys.free_memory() / Sys.total_memory() < 0.1)
+                    clean_gc()
+                    sleep(10)
                 end
             end
         end

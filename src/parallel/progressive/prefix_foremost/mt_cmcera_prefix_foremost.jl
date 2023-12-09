@@ -68,6 +68,10 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
             else
                 _pfm_accumulate_rtb!(tg,tal,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
             end
+            if (Sys.free_memory() / Sys.total_memory() < 0.1)
+                clean_gc()
+                sleep(10)
+            end
         end
     end
    
@@ -175,7 +179,10 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
                 else
                     _pfm_accumulate_rtb!(tg,tal,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
                 end
-
+                if (Sys.free_memory() / Sys.total_memory() < 0.1)
+                    clean_gc()
+                    sleep(10)
+                end
             end
         end
         

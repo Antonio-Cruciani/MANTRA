@@ -58,7 +58,6 @@ datasets = [
 
 =#
 datasets = [
-"13_topology.txt",
 "07_digg_reply.txt",
 "14_SMS.txt",
 "21_mathoverflow.txt",

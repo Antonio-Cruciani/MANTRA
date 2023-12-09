@@ -277,12 +277,6 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
     omega::Float64 = 1000
     t_diam::Float64 = 0.0
     max_num_samples::Float64 = 0.0
-    extreme_forcing::Bool = false
-    to_clean::Int64 = 10000
-    if eps <= 0.001
-        extreme_forcing = true
-        println("Extreme GC enabled, suggesting Julia to clean the GC every "*string(to_clean)*" samples ")
-    end
     if (diam == -1)
         println("Approximating (sh)-Temporal Diameter ")
         diam,avg_dist,_,_,_,t_diam = threaded_temporal_shortest_diameter(tg,64,0,0.9,false)
@@ -317,6 +311,10 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
                 _sh_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
             elseif algo == "rtb"
                 _sh_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+            end
+            if (Sys.free_memory() / Sys.total_memory() < 0.1)
+                clean_gc()
+                sleep(10)
             end
         end
     end
@@ -410,57 +408,32 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
     has_to_stop::Bool = false
     num_samples = 0
     sample_i::Int64 = 0
-    progressive_samples::Int64 = 0
     number_of_gc_calls::Int64 = 0
     overall_cleaning_time::Float64 = 0.0
-    lk = ReentrantLock()
     while !has_to_stop
         sample_i = trunc(Int,next_stopping_samples-prev_stopping_samples)
         task_size = cld(sample_i, ntasks)
         vs_active = [i for i in 1:sample_i]
-        if extreme_forcing
-            @sync for (t, task_range) in enumerate(Iterators.partition(1:sample_i, task_size))
-                Threads.@spawn for _ in @view(vs_active[task_range])
-                    sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
-                    s = sample[1][1]
-                    z = sample[1][2]
-                    if algo == "trk"
-                        _sh_accumulate_trk!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
-                    elseif algo == "ob"
-                        _sh_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
-                    elseif algo == "rtb"
-                        _sh_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
-                    end
-                    lock(lk)
-                    try 
-                        time_cleaning_start = time()
-                        if ((progressive_samples % to_clean)== 0)
-                            clean_gc()
-                            number_of_gc_calls+=1
-                        end
-                        overall_cleaning_time += time()-time_cleaning_start
-                        progressive_samples+=1
-                    finally 
-                        unlock(lk)
-                    end
+    
+        @sync for (t, task_range) in enumerate(Iterators.partition(1:sample_i, task_size))
+            Threads.@spawn for _ in @view(vs_active[task_range])
+                sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+                s = sample[1][1]
+                z = sample[1][2]
+                if algo == "trk"
+                    _sh_accumulate_trk!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                elseif algo == "ob"
+                    _sh_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
+                elseif algo == "rtb"
+                    _sh_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
                 end
-            end
-        else
-            @sync for (t, task_range) in enumerate(Iterators.partition(1:sample_i, task_size))
-                Threads.@spawn for _ in @view(vs_active[task_range])
-                    sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
-                    s = sample[1][1]
-                    z = sample[1][2]
-                    if algo == "trk"
-                        _sh_accumulate_trk!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
-                    elseif algo == "ob"
-                        _sh_accumulate_onbra!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
-                    elseif algo == "rtb"
-                        _sh_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,false,local_temporal_betweenness[t],local_wv[t],mcrade[t],local_sp_lengths[t])
-                    end
+                if (Sys.free_memory() / Sys.total_memory() < 0.1)
+                    clean_gc()
+                    sleep(10)
                 end
-            end
+            end 
         end
+        
 
         num_samples += sample_i
 
@@ -496,9 +469,7 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
                 if (force_gc)
                     clean_gc()
                 end
-                if (extreme_forcing)
-                    println("Extreme GC forcing status: ACTIVATED , number of GC() calls :"*string(number_of_gc_calls)*" Overall cleaning time "*string(overall_cleaning_time))
-                end
+                
             end
                     
         end

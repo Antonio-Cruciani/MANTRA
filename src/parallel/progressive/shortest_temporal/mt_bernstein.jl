@@ -54,6 +54,10 @@ function threaded_progressive_bernstein(tg::temporal_graph,eps::Float64,delta::F
             elseif algo == "rtb"
                 _sh_accumulate_rtb!(tg,tal,tn_index,bigint,s,z,mc_trials,true,local_temporal_betweenness_bootstrap[t],local_wv[t],mcrade[t],local_sp_lengths[t])
             end
+            if (Sys.free_memory() / Sys.total_memory() < 0.1)
+                clean_gc()
+                sleep(10)
+            end
         end
     end
     betweenness = reduce(+, local_temporal_betweenness_bootstrap)
@@ -138,6 +142,10 @@ function threaded_progressive_bernstein(tg::temporal_graph,eps::Float64,delta::F
                     _p_trk_sh_accumulate_bernstein!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[t],t_bc[t])
                 elseif algo == "rtb"
                     _sstp_accumulate_bernstein!(tg,tal,tn_index,s,bigint,local_temporal_betweenness[t],t_bc[t])
+                end
+                if (Sys.free_memory() / Sys.total_memory() < 0.1)
+                    clean_gc()
+                    sleep(10)
                 end
             end
         end
