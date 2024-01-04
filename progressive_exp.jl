@@ -106,7 +106,7 @@ for i in 1:lastindex(epsilon_list)
         
     end
 end
-=#
+
 trials = 1
 
 datasets = [
@@ -144,6 +144,7 @@ for i in 1:lastindex(epsilon_list)
         
     end
 end
+=#
 trials = 5
 
 datasets = [
@@ -183,44 +184,8 @@ for i in 1:lastindex(epsilon_list)
     end
 end
 
-trials = 4
-datasets = [
-"04_college_msg.txt",
-"10_facebook_wall.txt",
-"11_slashdot_reply.txt",
-"07_digg_reply.txt",
-"14_SMS.txt",
-"21_mathoverflow.txt",
-"20_askubuntu.txt",
-"22_superuser.txt"
-]
 
-topt = "sfm"
-
-for i in 1:lastindex(epsilon_list)
-    epsilon = epsilon_list[i]
-    starting_ss = sample_list[i]
-    for gn in datasets
-        nn = String(split(gn, ".t")[1])
-        tg = load_temporal_graph(path*gn," ")
-        print_samplig_stats(epsilon,delta,trials,starting_ss)
-        print_stats(tg, graph_name= gn)
-
-        
-        println("Running c-MC ERA")
-        flush(stdout)
-        for i in 1:trials
-            result = progressive_cmcera(tg,epsilon,delta,big_int,algo,topt,false,1.2,-1,2.0,true)
-            save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt,result[1],result[2],result[4],starting_ss,epsilon)
-            clean_gc()
-        end
-        
-        
-        
-    end
-end
-
-trials = 5
+trials = 1
 epsilon_list = [0.007,0.005,0.001]
 sample_list = [1350,1500,2000]
 datasets = [
@@ -282,7 +247,105 @@ for i in 1:lastindex(epsilon_list)
         
     end
 end
+epsilon_list = [0.001]
+sample_list = [2000]
+trials = 4
+datasets = [
+"04_college_msg.txt",
+"10_facebook_wall.txt",
+"11_slashdot_reply.txt",
+"07_digg_reply.txt",
+"14_SMS.txt",
+"21_mathoverflow.txt",
+"20_askubuntu.txt",
+"22_superuser.txt"
+]
 
+topt = "sfm"
+
+for i in 1:lastindex(epsilon_list)
+    epsilon = epsilon_list[i]
+    starting_ss = sample_list[i]
+    for gn in datasets
+        nn = String(split(gn, ".t")[1])
+        tg = load_temporal_graph(path*gn," ")
+        print_samplig_stats(epsilon,delta,trials,starting_ss)
+        print_stats(tg, graph_name= gn)
+
+        
+        println("Running c-MC ERA")
+        flush(stdout)
+        for i in 1:trials
+            result = progressive_cmcera(tg,epsilon,delta,big_int,algo,topt,false,1.2,-1,2.0,true)
+            save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt,result[1],result[2],result[4],starting_ss,epsilon)
+            clean_gc()
+        end
+        
+        
+        
+    end
+end
+epsilon_list = [0.007,0.005,0.001]
+sample_list = [1350,1500,2000]
+datasets = [
+    "18_venice.txt",
+    "19_bordeaux.txt"
+]
+
+
+trials = 4
+topt = "sh"
+big_int = true
+
+for i in 1:lastindex(epsilon_list)
+    epsilon = epsilon_list[i]
+    starting_ss = sample_list[i]
+    for gn in datasets
+        nn = String(split(gn, ".t")[1])
+        tg = load_temporal_graph(path*gn," ")
+        print_samplig_stats(epsilon,delta,trials,starting_ss)
+        print_stats(tg, graph_name= gn)
+
+        
+        println("Running c-MC ERA")
+        flush(stdout)
+        for i in 1:trials
+            result = progressive_cmcera(tg,epsilon,delta,big_int,algo,topt,false,1.2,-1,2.0,true)
+            save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt,result[1],result[2],result[4],starting_ss,epsilon)
+            clean_gc()
+        end
+        
+        
+        
+    end
+end
+
+
+
+topt = "sfm"
+
+for i in 1:lastindex(epsilon_list)
+    epsilon = epsilon_list[i]
+    starting_ss = sample_list[i]
+    for gn in datasets
+        nn = String(split(gn, ".t")[1])
+        tg = load_temporal_graph(path*gn," ")
+        print_samplig_stats(epsilon,delta,trials,starting_ss)
+        print_stats(tg, graph_name= gn)
+
+        
+        println("Running c-MC ERA")
+        flush(stdout)
+        for i in 1:trials
+            result = progressive_cmcera(tg,epsilon,delta,big_int,algo,topt,false,1.2,-1,2.0,true)
+            save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt,result[1],result[2],result[4],starting_ss,epsilon)
+            clean_gc()
+        end
+        
+        
+        
+    end
+end
 #=
 upperbound_sample = "rho"
 vc_upper_bound = false
