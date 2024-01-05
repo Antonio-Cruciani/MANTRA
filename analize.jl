@@ -2,13 +2,13 @@ include("src/APXTBC.jl")
 
 # mathoverflow 0.007 must be done
 datasets = [
-"13_topology.txt",
-"14_SMS.txt",
-"20_askubuntu.txt",
-"22_superuser.txt"
+
+"04_college_msg.txt"
+
+
 ]
 
-path_opt = ["sfm"]
+path_opt = ["sh"]
 
 algo = "ob"
 

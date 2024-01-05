@@ -49,6 +49,7 @@ function get_correlations(method::String,starting_sample::Int64,target_epsilon::
     for graph in datasets
         tg = load_temporal_graph("graphs/"*graph, " ")
         gn = split(graph,".txt")[1]
+        #println("Nnodes "*string(tg.num_nodes))
         #println("Analyzing "*gn*" ε ",target_epsilon, " Algorithm ",algo," Progressive Sampler ",prog_sampler, " Path Optimality ",method, " Upper bound samples via ",upper_bound_samples)
         exact = normalize_centrality(read_centrality_values("scores/"*gn*"/"*method*".txt"))
         if prog_sampler == "cm"
