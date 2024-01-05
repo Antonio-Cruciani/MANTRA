@@ -41,7 +41,6 @@ datasets = [
 "06_highschool.txt",
 "08_infectious.txt",
 "09_primary_school.txt",
-"12_highschool.txt",
 ]
 
 
@@ -50,7 +49,7 @@ sample_list = [2000]
 
 
 
-
+#=
 topt = "sh"
 for i in 1:lastindex(epsilon_list)
     epsilon = epsilon_list[i]
@@ -74,7 +73,7 @@ for i in 1:lastindex(epsilon_list)
         
     end
 end
-
+=#
 
 topt = "sfm"
 for i in 1:lastindex(epsilon_list)
@@ -96,7 +95,31 @@ for i in 1:lastindex(epsilon_list)
                
     end
 end
+trials = 1
+datasets = [
 
+"12_highschool.txt"
+]
+
+for i in 1:lastindex(epsilon_list)
+    epsilon = epsilon_list[i]
+    starting_ss = sample_list[i]
+    for gn in datasets
+        nn = String(split(gn, ".t")[1])
+        tg = load_temporal_graph(path*gn," ")
+        print_samplig_stats(epsilon,delta,trials,starting_ss)
+        print_stats(tg, graph_name= gn)
+        println("Running c-MC ERA")
+        flush(stdout)
+        for i in 1:trials
+            result = progressive_cmcera(tg,epsilon,delta,big_int,algo,topt,false,1.2,-1,2.0,true)
+            save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt,result[1],result[2],result[4],starting_ss,epsilon)
+            clean_gc()
+        end
+        
+               
+    end
+end
 # ONBRA EXEC
 epsilon_list = [0.007,0.005]
 sample_list = [1350,1500]
