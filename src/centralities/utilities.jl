@@ -215,10 +215,14 @@ function save_results_topk(nn::String,cn::String,c::Array{Tuple{Int64,Float64}},
         close(f)
     end
 end
-function save_results_diameter(nn::String,diameter::Int64,vertex_diameter::Int64,avg_distance::Float64,number_of_pairs::Float64,eff_diam::Float64,zeta::Float64,tt::Float64,path_optimality::String)
+function save_results_diameter(nn::String,diameter::Int64,vertex_diameter::Int64,avg_distance::Float64,number_of_pairs::Float64,eff_diam::Float64,zeta::Float64,tt::Float64,path_optimality::String,diam_path_size::Float64 = 0.0,eff_diam_path_size::Float64 = 0.0,avg_path_size::Float64 = 0.0,total_couples_path_size::Float64 = 0.0)
     mkpath("diameter/" * nn * "/")
     f::IOStream = open("diameter/" * nn * "/"*path_optimality*".txt", "a")
-    write(f, string(diameter)*","*string(vertex_diameter)*","*string(avg_distance)*","*string(number_of_pairs)*","*string(eff_diam)*","*string(zeta)*","*string(tt)* "\n")
+    if path_optimality != "pfm"
+        write(f, string(diameter)*","*string(vertex_diameter)*","*string(avg_distance)*","*string(number_of_pairs)*","*string(eff_diam)*","*string(zeta)*","*string(tt)* "\n")
+    else
+        write(f, string(diameter)*","*string(vertex_diameter)*","*string(avg_distance)*","*string(number_of_pairs)*","*string(eff_diam)*","*string(zeta)*","*string(tt)*","*string(diam_path_size)*","*string(eff_diam_path_size)*","*string(avg_path_size)*","*string(total_couples_path_size)* "\n")
+    end
     close(f)
 end
 

@@ -61,6 +61,10 @@ function threaded_temporal_shortest_diameter(tg::temporal_graph,sample_size::Int
             time_to_finish::String = string(round((sample_size*(time() - start_time) / processed_so_far )-(time() - start_time) ; digits=4))
             println("TS-Diam. Processed " * string(processed_so_far) * "/" * string(sample_size) * " nodes in " * finish_partial * " seconds | Est. remaining time : "*time_to_finish)
         end
+        if (Sys.free_memory() / Sys.total_memory() < 0.1)
+            clean_gc()
+            sleep(0.01)
+        end
     end
     dd = reduce(+, local_temporal_distance_distribution)
     diameter = get_diameter(dd)
@@ -228,6 +232,10 @@ function threaded_temporal_shortest_foremost_diameter(tg::temporal_graph,sample_
             time_to_finish::String = string(round((sample_size*(time() - start_time) / processed_so_far )-(time() - start_time) ; digits=4))
             println("TS-Diam (SFM). Processed " * string(processed_so_far) * "/" * string(sample_size) * " nodes in " * finish_partial * " seconds | Est. remaining time : "*time_to_finish)
         end
+        if (Sys.free_memory() / Sys.total_memory() < 0.1)
+            clean_gc()
+            sleep(0.01)
+        end
     end
     dd = reduce(+, local_temporal_distance_distribution)
     diameter = get_diameter(dd)
@@ -331,6 +339,10 @@ function threaded_temporal_prefix_foremost_diameter(tg::temporal_graph,sample_si
             time_to_finish::String = string(round((sample_size*(time() - start_time) / processed_so_far )-(time() - start_time) ; digits=4))
             println("TS-Diam (PFM). Processed " * string(processed_so_far) * "/" * string(sample_size) * " nodes in " * finish_partial * " seconds | Est. remaining time : "*time_to_finish)
         end
+        if (Sys.free_memory() / Sys.total_memory() < 0.1)
+            clean_gc()
+            sleep(0.01)
+        end
     end
     dd = reduce(+, local_temporal_distance_distribution)
     diameter = get_temporal_diameter(dd)
@@ -363,9 +375,9 @@ function threaded_temporal_prefix_foremost_diameter(tg::temporal_graph,sample_si
     avg_path_size::Float64 = average_distance(temporal_path_size_table)
     #println("Average distance ",avg_dist)
     eff_diam_path_size::Float64 = effective_diameter(temporal_path_size_table,threshold)
-    total_couples_path_sieze::Float64 = total_reachable_couples(temporal_path_size_table)
+    total_couples_path_size::Float64 = total_reachable_couples(temporal_path_size_table)
     #println("Diameter ",diameter, " Effective Diameter ",eff_diam," Average Distance ",avg_dist, " #Couples ",total_couples, " α ",alpha)
-    return diameter,avg_dist,eff_diam,total_couples,alpha, vertex_diameter+1,diameter_path_size,avg_path_size,eff_diam_path_size,total_couples_path_sieze,time()-start_time
+    return diameter,avg_dist,eff_diam,total_couples,alpha, vertex_diameter+1,convert(AbstractFloat,diameter_path_size),avg_path_size,eff_diam_path_size,total_couples_path_size,time()-start_time
 end
 
 

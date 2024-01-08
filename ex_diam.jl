@@ -35,11 +35,14 @@ for gn in datasets
     print_stats(tg, graph_name= gn)
     flush(stdout)
     result = threaded_temporal_prefix_foremost_diameter(tg,0,1000)
+    println(result)
     nn = String(split(gn, ".t")[1])
     
-    save_results_diameter(nn,result[1],trunc(Int,result[6]),result[2],result[4],result[3],result[5],result[7],"pfm")
+    save_results_diameter(nn,result[1],trunc(Int,result[6]),result[2],result[4],result[3],result[5],result[11],"pfm",result[7],result[8],result[9],result[10])
 
 end
+
+
 
 
 println("Computing Ground Truth values for the shortest temporal diameter")

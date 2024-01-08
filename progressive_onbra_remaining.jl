@@ -45,6 +45,7 @@ datasets = [
 "10_facebook_wall.txt",
 "11_slashdot_reply.txt",
 "07_digg_reply.txt",
+"13_topology.txt",
 "14_SMS.txt",
 "21_mathoverflow.txt",
 "20_askubuntu.txt",
