@@ -146,13 +146,21 @@ for i in 1:lastindex(epsilon_list)
 end
 =#
 trials = 5
-
+#=
 datasets = [
 "04_college_msg.txt",
 "10_facebook_wall.txt",
 "11_slashdot_reply.txt",
 "07_digg_reply.txt",
 "14_SMS.txt",
+"21_mathoverflow.txt",
+"20_askubuntu.txt",
+"22_superuser.txt",
+"18_venice.txt",
+"19_bordeaux.txt"
+]
+=#
+datasets = [
 "21_mathoverflow.txt",
 "20_askubuntu.txt",
 "22_superuser.txt",
@@ -184,7 +192,7 @@ for i in 1:lastindex(epsilon_list)
     end
 end
 
-
+#=
 trials = 1
 epsilon_list = [0.007,0.005,0.001]
 sample_list = [1350,1500,2000]
@@ -346,7 +354,7 @@ for i in 1:lastindex(epsilon_list)
         
     end
 end
-#=
+
 upperbound_sample = "rho"
 vc_upper_bound = false
 
