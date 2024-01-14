@@ -27,7 +27,7 @@ path = "graphs/"
 trials = 5
 
 println("Computing Ground Truth values for the prefix-foremost temporal diameter")
-#=
+
 seed = 0
 for gn in datasets
 
@@ -41,7 +41,7 @@ for gn in datasets
     save_results_diameter(nn,result[1],trunc(Int,result[6]),result[2],result[4],result[3],result[5],result[11],"pfm",result[7],result[8],result[9],result[10])
 
 end
-=#
+
 seed = 64
 for gn in datasets
 
