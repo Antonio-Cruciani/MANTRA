@@ -282,7 +282,7 @@ end
 # Progressive ONBRA using Bernstein Bound to compute ξ
 #------------------------------------------------------
 
-function threaded_progressive_onbra_prefix_foremost_bernstein(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64,verbose_step::Int64)::Tuple{Array{Float64},Array{Int64},Float64,Float64}
+function threaded_progressive_onbra_prefix_foremost_bernstein_dep(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64,verbose_step::Int64)::Tuple{Array{Float64},Array{Int64},Float64,Float64}
 
 
     start_time = time()
