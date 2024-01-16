@@ -66,7 +66,7 @@ for i in 1:lastindex(epsilon_list)
         println("Running ONBRA")
         flush(stdout)
         for i in 1:trials
-            result = progressive_bernstein(tg,epsilon,delta,big_int,algo,topt,true,true)
+            result = progressive_bernstein(tg,epsilon,delta,geo,big_int,algo,topt,true,true)
             save_results_progressive_sampling(nn,"b_"*algo*"_"*topt*"_"*upperbound_sample,result[1],result[2][end],result[4],starting_ss,result[3])
             clean_gc()
         end
