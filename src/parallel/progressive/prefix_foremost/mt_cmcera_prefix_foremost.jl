@@ -33,7 +33,7 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
 
     if (diam == -1)
         println("Approximating (pfm)-Temporal Diameter ")
-        _,_,_,_,_,diam_v,t_diam = threaded_temporal_prefix_foremost_diameter(tg,64,0,0.9)
+        _,_,_,_,_,diam_v,_,_,_,_,t_diam = threaded_temporal_prefix_foremost_diameter(tg,64,0,0.9)
         diam = trunc(Int,diam_v)
         println("Task completed in "*string(round(t_diam;digits = 4))*". Δ = "*string(diam))
         flush(stdout)

@@ -52,7 +52,8 @@ datasets = [
 "21_mathoverflow.txt",
 "20_askubuntu.txt",
 "22_superuser.txt",
-"23_wiki_talk.txt"
+"18_venice.txt",
+"19_bordeaux.txt"
 ]
 
 =#
