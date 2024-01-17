@@ -163,7 +163,7 @@ datasets = [
 "21_mathoverflow.txt",
 "20_askubuntu.txt",
 "22_superuser.txt",
-=#
+
 datasets = [
 "18_venice.txt",
 "19_bordeaux.txt"
@@ -192,15 +192,14 @@ for i in 1:lastindex(epsilon_list)
         
     end
 end
-
+=#
 trials = 1
 
-
+epsilon_list = [0.001]
+sample_list = [2000]
 datasets = [
-    "19_bordeaux.txt"
+    "18_venice.txt"
 ]
-epsilon_list = [0.005]
-sample_list = [1500]
 
 topt = "sh"
 big_int = true
@@ -230,10 +229,9 @@ end
 
 
 trials = 1
-epsilon_list = [0.001]
-sample_list = [2000]
+epsilon_list = [0.005,0.001]
+sample_list = [1500,2000]
 datasets = [
-    "18_venice.txt",
     "19_bordeaux.txt"
 ]
 
