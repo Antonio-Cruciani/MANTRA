@@ -231,6 +231,7 @@ function threaded_temporal_shortest_foremost_diameter(tg::temporal_graph,sample_
             finish_partial::String = string(round(time() - start_time; digits=4))
             time_to_finish::String = string(round((sample_size*(time() - start_time) / processed_so_far )-(time() - start_time) ; digits=4))
             println("TS-Diam (SFM). Processed " * string(processed_so_far) * "/" * string(sample_size) * " nodes in " * finish_partial * " seconds | Est. remaining time : "*time_to_finish)
+            flush(stdout)
         end
         if (Sys.free_memory() / Sys.total_memory() < 0.1)
             clean_gc()
