@@ -41,17 +41,32 @@ datasets = [
 "12_highschool.txt",
 "13_topology.txt",
 "14_SMS.txt",
-"18_venice.txt",
-"19_bordeaux.txt",
 "21_mathoverflow.txt",
 "20_askubuntu.txt",
 "22_superuser.txt"
 ]
-trials = 5
+#=
+"18_venice.txt",
+"19_bordeaux.txt",
+datasets = [
+"04_college_msg.txt",
+"10_facebook_wall.txt",
+"11_slashdot_reply.txt",
+"07_digg_reply.txt",
+"14_SMS.txt",
+"21_mathoverflow.txt",
+"20_askubuntu.txt",
+"22_superuser.txt"
+]
+=#
+trials = 1
 epsilon_list = [0.01,0.007,0.005,0.001]
 sample_list = [1000,1350,1500,2000]
-
-topt = "pfm"
+#=
+epsilon_list = [0.01,0.007,0.005,0.001]
+sample_list = [1000,1350,1500,2000]
+=#
+topt = "sh"
 
 for i in 1:lastindex(epsilon_list)
     epsilon = epsilon_list[i]
