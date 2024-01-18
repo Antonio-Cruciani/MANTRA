@@ -62,8 +62,7 @@ datasets = [
 
 datasets = [
 "21_mathoverflow.txt",
-"20_askubuntu.txt",
-"22_superuser.txt",
+"13_topology.txt"
 ]
 
 datasets = [
@@ -193,16 +192,18 @@ for i in 1:lastindex(epsilon_list)
     end
 end
 =#
-trials = 1
+trials = 5
 
 epsilon_list = [0.001]
 sample_list = [2000]
+
+
 datasets = [
-    "18_venice.txt"
+"21_mathoverflow.txt"
 ]
 
-topt = "sh"
-big_int = true
+topt = "pfm"
+big_int = false
 
 for i in 1:lastindex(epsilon_list)
     epsilon = epsilon_list[i]
@@ -228,17 +229,19 @@ for i in 1:lastindex(epsilon_list)
 end
 
 
-trials = 1
-epsilon_list = [0.005,0.001]
-sample_list = [1500,2000]
+
+
+trials = 5
+epsilon_list = [0.001]
+sample_list = [2000]
 datasets = [
-    "19_bordeaux.txt"
+    "13_topology.txt"
 ]
 
 
 
-topt = "sh"
-big_int = true
+topt = "sfm"
+big_int = false
 
 for i in 1:lastindex(epsilon_list)
     epsilon = epsilon_list[i]
@@ -263,6 +266,7 @@ for i in 1:lastindex(epsilon_list)
     end
 end
 
+#=
 epsilon_list = [0.007,0.005,0.001]
 sample_list = [1350,1500,2000]
 
@@ -291,7 +295,6 @@ for i in 1:lastindex(epsilon_list)
     end
 end
 
-#=
 trials = 1
 epsilon_list = [0.007,0.005,0.001]
 sample_list = [1350,1500,2000]
