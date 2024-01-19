@@ -65,6 +65,13 @@ function get_correlations(method::String,starting_sample::Int64,target_epsilon::
             end
         end
         apx_bc = apx_bc .* [1/trials]
+       
+        for i in 1:tg.num_nodes
+            if apx_bc[i]> 1
+                apx_bc[i] = 0.0
+            end
+        end
+        
         corr = compute_correlations(exact,apx_bc,false)
         push!(results,[gn,method,algo,prog_sampler,corr[1],corr[2],corr[3],corr[4]])
     end
@@ -154,6 +161,11 @@ function get_errors(method::String,starting_sample::Int64,target_epsilon::Float6
             end
         end
         apx_bc = apx_bc .* [1/trials]
+        for i in 1:tg.num_nodes
+            if apx_bc[i]> 1
+                apx_bc[i] = 0.0
+            end
+        end
         SD = supremum_deviation(exact,apx_bc)
         MSE = mean_sqaured_error(exact,apx_bc)
         push!(results,[gn,method,algo,prog_sampler,SD,MSE,mean(sd_list),std(sd_list),mean(mse_list),std(mse_list)])

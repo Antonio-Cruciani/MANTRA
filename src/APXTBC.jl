@@ -92,7 +92,7 @@ include("parallel/TOP-K/prefix_foremost/mt_silvan_prefix_foremost_topk.jl")
 include("parallel/progressive/prefix_foremost/mt_det_era_prefix_foremost.jl")
 
 #STATS 
-#include("statistics/correlations_and_error.jl")
+include("statistics/correlations_and_error.jl")
 
 # SOME PRINTS 
 packet_name::String =raw"
