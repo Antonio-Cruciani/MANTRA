@@ -168,9 +168,10 @@ datasets = [
 "19_bordeaux.txt"
 ]
 =#
-datasets = ["22_superuser.txt"
+datasets = ["20_askubuntu.txt",
+"22_superuser.txt"
 ]
-trials = 1
+trials = 4
 epsilon_list = [0.001]
 sample_list = [2000]
 topt = "pfm"
@@ -198,7 +199,7 @@ for i in 1:lastindex(epsilon_list)
         
     end
 end
-
+#=
 trials = 1
 
 epsilon_list = [0.01]
@@ -274,7 +275,7 @@ for i in 1:lastindex(epsilon_list)
     end
 end
 
-#=
+
 epsilon_list = [0.007,0.005,0.001]
 sample_list = [1350,1500,2000]
 

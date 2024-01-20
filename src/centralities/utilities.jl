@@ -237,6 +237,22 @@ function read_vertex_diameter(nn::String,path_optimality::String)
 end
 
 
+function read_distance_measures(nn::String,path_optimality::String,apx::Bool = false)
+    file_name = "diameter/"*nn*"/"*path_optimality*".txt"
+    @assert isfile(file_name) "The vertex diameter does not exists"
+    f = open(file_name, "r")
+    res = []
+    if !apx
+        res = [parse(Float64,x) for x in split(readline(f),",")]
+    else
+        for line in eachline(f)
+            push!(res,[parse(Float64,x) for x in split(readline(line),",")])
+        end
+    end
+    close(f)
+    return res
+end
+
 
 
 function print_algorithm_status(algo::String,bound::String,progressive::Bool)

@@ -329,10 +329,19 @@ end
 
 
 
-
+function compute_temporal_distance_residuals(datasets,path_optimality)
  
-
-
+    all_results = []
+    for graph in datasets
+        gn = split(graph,".txt")[1]
+        exact = read_distance_measures(gn,path_optimality)
+        apx = read_distance_measures(gn,path_optimality,true)
+        res = compute_residuals(exact,apx,path_optimality)
+        # write the procedure
+        push!(all_results,res)
+    end
+    return all_results
+end
 
 
 
