@@ -19,7 +19,7 @@ geo = 1.2
 big_int = false
 vc_upper_bound = false
 #topt = "pfm"
-algo = "rtb"
+algo = "trk"
 k = 0
 topt = "pfm"
 upperbound_sample = "vc"
@@ -150,7 +150,7 @@ datasets = [
     "19_bordeaux.txt"
     
 ]
-trials =2
+trials =1
 topt = "pfm"
 big_int = false
 epsilon_list = [0.007]
