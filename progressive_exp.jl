@@ -169,12 +169,16 @@ datasets = [
 "19_bordeaux.txt"
 ]
 =#
-
+datasets = [
+    "23_wiki_talk.txt"
+    ]
 
 topt = "pfm"
 big_int = false
-epsilon_list = [0.1,0.07,0.05,0.01,0.007,0.005,0.001]
-sample_list = [100,350,750,1000,1350,1500,2000]
+#epsilon_list = [0.1,0.07,0.05,0.01,0.007,0.005,0.001]
+#sample_list = [100,350,750,1000,1350,1500,2000]
+epsilon_list = [0.007,0.001]
+sample_list = [1350,2000]
 for i in 1:lastindex(epsilon_list)
     epsilon = epsilon_list[i]
     starting_ss = sample_list[i]
