@@ -1,8 +1,11 @@
 include("src/APXTBC.jl")
 
 # mathoverflow 0.007 must be done
-datasets = [
+#"13_topology.txt",
 
+datasets = [
+"18_venice.txt",
+"19_bordeaux.txt",
 "16_brain_100206_90.txt",
 "17_brain_100206_70.txt",
 "01_hypertext.txt",
@@ -21,11 +24,12 @@ datasets = [
 "14_SMS.txt",
 "21_mathoverflow.txt",
 "20_askubuntu.txt",
-"22_superuser.txt",
+"22_superuser.txt"
 
 ]
 
-path_opt = ["sh"]
+#datasets =[  "19_bordeaux.txt"]
+path_opt = ["pfm"]
 
 algo = "ob"
 
@@ -39,8 +43,8 @@ upper_bound_sampless = ["vc"]
 
 kappas = [10,25,50]
 
-epsilon_list = [0.1,0.07,0.05,0.01,0.007,0.005,0.001]
-sample_list = [100,350,750,1000,1350,1500,2000]
+epsilon_list = [0.01]
+sample_list = [1000]
 #epsilon_list = [0.007]
 #sample_list = [1350]
 j = 1
@@ -64,7 +68,7 @@ for eps in epsilon_list
     end
 end
 
-
+#=
 datasets = [
 
 "16_brain_100206_90.txt",
@@ -168,7 +172,7 @@ datasets = [
 
 ]
 trials = 5
-#=
+
 datasets = [
 
 "16_brain_100206_90.txt",
