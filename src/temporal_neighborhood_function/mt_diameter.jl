@@ -363,6 +363,7 @@ function threaded_temporal_prefix_foremost_diameter(tg::temporal_graph,sample_si
     diameter_path_size = get_diameter(d)
     temporal_path_size_table = zeros(diameter_path_size+1)
     accum = 0
+
     for h in 1:(diameter_path_size+1)
         accum += d[h]
         temporal_path_size_table[h] = tg.num_nodes * accum/sample_size
@@ -409,9 +410,9 @@ function _sstp_pfm_diameter!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,Int
             bfs_ds.t_min[w] = t_w
             bfs_ds.dist_t[w] = bfs_ds.dist_t[v] + 1
             temporal_distance_distribution[bfs_ds.t_min[w]+1] += 1
+            temporal_path_size_distribution[bfs_ds.dist_t[w]+1] += 1
             if temporal_path_size[1] < bfs_ds.dist_t[w]
                 temporal_path_size[1] = bfs_ds.dist_t[w]
-                temporal_path_size_distribution[bfs_ds.dist_t[w]+1] += 1
             end
             for neig in next_temporal_neighbors(tal,w,t_w)
                 enqueue!(bfs_ds.priority_queue,(w,neig[1],neig[2]),neig[2])
