@@ -364,7 +364,7 @@ function threaded_temporal_prefix_foremost_diameter(tg::temporal_graph,sample_si
     temporal_path_size_table = zeros(diameter_path_size+1)
     accum = 0
     for h in 1:(diameter_path_size+1)
-        accum += dd[h]
+        accum += d[h]
         temporal_path_size_table[h] = tg.num_nodes * accum/sample_size
     end
 
