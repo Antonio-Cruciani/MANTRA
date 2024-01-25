@@ -168,12 +168,13 @@ datasets = [
 "18_venice.txt",
 "19_bordeaux.txt"
 ]
-=#
 datasets = [
     "24_flickr_grow.txt",
     "25_stackoverflow.txt",
     "26_delicius.txt"
     ]
+
+=#
 
 topt = "pfm"
 big_int = false

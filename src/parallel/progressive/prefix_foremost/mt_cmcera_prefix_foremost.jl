@@ -30,10 +30,10 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
     omega::Float64 = 1000
     t_diam::Float64 = 0.0
     max_num_samples::Float64 = 0.0
-
+    avg_diam_ub::Float64 = 0.0
     if (diam == -1)
         println("Approximating (pfm)-Temporal Diameter ")
-        _,_,_,_,_,diam_v,_,_,_,_,t_diam = threaded_temporal_prefix_foremost_diameter(tg,64,0,0.9)
+        _,_,_,_,_,diam_v,_,avg_diam_ub,_,_,t_diam = threaded_temporal_prefix_foremost_diameter(tg,256,0,0.9)
         diam = trunc(Int,diam_v)
         println("Task completed in "*string(round(t_diam;digits = 4))*". Δ = "*string(diam))
         flush(stdout)
@@ -106,7 +106,9 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
     if !vc_upper_bund
 
     # Upper bound on the average distance
-        avg_diam_ub::Float64 = upper_bound_average_diameter(delta/8,diam,sp_lengths,tau,true,norm)
+        if algo == "rtb"
+            avg_diam_ub = upper_bound_average_diameter(delta/8,diam,sp_lengths,tau,true,norm)
+        end
         # Upper bound on the top-1 temporal betweenness
         top1bc_upper_bound::Float64 = upper_bound_top_1_tbc(max_tbc,delta/8,tau)
         wimpy_var_upper_bound::Float64 = upper_bound_top_1_tbc(max_wv/tau,delta/8,tau)
