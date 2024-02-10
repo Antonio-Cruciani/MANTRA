@@ -32,7 +32,7 @@ sample_list = [100,350,750,1000,0.007,0.005,0.001]
 #epsilon_list = [0.005]
 #sample_list = [1500]
 
-
+#=
 datasets = [
     "18_venice.txt",
     "19_bordeaux.txt",
@@ -56,15 +56,14 @@ datasets = [
     "20_askubuntu.txt",
     "22_superuser.txt"
 ]
-
+=#
+datasets = [
+"23_wiki_talk.txt"
+]
 #=
 
 
 
-datasets = [
-"21_mathoverflow.txt",
-"13_topology.txt"
-]
 
 datasets = [
 "21_mathoverflow.txt",
