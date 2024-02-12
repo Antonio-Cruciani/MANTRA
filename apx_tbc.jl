@@ -12,10 +12,12 @@ end
 =#
 println("Computing Groun Truth values for the shortest-foremost temporal betweenness")
 ## "26_delicius.txt",
-## "24_flickr_grow.txt"
+## "25_stackoverflow.txt"
+
 
 datasets = [
-"25_stackoverflow.txt"
+"24_flickr_grow.txt"
+
 
 ]
 
