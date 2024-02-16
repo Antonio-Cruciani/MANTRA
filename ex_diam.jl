@@ -24,7 +24,10 @@ datasets = [
 "20_askubuntu.txt",
 "22_superuser.txt"
 ]
+datasets = [
 
+"23_wiki_talk.txt"
+]
 path = "graphs/"
 trials = 5
 
@@ -74,7 +77,7 @@ for gn in datasets
     end
 end
 
-#=
+
 seed = 0
 println("Computing Ground Truth values for the shortest temporal diameter")
 
@@ -157,24 +160,3 @@ for gn in datasets
         save_results_diameter(nn,result[1],result[1]+1,result[2],result[4],result[3],result[5],result[6],"apx_sfm_"*string(seed))
     end
 end
-
-datasets = [
-"21_mathoverflow.txt",
-"20_askubuntu.txt",
-"22_superuser.txt"
-]
-
-seed = 0
-println("Computing Ground Truth values for the shortest-foremost temporal diameter")
-
-for gn in datasets
-
-    tg = load_temporal_graph(path*gn," ")
-    print_stats(tg, graph_name= gn)
-    flush(stdout)
-    result = threaded_temporal_shortest_foremost_diameter(tg,seed,1000)
-    nn = String(split(gn, ".t")[1])
-    
-    save_results_diameter(nn,result[1],result[1]+1,result[2],result[4],result[3],result[5],result[6],"sfm")
-end
-=#
