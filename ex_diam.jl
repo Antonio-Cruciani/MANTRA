@@ -30,7 +30,7 @@ datasets = [
 ]
 path = "graphs/"
 trials = 5
-
+#=
 println("Computing Ground Truth values for the prefix-foremost temporal diameter")
 
 seed = 0
@@ -77,7 +77,80 @@ for gn in datasets
     end
 end
 
+=#
 
+
+
+
+
+seed = 64
+println("Computing Ground Truth values for the shortest temporal diameter")
+
+for gn in datasets
+
+    tg = load_temporal_graph(path*gn," ")
+    print_stats(tg, graph_name= gn)
+    flush(stdout)
+    for i in 1:trials
+        result = threaded_temporal_shortest_diameter(tg,seed,0)
+        nn = String(split(gn, ".t")[1])
+        
+        save_results_diameter(nn,result[1],result[1]+1,result[2],result[4],result[3],result[5],result[6],"apx_sh_"*string(seed))
+    end
+end
+
+seed = 256
+println("Computing Ground Truth values for the shortest temporal diameter")
+
+for gn in datasets
+
+    tg = load_temporal_graph(path*gn," ")
+    print_stats(tg, graph_name= gn)
+    flush(stdout)
+    for i in 1:trials
+        result = threaded_temporal_shortest_diameter(tg,seed,0)
+        nn = String(split(gn, ".t")[1])
+        
+        save_results_diameter(nn,result[1],result[1]+1,result[2],result[4],result[3],result[5],result[6],"apx_sh_"*string(seed))
+    end
+end
+
+
+
+
+
+seed = 64
+
+println("Computing Ground Truth values for the shortest-foremost temporal diameter")
+
+for gn in datasets
+
+    tg = load_temporal_graph(path*gn," ")
+    print_stats(tg, graph_name= gn)
+    flush(stdout)
+    for i in 1:trials
+        result = threaded_temporal_shortest_foremost_diameter(tg,seed,0)
+        nn = String(split(gn, ".t")[1])
+        
+        save_results_diameter(nn,result[1],result[1]+1,result[2],result[4],result[3],result[5],result[6],"apx_sfm_"*string(seed))
+    end
+end
+seed = 256
+
+println("Computing Ground Truth values for the shortest-foremost temporal diameter")
+
+for gn in datasets
+
+    tg = load_temporal_graph(path*gn," ")
+    print_stats(tg, graph_name= gn)
+    flush(stdout)
+    for i in 1:trials
+        result = threaded_temporal_shortest_foremost_diameter(tg,seed,0)
+        nn = String(split(gn, ".t")[1])
+        
+        save_results_diameter(nn,result[1],result[1]+1,result[2],result[4],result[3],result[5],result[6],"apx_sfm_"*string(seed))
+    end
+end
 seed = 0
 println("Computing Ground Truth values for the shortest temporal diameter")
 
@@ -90,73 +163,4 @@ for gn in datasets
     nn = String(split(gn, ".t")[1])
     
     save_results_diameter(nn,result[1],result[1]+1,result[2],result[4],result[3],result[5],result[6],"sh")
-end
-
-seed = 64
-println("Computing Ground Truth values for the shortest temporal diameter")
-
-for gn in datasets
-
-    tg = load_temporal_graph(path*gn," ")
-    print_stats(tg, graph_name= gn)
-    flush(stdout)
-    for i in 1:trials
-        result = threaded_temporal_shortest_diameter(tg,seed,0)
-        nn = String(split(gn, ".t")[1])
-        
-        save_results_diameter(nn,result[1],result[1]+1,result[2],result[4],result[3],result[5],result[6],"apx_sh_"*string(seed))
-    end
-end
-
-seed = 256
-println("Computing Ground Truth values for the shortest temporal diameter")
-
-for gn in datasets
-
-    tg = load_temporal_graph(path*gn," ")
-    print_stats(tg, graph_name= gn)
-    flush(stdout)
-    for i in 1:trials
-        result = threaded_temporal_shortest_diameter(tg,seed,0)
-        nn = String(split(gn, ".t")[1])
-        
-        save_results_diameter(nn,result[1],result[1]+1,result[2],result[4],result[3],result[5],result[6],"apx_sh_"*string(seed))
-    end
-end
-
-
-
-
-
-seed = 64
-
-println("Computing Ground Truth values for the shortest-foremost temporal diameter")
-
-for gn in datasets
-
-    tg = load_temporal_graph(path*gn," ")
-    print_stats(tg, graph_name= gn)
-    flush(stdout)
-    for i in 1:trials
-        result = threaded_temporal_shortest_foremost_diameter(tg,seed,0)
-        nn = String(split(gn, ".t")[1])
-        
-        save_results_diameter(nn,result[1],result[1]+1,result[2],result[4],result[3],result[5],result[6],"apx_sfm_"*string(seed))
-    end
-end
-seed = 256
-
-println("Computing Ground Truth values for the shortest-foremost temporal diameter")
-
-for gn in datasets
-
-    tg = load_temporal_graph(path*gn," ")
-    print_stats(tg, graph_name= gn)
-    flush(stdout)
-    for i in 1:trials
-        result = threaded_temporal_shortest_foremost_diameter(tg,seed,0)
-        nn = String(split(gn, ".t")[1])
-        
-        save_results_diameter(nn,result[1],result[1]+1,result[2],result[4],result[3],result[5],result[6],"apx_sfm_"*string(seed))
-    end
 end
