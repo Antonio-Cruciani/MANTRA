@@ -23,16 +23,36 @@ end
 function threaded_trk(tg::temporal_graph,sample_size::Int64,verbose_step::Int64, bigint::Bool)::Tuple{Array{Float64},Float64}
 
     start_time = time()
-    sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, sample_size)
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
     tn_index::Dict{Tuple{Int64,Int64},Int64} = temporal_node_index_srtp(tg)
 
-    local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
     processed_so_far::Int64 = 0
     s::Int64 = 0
     z::Int64 = 0
     println("Using ",nthreads()," Trheads")
+    vs_active = [i for i in 1:sample_size]
+    d, r = divrem(sample_size, nthreads())
+    ntasks = d == 0 ? r : nthreads()
+    local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    task_size = cld(sample_size, ntasks)
 
+    @sync for (t, task_range) in enumerate(Iterators.partition(1:sample_size, task_size))
+        Threads.@spawn for _ in @view(vs_active[task_range])
+            sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+            s = sample[1][1]
+            z = sample[1][2]
+            _trk_sh_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[t])
+            processed_so_far = processed_so_far + 1
+            if (verbose_step > 0 && processed_so_far % verbose_step == 0)
+                finish_partial::String = string(round(time() - start_time; digits=4))
+                time_to_finish::String = string(round((sample_size*(time() - start_time) / processed_so_far )-(time() - start_time) ; digits=4))
+                println("TRK-SH. Processed " * string(processed_so_far) * "/" * string(sample_size) * " samples in " * finish_partial * " seconds | Est. remaining time : "*time_to_finish)
+                flush(stdout)
+            end
+        end
+    end
+
+    #=
     Base.Threads.@threads for i in 1:sample_size
         s = sample[i][1]
         z = sample[i][2]
@@ -44,6 +64,7 @@ function threaded_trk(tg::temporal_graph,sample_size::Int64,verbose_step::Int64,
             println("TRK-SH. Processed " * string(processed_so_far) * "/" * string(sample_size) * " samples in " * finish_partial * " seconds | Est. remaining time : "*time_to_finish)
         end
     end
+    =#
     betweenness = reduce(+, local_temporal_betweenness)
     betweenness = betweenness .* [1/sample_size]
     return betweenness,time()-start_time
@@ -158,17 +179,260 @@ function _trk_sh_accumulate!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,Int
        
         
     end
+    if (bigint)
+        bfs_ds = BI_BFS_SRTP_DS(0,0)
+    else
+        bfs_ds = BFS_SRTP_DS(0,0)
+    end
     return nothing
 
 end
+# Bidirectional work in progress
+#=
+struct BI_BFS_SRTP_DS_BID
+    sigma::Array{BigInt}
+    dist::Array{Int64}
+    sigma_t::Array{BigInt}
+    sigma_z::Array{BigInt}
+    dist_t::Array{Int64}
+    predecessors::Array{Set{Tuple{Int64,Int64,Int64}}}
+    boolean_array::Array{Bool}
+    forward_queue::Queue{Tuple{Int64,Int64}}
+    backward_queue::Queue{Tuple{Int64,Int64}}
+    function BI_BFS_SRTP_DS_BID(nn::Int64, ntn::Int64)
+        return new(Array{BigInt}(undef, nn), Array{Int64}(undef, nn), Array{BigInt}(undef, ntn), zeros(Int64, ntn), Array{Int64}(undef, ntn), Array{Set{Tuple{Int64,Int64}}}(undef, ntn+1), falses(ntn), Queue{Tuple{Int64,Int64}}(),Queue{Tuple{Int64,Int64}}())
+    end
+end
+macro visited_s()
+    return 1
+end
+macro visited_z()
+    return 2
+end
+function next_temporal_neighbors_backward(til::Array{Array{Tuple{Int64,Int64}}}, u::Int64, t::Int64)::Array{Tuple{Int64,Int64}}
+    neig::Array{Tuple{Int64,Int64}} = til[u]
+    left::Int64 = 1
+    right::Int64 = length(neig)
+    pos::Int64 = length(neig) + 1
+    mid::Int64 = -1
+    while (left <= right)
+        mid = (left + right) ÷ 2
+        if (neig[mid][2] < t)
+            pos = mid
+            left = mid + 1 
+        else
+            right = mid - 1
+        end
+    end
+    return neig[begin:pos]
+end
+
+function initialize_ball_indicator(tg::temporal_graph)::Dict{Tuple{Int64,Int64},Int64}
+    d::Dict{Tuple{Int64,Int64},Int64} = Dict{Tuple{Int64,Int64},Int64}()
+    t_z::Int64 = tg.temporal_edges[lastindex(tg.temporal_edges)][3]+1  
+    for edge in tg.temporal_edges
+        if (get(d, (edge[2], edge[3]), 0) == 0)
+            d[(edge[2], edge[3])] = 0
+        end
+    end
+    return d
+end
+
+function _trk_sh_bidirectional_accumulate!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,Int64}}},til::Array{Array{Tuple{Int64,Int64}}},al,il,tn_index::Dict{Tuple{Int64,Int64},Int64},bigint::Bool,s::Int64,z::Int64,temporal_betweenness_centrality::Vector{Float64})
+    indexes::Int64 = length(keys(tn_index))
+    bfs_ds = BI_BFS_SRTP_DS_BID(tg.num_nodes, indexes)
+   
+    t_z::Int64 = tg.temporal_edges[lastindex(tg.temporal_edges)][3]+1
+    index_z::Int64 = tn_index[(z,t_z)]
+    u::Int64 = -1
+    w::Int64 = -1
+    t::Int64 = -1
+    t_w::Int64 = -1
+    tni::Int64 = -1
+    tni_w::Int64 = -1
+    temporal_node::Tuple{Int64,Int64} = (-1, -1)
+    totalWeight,randomEdge,curWeight,curEdge = initialize_weights(bigint)
+    cur_w::Tuple{Int64,Int64} = (-1,-1)
+    for u in 1:tg.num_nodes
+        bfs_ds.dist[u] = -1
+        bfs_ds.sigma[u] = 0
+    end
+    for tn in 1:lastindex(bfs_ds.dist_t)
+        bfs_ds.sigma_t[tn] = 0
+        bfs_ds.dist_t[tn] = -1
+        bfs_ds.predecessors[tn] = Set{Tuple{Int64,Int64}}()
+    end
+    t_max::Int64 = lastindex(tg.file_time)+1
+    tni = tn_index[(s, 0)]
+    bfs_ds.sigma[s] = 1
+    bfs_ds.sigma_t[tni] = 1
+    bfs_ds.dist[s] = 0
+    bfs_ds.dist_t[tni] = 0
+    tni = tn_index[(z, t_max)]
+    bfs_ds.sigma[z] = 1
+    bfs_ds.sigma_t[tni] = 1
+    bfs_ds.dist[z] = 0
+    bfs_ds.dist_t[tni] = 0
+    ball_indicator = initialize_ball_indicator(tg)
+    ball_indicator[(s,0)] = @visited_s
+    ball_indicator[(z,t_max)] = @visited_z
+    sum_degs_s::Int64 = 0
+    sum_degs_z::Int64 = 0
+    sum_degs_cur::Int64 = 0
+    have_to_stop::Bool = false
+    start_q_s::Int64 = 1
+    end_q_s::Int64 = 1
+    start_q_z::Int64 = 1
+    end_q_z::Int64 = 1
+    start_cur::Int64 = 0
+    end_cur::Int64 = 0
+    method::Int8 = 0
+    new_end_cur::Int64 = 0
+    new_start_cur::Int64 = 0
+    sp_edges = []
+    
+    enqueue!(bfs_ds.forward_queue, (s, 0))
+    enqueue!(bfs_ds.backward_queue, (z, t_max))
+
+    # 1 forward in time 2 backward in time
+    while (!have_to_stop)
+        if sum_degs_s <= sum_degs_z
+            sum_degs_s = 0
+            sum_degs_cur = 0
+            start_cur = 0
+            end_cur = length(bfs_ds.forward_queue)
+            method = 1
+            new_start_cur = end_q_s
+            println("Expanding forward | Size queue ",length(bfs_ds.forward_queue))
+        else
+            sum_degs_z = 0
+            sum_degs_cur = 0
+            start_cur = 0
+            end_cur = length(bfs_ds.backward_queue)
+            method = 2
+            new_start_cur = end_q_z
+            println("Expanding backward | Size queue ",length(bfs_ds.backward_queue))
+
+        end
+        while (start_cur < end_cur)
+            if method == 1
+                temporal_node = dequeue!(bfs_ds.forward_queue)
+            else
+                temporal_node = dequeue!(bfs_ds.backward_queue)
+            end
+            start_cur += 1
+            u = temporal_node[1]
+            t = temporal_node[2]
+            tni = tn_index[temporal_node]
+            neighbors = []
+            if method == 1
+                neighbors = next_temporal_neighbors(tal, u, t)
+            else
+                neighbors = next_temporal_neighbors_backward(til,u,t)
+            end
+            println("neighbors ",neighbors)
+            for neig in neighbors
+                w = neig[1]
+                t_w = neig[2]
+                tni_w = tn_index[(w, t_w)]
+                if bfs_ds.dist_t[tni_w] == -1
+                    bfs_ds.dist_t[tni_w] = bfs_ds.dist_t[tni] + 1
+                    ball_indicator[(w, t_w)] = method
+                    println("HALOOO")
+                    new_end_cur += 1 
+                    if bfs_ds.dist[w] == -1
+                        bfs_ds.dist[w] = bfs_ds.dist_t[tni] + 1
+                        if method == 1
+                            sum_degs_cur += lastindex(al[w])
+                        else
+                            sum_degs_cur += lastindex(il[w])
+                        end
+                    end
+                    if method == 1
+                        enqueue!(bfs_ds.forward_queue, (w,t_w,tni_w))
+                    else
+                        enqueue!(bfs_ds.backward_queue, (w,t_w,tni_w))
+                    end
+                elseif ball_indicator[tni_w] != ball_indicator[tni]
+                    have_to_stop = true
+                    push!(sp_edges, [[tni,(u,t)],[tni_w,(w, t_w)]])
+                    println("TBF MEETING")
+                end
+            
+                if bfs_ds.dist_t[tni_w] == bfs_ds.dist_t[tni] + 1
+                    bfs_ds.sigma_t[tni_w] += bfs_ds.sigma_t[tni]
+                    push!(bfs_ds.predecessors[tni_w], (temporal_node[1],temporal_node[2],tni))
+                    if bfs_ds.dist_t[tni_w] == bfs_ds.dist[w]
+                        bfs_ds.sigma[w] += bfs_ds.sigma_t[tni]
+                    end
+                end
+            end
+        end
+
+    end
 
 
+end
 
+=#
+function threaded_trk_bid(tg::temporal_graph,sample_size::Int64,verbose_step::Int64, bigint::Bool)
 
+    start_time = time()
+    tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
+    til::Array{Array{Tuple{Int64,Int64}}} = temporal_incidency_list(tg)
+    g::static_graph = underlying_graph(tg)
+    al::Array{Array{Int64}} = adjacency_list(g)
+    il::Array{Array{Int64}} = incidency_list(g)
+    tn_index::Dict{Tuple{Int64,Int64},Int64} = temporal_node_index_srtp(tg)
 
+    processed_so_far::Int64 = 0
+    s::Int64 = 0
+    z::Int64 = 0
+    println("Using ",nthreads()," Trheads")
+    vs_active = [i for i in 1:sample_size]
+    d, r = divrem(sample_size, nthreads())
+    ntasks = d == 0 ? r : nthreads()
+    local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    task_size = cld(sample_size, ntasks)
 
-function threaded_progressive_trk(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,bigint::Bool,diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
+    @sync for (t, task_range) in enumerate(Iterators.partition(1:sample_size, task_size))
+        Threads.@spawn for _ in @view(vs_active[task_range])
+            sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+            s = sample[1][1]
+            z = sample[1][2]
+            
+            _trk_sh_bidirectional_accumulate!(tg,tal,til,al,il,tn_index,bigint,s,z,local_temporal_betweenness[t])
+            processed_so_far = processed_so_far + 1
+            if (verbose_step > 0 && processed_so_far % verbose_step == 0)
+                finish_partial::String = string(round(time() - start_time; digits=4))
+                time_to_finish::String = string(round((sample_size*(time() - start_time) / processed_so_far )-(time() - start_time) ; digits=4))
+                println("TRK-SH. Processed " * string(processed_so_far) * "/" * string(sample_size) * " samples in " * finish_partial * " seconds | Est. remaining time : "*time_to_finish)
+                flush(stdout)
+            end
+        end
+    end
 
+    #=
+    Base.Threads.@threads for i in 1:sample_size
+        s = sample[i][1]
+        z = sample[i][2]
+        _trk_sh_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[Base.Threads.threadid()])
+        processed_so_far = processed_so_far + 1
+        if (verbose_step > 0 && processed_so_far % verbose_step == 0)
+            finish_partial::String = string(round(time() - start_time; digits=4))
+            time_to_finish::String = string(round((sample_size*(time() - start_time) / processed_so_far )-(time() - start_time) ; digits=4))
+            println("TRK-SH. Processed " * string(processed_so_far) * "/" * string(sample_size) * " samples in " * finish_partial * " seconds | Est. remaining time : "*time_to_finish)
+        end
+    end
+    =#
+    betweenness = reduce(+, local_temporal_betweenness)
+    betweenness = betweenness .* [1/sample_size]
+    return betweenness,time()-start_time
+end
+
+#--------------
+function threaded_progressive_trk(tg::temporal_graph,eps::Float64,delta::Float64,verbose_step::Int64,bigint::Bool,algo::String = "trk",diam::Int64 = -1,start_factor::Int64 = 100,sample_step::Int64 = 10,hb::Bool = false)
+    @assert (algo == "trk") || (algo == "ob") || (algo == "rtb") "Illegal algorithm, use: trk , ob , or rtb"
     start_time = time()
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
     tn_index::Dict{Tuple{Int64,Int64},Int64} = temporal_node_index_srtp(tg)
@@ -197,7 +461,11 @@ function threaded_progressive_trk(tg::temporal_graph,eps::Float64,delta::Float64
         sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
         s = sample[1][1]
         z = sample[1][2]
-        _trk_sh_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[Base.Threads.threadid()])
+        if algo == "trk"
+            _trk_sh_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[Base.Threads.threadid()])
+        elseif algo == "ob"
+            _onbra_sh_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[Base.Threads.threadid()])
+        end
     end
     betweenness = reduce(+, local_temporal_betweenness)
     betweenness = betweenness .* [1/tau]
@@ -210,15 +478,20 @@ function threaded_progressive_trk(tg::temporal_graph,eps::Float64,delta::Float64
     _compute_δ_guess!(betweenness,eps,delta,balancing_factor,eps_lb,eps_ub,delta_lb_min_guess,delta_ub_min_guess,delta_lb_guess,delta_ub_guess) 
     println("Bootstrap completed ")
 
+    local_temporal_betweenness = [zeros(tg.num_nodes) for i in 1:nthreads()]
     betweenness = zeros(tg.num_nodes)
     sampled_so_far::Int64 = 0
     stop::Array{Bool} = [false]
-    while sampled_so_far <= omega && !stop[1]
+    while sampled_so_far < omega && !stop[1]
         Base.Threads.@threads for i in 1:sample_step
             sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
             s = sample[1][1]
             z = sample[1][2]
-            _trk_sh_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[Base.Threads.threadid()])
+            if algo == "trk"
+                _trk_sh_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[Base.Threads.threadid()])
+            elseif algo == "ob"
+                _onbra_sh_accumulate!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[Base.Threads.threadid()])
+            end
         end
         sampled_so_far += sample_step
         betweenness = reduce(+, local_temporal_betweenness)
@@ -235,18 +508,18 @@ function threaded_progressive_trk(tg::temporal_graph,eps::Float64,delta::Float64
 
 
 end
-function commpute_f(btilde::Float64, iter_num::Int64,δ_l::Float64,ω::Int64)::Float64
+function commpute_f_dep(btilde::Float64, iter_num::Int64,δ_l::Float64,ω::Int64)::Float64
     tmp::Float64 = ω/iter_num - 1.0/3.0
     err_chern::Float64 = (log(1.0/δ_l))*1.0/iter_num*(-tmp+sqrt(tmp*tmp +2*btilde * ω/(log(1.0/δ_l))))
     return min(err_chern,btilde)
 end
 
-function compute_g(btilde::Float64, iter_num::Int64,δ_u::Float64,ω::Int64)::Float64
+function compute_g_dep(btilde::Float64, iter_num::Int64,δ_u::Float64,ω::Int64)::Float64
     tmp::Float64 = ω/iter_num + 1.0/3.0
     err_chern::Float64 = (log(1.0/δ_u))*1.0/iter_num*(tmp+sqrt(tmp*tmp +2*btilde * ω/(log(1.0/δ_u))))
     return min(err_chern,1-btilde)
 end
-function _compute_finished!(stop::Array{Bool},omega::Int64,betweenness::Array{Float64},sampled_so_far::Int64,eps::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},delta_lb_guess::Array{Float64},delta_ub_guess::Array{Float64},delta_lb_min_guess::Float64,delta_ub_min_guess::Float64)
+function _compute_finished_dep!(stop::Array{Bool},omega::Int64,betweenness::Array{Float64},sampled_so_far::Int64,eps::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},delta_lb_guess::Array{Float64},delta_ub_guess::Array{Float64},delta_lb_min_guess::Float64,delta_ub_min_guess::Float64)
     #j::Int64 = 1
     n::Int64 = lastindex(betweenness)
     all_finished::Bool = true
@@ -269,7 +542,7 @@ function _compute_finished!(stop::Array{Bool},omega::Int64,betweenness::Array{Fl
 end
 
 
-function compute_bet_err(eps::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},start_factor::Int64)::Tuple{Array{Float64},Array{Float64}}
+function compute_bet_err_dep(eps::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},start_factor::Int64)::Tuple{Array{Float64},Array{Float64}}
     Base.Threads.@threads for i in 1:n
         eps_lb[i] = eps
         eps_ub[i] = eps
@@ -277,7 +550,11 @@ function compute_bet_err(eps::Float64,eps_lb::Array{Float64},eps_ub::Array{Float
     return eps_lb,eps_ub
 end
 
-function _compute_δ_guess!(betweenness::Array{Float64},eps::Float64,delta::Float64,balancing_factor::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},delta_lb_min_guess::Array{Float64},delta_ub_min_guess::Array{Float64},delta_lb_guess::Array{Float64},delta_ub_guess::Array{Float64}) 
+
+
+
+
+function _compute_δ_guess_dep!(betweenness::Array{Float64},eps::Float64,delta::Float64,balancing_factor::Float64,eps_lb::Array{Float64},eps_ub::Array{Float64},delta_lb_min_guess::Array{Float64},delta_ub_min_guess::Array{Float64},delta_lb_guess::Array{Float64},delta_ub_guess::Array{Float64}) 
 
     n::Int64 = lastindex(betweenness)
     a::Float64 = 0
@@ -285,7 +562,7 @@ function _compute_δ_guess!(betweenness::Array{Float64},eps::Float64,delta::Floa
     c::Float64 = (a+b)/2
     summation::Float64 = 0.0
     
-    for i in 1:n
+    Base.Threads.@threads for i in 1:n
         eps_lb[i] = eps
         eps_ub[i] = eps
     end
@@ -312,3 +589,193 @@ function _compute_δ_guess!(betweenness::Array{Float64},eps::Float64,delta::Floa
     end
     return nothing
 end
+
+
+
+
+#------------------------------------------------------
+# Progressive TRK using Bernstein Bound to compute ξ
+#------------------------------------------------------
+
+function threaded_progressive_trk_bernstein(tg::temporal_graph,initial_sample::Int64,epsilon::Float64,delta::Float64,geo::Float64,verbose_step::Int64, bigint::Bool)::Tuple{Array{Float64},Array{Int64},Float64,Float64}
+
+    start_time = time()
+    print_algorithm_status("TRK","Bernstein",true)
+    tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
+    tn_index::Dict{Tuple{Int64,Int64},Int64} = temporal_node_index_srtp(tg)
+
+    local_temporal_betweenness::Vector{Vector{Vector{Float64}}} = [[] for i in 1:nthreads()]
+    t_bc::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for i in 1:nthreads()]
+    reduced_betweenness::Vector{Float64} = Vector{Float64}([])
+    betweenness::Vector{Float64} = zeros(tg.num_nodes)
+
+    s::Int64 = 0
+    z::Int64 = 0
+    sample_size_schedule::Array{Int64} = [0,initial_sample]
+    xi::Float64 = 0
+    sampled_so_far::Int64 = 0
+    new_sample::Int64 = 0
+    keep_sampling::Bool = true
+    k::Int64 = 0
+    j::Int64 = 2
+    finish_partial::String = ""
+    println("Using ",nthreads()," Trheads")
+    while keep_sampling
+        k+=1
+        if (k >= 2)
+            new_sample = trunc(Int,geo^k*sample_size_schedule[2])
+            push!(sample_size_schedule,new_sample)
+        end
+
+        Base.Threads.@threads for i in 1:(sample_size_schedule[j]-sample_size_schedule[j-1])
+            sampled_so_far+=1
+            sample::Array{Tuple{Int64,Int64}} = onbra_sample(tg, 1)
+            s = sample[1][1]
+            z = sample[1][2]
+            _p_trk_sh_accumulate_bernstein!(tg,tal,tn_index,bigint,s,z,local_temporal_betweenness[Base.Threads.threadid()],t_bc[Base.Threads.threadid()])
+            if (verbose_step > 0 && sampled_so_far % verbose_step == 0)
+                finish_partial = string(round(time() - start_time; digits=4))
+                println("P-TRK. Processed " * string(sampled_so_far) * " pairs in " * finish_partial * " seconds ")
+            end
+        end
+        _reduce_arrays!(local_temporal_betweenness,reduced_betweenness)
+        xi = theoretical_error_bound(reduced_betweenness,reduce(+,t_bc),sample_size_schedule[j],delta/2^k)
+
+
+     
+        finish_partial = string(round(time() - start_time; digits=4))
+        println("P-TRK. Processed " * string(sampled_so_far) * " pairs in " * finish_partial * " seconds | Est. ξ = ",xi)
+        if xi <= epsilon
+            keep_sampling = false
+        else
+            j+=1
+            local_temporal_betweenness = [[zeros(tg.num_nodes)] for i in 1:nthreads()]
+        end
+
+    end
+    
+    _reduce_list_of_arrays!(local_temporal_betweenness,betweenness,sample_size_schedule[j],tg.num_nodes)
+    betweenness = betweenness .* [1/sample_size_schedule[j]]
+    return betweenness,sample_size_schedule,xi,time()-start_time
+end
+
+
+
+
+function _p_trk_sh_accumulate_bernstein!(tg::temporal_graph,tal::Array{Array{Tuple{Int64,Int64}}},tn_index::Dict{Tuple{Int64,Int64},Int64},bigint::Bool,s::Int64,z::Int64,B_1::Vector{Vector{Float64}},B_2::Vector{Float64})
+    indexes::Int64 = length(keys(tn_index))
+    if (bigint)
+        bfs_ds = BI_BFS_SRTP_DS(tg.num_nodes, indexes)
+    else
+        bfs_ds = BFS_SRTP_DS(tg.num_nodes, indexes)
+    end
+    push!(B_1,zeros(tg.num_nodes))
+    p::Int64 = lastindex(B_1)
+    t_z::Int64 = tg.temporal_edges[lastindex(tg.temporal_edges)][3]+1
+    index_z::Int64 = tn_index[(z,t_z)]
+    u::Int64 = -1
+    w::Int64 = -1
+    t::Int64 = -1
+    t_w::Int64 = -1
+    tni::Int64 = -1
+    tni_w::Int64 = -1
+    temporal_node::Tuple{Int64,Int64,Int64} = (-1, -1,-1)
+    totalWeight,randomEdge,curWeight,curEdge = initialize_weights(bigint)
+    cur_w::Tuple{Int64,Int64} = (-1,-1)
+    for u in 1:tg.num_nodes
+        bfs_ds.dist[u] = -1
+        bfs_ds.sigma[u] = 0
+    end
+    for tn in 1:lastindex(bfs_ds.dist_t)
+        bfs_ds.sigma_t[tn] = 0
+        bfs_ds.dist_t[tn] = -1
+        bfs_ds.predecessors[tn] = Set{Tuple{Int64,Int64,Int64}}()
+    end
+    tni = tn_index[(s, 0)]
+    bfs_ds.sigma[s] = 1
+    bfs_ds.sigma_t[tni] = 1
+    bfs_ds.dist[s] = 0
+    bfs_ds.dist_t[tni] = 0
+    enqueue!(bfs_ds.forward_queue, (s, 0,tni))
+    d_z_min = Inf
+    while length(bfs_ds.forward_queue) != 0
+        temporal_node = dequeue!(bfs_ds.forward_queue)
+        u = temporal_node[1]
+        t = temporal_node[2]
+        tni = temporal_node[3]
+        if bfs_ds.dist_t[tni] < d_z_min
+            for neig in next_temporal_neighbors(tal, u, t)
+                w = neig[1]
+                t_w = neig[2]
+                tni_w = tn_index[(w, t_w)]
+                if bfs_ds.dist_t[tni_w] == -1
+                    bfs_ds.dist_t[tni_w] = bfs_ds.dist_t[tni] + 1
+                    if bfs_ds.dist[w] == -1
+                        bfs_ds.dist[w] = bfs_ds.dist_t[tni] + 1
+                        if w == z
+                            d_z_min = bfs_ds.dist[w]
+                        end
+                    end
+                    enqueue!(bfs_ds.forward_queue, (w,t_w,tni_w))
+                end
+                if bfs_ds.dist_t[tni_w] == bfs_ds.dist_t[tni] + 1
+                    if (!bigint && bfs_ds.sigma_t[tni] > typemax(UInt128) - bfs_ds.sigma_t[tni_w])
+                        println("Overflow occurred with sample (", s, ",", z, ")")
+                        return [], 0.0
+                    end
+                    bfs_ds.sigma_t[tni_w] += bfs_ds.sigma_t[tni]
+                    push!(bfs_ds.predecessors[tni_w], (temporal_node[1],temporal_node[2],tni))
+                    if bfs_ds.dist_t[tni_w] == bfs_ds.dist[w]
+                        if (!bigint && bfs_ds.sigma_t[tni] > typemax(UInt128) - bfs_ds.sigma[w])
+                            println("Overflow occurred with sample (", s, ",", z, ")")
+                            return [], 0.0
+                        end
+                        bfs_ds.sigma[w] += bfs_ds.sigma_t[tni]
+                    end
+                    if w == z
+                        push!(bfs_ds.predecessors[index_z], (neig[1],neig[2],tni_w))
+                    end
+                end
+            end
+        end
+    end
+    if bfs_ds.dist[z] > 0
+       
+        totalWeight = 0
+        randomEdge = 0
+        curWeight = 0
+        totalWeight = bfs_ds.sigma[z]
+        cur_w = (z,t_z)
+        tni = index_z
+        while cur_w[1] != s
+            if cur_w == (z,t_z)
+                totalWeight = bfs_ds.sigma[z]
+            else
+                totalWeight = bfs_ds.sigma_t[tni]
+            end
+            randomEdge = rand(0:totalWeight-1)
+            curEdge = 0
+            for pred in bfs_ds.predecessors[tni]
+                pred_i = pred[3]
+                curEdge += bfs_ds.sigma_t[pred_i]
+                cur_w = (pred[1],pred[2])
+                tni = pred_i
+                if curEdge > randomEdge
+                    if pred[1]!= s && pred[1] != z
+                        B_1[p][pred[1]] += 1
+                        B_2[pred[1]] += 1
+                    end
+                    break
+                end
+            end
+            
+        end
+       
+        
+    end
+    bfs_ds = nothing
+
+    return nothing
+
+end
+

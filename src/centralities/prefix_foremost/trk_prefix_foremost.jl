@@ -17,19 +17,17 @@ struct BFS_PFM_SRTP_DS_BI
     end
 end
 
-function trk_prefix_foremost(tg::temporal_graph, sample_size::Int64, verbose_step::Int64, bigint::Bool)::Tuple{Array{Float64},Int64,Float64}
+function trk_prefix_foremost(tg::temporal_graph, sample_size::Int64, verbose_step::Int64)::Tuple{Array{Float64},Float64}
 
     start_time = time()
    
-    
+    bigint::Bool = false
     sample::Array{Tuple{Int64,Int64}} = trk_sample(tg, sample_size)
     
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
-    if (bigint)
-        bfs_ds = BFS_PFM_SRTP_DS_BI(tg.num_nodes)
-    else
-        bfs_ds = BFS_PFM_SRTP_DS(tg.num_nodes)
-    end
+
+    bfs_ds = BFS_PFM_SRTP_DS(tg.num_nodes)
+    
     tilde_b::Array{Float64} = zeros(tg.num_nodes)
     w::Int64 = -1
     v::Int64 = -1

@@ -143,7 +143,7 @@ end
 
 #------ Progressive 
 
-function progressive_rtb(tg::temporal_graph, c::Int64, verbose_step::Int64, bigint::Bool)::Tuple{Array{Float64},Int64,Float64}
+function progressive_rtb(tg::temporal_graph, c::Float64, verbose_step::Int64, bigint::Bool)::Tuple{Array{Float64},Int64,Float64}
     start_time = time()
     tal::Array{Array{Tuple{Int64,Int64}}} = temporal_adjacency_list(tg)
     tn_index::Dict{Tuple{Int64,Int64},Int64} = temporal_node_index(tg)

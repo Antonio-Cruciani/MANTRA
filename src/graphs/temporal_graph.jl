@@ -4,6 +4,13 @@ struct temporal_graph
     file_id::Array{String}
     file_time::Array{Int64}
 end
+
+
+struct static_graph
+    num_nodes::Int64
+    edges::Array{Tuple{Int64,Int64}}
+end
+
  
 function load_temporal_graph(file_name::String, sep::String)
     @assert isfile(file_name) "The temporal edge list file " * file_name * " does not exist"
@@ -91,4 +98,28 @@ function temporal_incidency_list(tg::temporal_graph)::Array{Array{Tuple{Int64,In
     return tal
 end
 
+function adjacency_list(sg::static_graph)::Array{Array{Int64}}
+    al = [[] for _ in 1:sg.num_nodes]
+    
+    for i in 1:lastindex(sg.edges)
+        push!(al[sg.edges[i][1]], sg.edges[i][2])
+    end
+    return al
+end
 
+function incidency_list(sg::static_graph)::Array{Array{Int64}}
+    al = [[] for _ in 1:sg.num_nodes]
+   
+    for i in 1:lastindex(sg.edges)
+        push!(al[sg.edges[i][2]], sg.edges[i][1])
+    end
+    return al
+end
+
+function underlying_graph(tg::temporal_graph)::static_graph
+    edge_set::Set{Tuple{Int64,Int64}} = Set{Tuple{Int64,Int64}}()
+    for te in tg.temporal_edges
+        push!(edge_set,(te[1],te[2]))
+    end  
+    return static_graph(tg.num_nodes,sort!(collect(edge_set), by=e -> (e[1],e[2])))
+end

@@ -49,6 +49,7 @@ function next_temporal_neighbors(tal::Array{Array{Tuple{Int64,Int64}}}, u::Int64
     return neig[pos:end]
 end
 
+
 function temporal_node_index(tg::temporal_graph)::Dict{Tuple{Int64,Int64},Int64}
     d::Dict{Tuple{Int64,Int64},Int64} = Dict{Tuple{Int64,Int64},Int64}()
     current_index = 1

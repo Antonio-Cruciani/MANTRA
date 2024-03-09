@@ -43,7 +43,7 @@ function onbra_sample(tg::temporal_graph, sample_size::Int64)::Array{Tuple{Int64
     end
     return sample_pairs
 end
-
+#=
 function empirical_variance(tilde_b::Array{Float64}, sample_size::Int64, v::Int64)::Float64
     n::Int64 = div(length(tilde_b), sample_size)
     variance::Float64 = 0
@@ -59,16 +59,15 @@ function theoretical_error_bound(tilde_b::Array{Float64}, sample_size::Int64, et
     n::Int64 = div(length(tilde_b), sample_size)
     error::Float64 = 0.0
     max_error::Float64 = 0.0
+    errors::Array{Float64} = zeros(n)
     for u in 1:n
         variance::Float64 = empirical_variance(tilde_b, sample_size, u)
-        error = sqrt(2 * variance * log(4 * n / eta) / sample_size) + 7 * log(4 * n / eta) / (3 * (sample_size - 1))
-        if (error > max_error)
-            max_error = error
-        end
-    end
-    return max_error
-end
+        errors[u] = sqrt(2 * variance * log(4 * n / eta) / sample_size) + 7 * log(4 * n / eta) / (3 * (sample_size - 1))
 
+    end
+    return maximum(errors)
+end
+=#
 function onbra(tg::temporal_graph, sample_size::Int64, verbose_step::Int64, bigint::Bool; test_sample=Array{Tuple{Int64,Int64}}[])::Tuple{Array{Float64},Float64}
     start_time = time()
     sample = test_sample
@@ -157,39 +156,40 @@ function onbra(tg::temporal_graph, sample_size::Int64, verbose_step::Int64, bigi
             end
             tni = tn_index[(s, 0)]
             bfs_ds.sigma_z[tni] = 1
-        end
-        for t in 1:lastindex(tg.file_time)
-            tni = get(tn_index, (z, t), 0)
-            if tni > 0 && bfs_ds.sigma_t[tni] > 0
-                for pred in bfs_ds.predecessors[tni]
-                    tni_w = tn_index[(pred[1], pred[2])]
-                    if (!bigint && bfs_ds.sigma_z[tni_w] == typemax(UInt128))
-                        println("Overflow occurred with sample (", s, ",", z, ")")
-                        return [], 0.0
-                    end
-                    bfs_ds.sigma_z[tni_w] += 1
-                    if !bfs_ds.boolean_matrix[tni_w]
-                        enqueue!(bfs_ds.backward_queue, pred)
-                        bfs_ds.boolean_matrix[tni_w] = true
+        
+            for t in 1:lastindex(tg.file_time)
+                tni = get(tn_index, (z, t), 0)
+                if tni > 0 && bfs_ds.sigma_t[tni] > 0
+                    for pred in bfs_ds.predecessors[tni]
+                        tni_w = tn_index[(pred[1], pred[2])]
+                        if (!bigint && bfs_ds.sigma_z[tni_w] == typemax(UInt128))
+                            println("Overflow occurred with sample (", s, ",", z, ")")
+                            return [], 0.0
+                        end
+                        bfs_ds.sigma_z[tni_w] += 1
+                        if !bfs_ds.boolean_matrix[tni_w]
+                            enqueue!(bfs_ds.backward_queue, pred)
+                            bfs_ds.boolean_matrix[tni_w] = true
+                        end
                     end
                 end
             end
-        end
-        while length(bfs_ds.backward_queue) > 0
-            temporal_node = dequeue!(bfs_ds.backward_queue)
-            tni = tn_index[(temporal_node[1], temporal_node[2])]
-            if temporal_node[1] != s
-                tilde_b[temporal_node[1]] += (bfs_ds.sigma_z[tni] * (bfs_ds.sigma_t[tni] / bfs_ds.sigma[z]))
-                for pred in bfs_ds.predecessors[tni]
-                    tni_w = tn_index[(pred[1], pred[2])]
-                    if (!bigint && bfs_ds.sigma_z[tni_w] > typemax(UInt128) - bfs_ds.sigma_z[tni])
-                        println("Overflow occurred with sample (", s, ",", z, ")")
-                        return [], 0.0
-                    end
-                    bfs_ds.sigma_z[tni_w] += bfs_ds.sigma_z[tni]
-                    if !bfs_ds.boolean_matrix[tni_w]
-                        enqueue!(bfs_ds.backward_queue, pred)
-                        bfs_ds.boolean_matrix[tni_w] = true
+            while length(bfs_ds.backward_queue) > 0
+                temporal_node = dequeue!(bfs_ds.backward_queue)
+                tni = tn_index[(temporal_node[1], temporal_node[2])]
+                if temporal_node[1] != s
+                    tilde_b[temporal_node[1]] += (bfs_ds.sigma_z[tni] * (bfs_ds.sigma_t[tni] / bfs_ds.sigma[z]))
+                    for pred in bfs_ds.predecessors[tni]
+                        tni_w = tn_index[(pred[1], pred[2])]
+                        if (!bigint && bfs_ds.sigma_z[tni_w] > typemax(UInt128) - bfs_ds.sigma_z[tni])
+                            println("Overflow occurred with sample (", s, ",", z, ")")
+                            return [], 0.0
+                        end
+                        bfs_ds.sigma_z[tni_w] += bfs_ds.sigma_z[tni]
+                        if !bfs_ds.boolean_matrix[tni_w]
+                            enqueue!(bfs_ds.backward_queue, pred)
+                            bfs_ds.boolean_matrix[tni_w] = true
+                        end
                     end
                 end
             end
@@ -439,3 +439,5 @@ function compute_xi(B,r)
     JuMP.optimize!(model)
     return(objective_value(model))
 end
+
+

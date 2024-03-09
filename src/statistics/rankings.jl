@@ -32,3 +32,16 @@ function intersection(a::Array{Float64}, b::Array{Float64}, max_k::Int64)::Array
     return inter
 end
 
+function jaccard(a::Array{Float64}, b::Array{Float64}, max_k::Int64)::Array{Float64}
+    @assert length(a) == length(b) "The two rankings have different number of elements"
+    if (max_k > length(a))
+        max_k = length(a)
+    end
+    ai::Vector{Int64} = sortperm(a, rev=true)
+    bi::Vector{Int64} = sortperm(b, rev=true)
+    jac::Array{Float64} = zeros(max_k)
+    for k in 1:max_k
+        jac[k] = length(intersect(Set(ai[1:k]), Set(bi[1:k]))) / length(union(Set(ai[1:k]), Set(bi[1:k])))
+    end
+    return jac
+end

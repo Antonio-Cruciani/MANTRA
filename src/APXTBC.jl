@@ -2,6 +2,7 @@
 using DataStructures
 using StatsBase
 using Base.Threads
+using Distributed
 
 include("graphs/temporal_graph.jl")
 # Shortest
@@ -25,7 +26,7 @@ include("centralities/prefix_foremost/trk_prefix_foremost.jl")
 include("temporal_neighborhood_function/mt_diameter.jl")
 include("centralities/utilities.jl")
 include("statistics/rankings.jl")
-include("statistics/correlations_and_error.jl")
+#include("statistics/correlations_and_error.jl")
 
 #PARALLEL 
 # EXACT
@@ -46,3 +47,62 @@ include("parallel/shortest_foremost/mt_trk_shortest_foremost.jl")
 include("parallel/prefix_foremost/mt_trk_prefix_foremost.jl")
 
 
+include("parallel/progressive/shortest_temporal/mt_bernstein.jl")
+include("parallel/progressive/shortest_temporal/mt_cmcera.jl")
+include("parallel/progressive/shortest_temporal/mt_weighted_ub.jl")
+
+include("parallel/progressive/shortest_foremost/mt_bernstein_shortest_foremost.jl")
+include("parallel/progressive/shortest_foremost/mt_cmcera_shortest_foremost.jl")
+include("parallel/progressive/shortest_foremost/mt_weighted_ub_shortest_foremost.jl")
+
+include("parallel/progressive/prefix_foremost/mt_bernstein_prefix_foremost.jl")
+include("parallel/progressive/prefix_foremost/mt_cmcera_prefix_foremost.jl")
+include("parallel/progressive/prefix_foremost/mt_weighted_ub_prefix_foremost.jl")
+
+
+
+
+#TOP-K Algortihms
+
+include("parallel/TOP-K/shortest_temporal/mt_trk_shortest_topk.jl")
+include("parallel/TOP-K/shortest_foremost/mt_trk_shortest_foremost_topk.jl")
+include("parallel/TOP-K/prefix_foremost/mt_trk_prefix_foremost_topk.jl")
+
+
+include("centralities/shortest_temporal/shortest_temporal_topk.jl")
+
+
+
+include("parallel/TOP-K/prefix_foremost/mt_onbra_prefix_foremost_topk.jl")
+
+
+
+# CM-ERA
+
+include("parallel/shortest_temporal/mt_silvan.jl")
+include("parallel/shortest_foremost/mt_silvan_shortest_foremost.jl")
+include("parallel/prefix_foremost/mt_silvan_prefix_foremost.jl")
+
+include("parallel/TOP-K/shortest_temporal/mt_silvan_shortest_topk.jl")
+
+include("parallel/TOP-K/prefix_foremost/mt_silvan_prefix_foremost_topk.jl")
+
+
+# DET-ERA
+include("parallel/progressive/prefix_foremost/mt_det_era_prefix_foremost.jl")
+
+#STATS 
+#include("statistics/correlations_and_error.jl")
+
+# SOME PRINTS 
+packet_name::String =raw"
+         __  __          _   _ _______ _____            
+        |  \/  |   /\   | \ | |__   __|  __ \     /\    
+        | \  / |  /  \  |  \| |  | |  | |__) |   /  \   
+        | |\/| | / /\ \ | . ` |  | |  |  _  /   / /\ \  
+        | |  | |/ ____ \| |\  |  | |  | | \ \  / ____ \ 
+        |_|  |_/_/    \_\_| \_|  |_|  |_|  \_\/_/    \_\
+       "
+
+println(packet_name)
+flush(stdout)
