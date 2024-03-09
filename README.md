@@ -32,3 +32,26 @@ where `<nthreads>` is the number of assigned threads.
 All the results will be automatically saved in the `scores` and `times` folders.
 
 Finally, to summarize the results run ```julia analyze_results.jl```, this command will create a new folder called `analysis` with all the results showed in the paper.
+
+# How to use MANTRA to analyze temporal graphs
+
+Here we describe how to run MANTRA on a general input temporal graph.
+
+## MANTRA parameters
+The algorithm has the following input parameters:
+
+(-) Temporal Graph (`temporal_graph`)
+
+(-) The absolute approximation precision epsilon (`Float64`)
+
+(-) The confidence value delta (`Float64`)
+
+(-) Whether the BigInt data type must be used (`Bool`)
+
+(-) The estimator that must be used (`String` - options: 1- `ob`:ONBRA estimator, 2-`trk` (default) TRK estimator, 3-`rtb` random temporal betweenness estimator)
+
+(-) The temporal path optimality that must be considered while computing the temporal betweenness (`String` - options: 1- `sh` (default) Shortest, 2- `sfm` Shortest-foremost, 3- `pfm` Prefix-foremost)
+
+(-) Whether to use the VC-Upperbound or the Variance Upperbound (`Bool` , `False` default, i.e., Variance Upperbound is used as default)
+
+(-) Diameter of the analyzed input graph (`Int64`, `-1` as defalut value. If the value is set to `-1` the algorithm approximates the diameter using the fast-sampling method described in our paper)
