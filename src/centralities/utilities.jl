@@ -380,7 +380,7 @@ function progressive_bernstein(tg::temporal_graph,epsilon::Float64,delta::Float6
     end
 end
 
-function progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Float64,bigint::Bool,algo::String = "trk",topt::String = "sh",vc_upper_bound::Bool = false,geo::Float64 = 1.2,diam::Int64 = -1,empirical_peeling_a::Float64 = 2.0,force_gc::Bool=false)
+function progressive_mantra(tg::temporal_graph,eps::Float64,delta::Float64,bigint::Bool,algo::String = "trk",topt::String = "sh",vc_upper_bound::Bool = false,geo::Float64 = 1.2,diam::Int64 = -1,empirical_peeling_a::Float64 = 2.0,force_gc::Bool=false)
     @assert (topt == "sh") || (topt == "sfm") || (topt == "pfm") "Illegal temporal-path optimality, use: sh for shortest , sfm for shortest foremost , or pfm for prefix foremost"
     if nthreads() > 1
         println("Algorithm "*algo* " Temporal path optimality "*topt)

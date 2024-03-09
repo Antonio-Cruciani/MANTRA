@@ -54,4 +54,33 @@ The algorithm has the following input parameters:
 
 (-) Whether to use the VC-Upperbound or the Variance Upperbound (`Bool` , `False` default, i.e., Variance Upperbound is used as default)
 
+(-) The geometric sampler value (`Float64`, default `1.2`)
+
 (-) Diameter of the analyzed input graph (`Int64`, `-1` as defalut value. If the value is set to `-1` the algorithm approximates the diameter using the fast-sampling method described in our paper)
+
+## Example on how to run MANTRA
+
+Open Julia Repl in the main folder (where all the .jl scripts are) using the command 
+
+```julia --threads <number of threads>```
+
+Next, include MANTRA
+
+```include("src/MANTRA.jl")```
+
+
+Load the temporal graph that must be analyzed
+
+```tg = load_temporal_graph("graphs/00_workplace.txt"," ")```
+
+notice: the temporal graph loader has two input parameters: (i) the temporal graph file and (ii) the file separator
+
+Run MANTRA,
+
+``` resut = progressive_mantra(tg,0.07,0.1,false,"ob","pfm")```
+
+the above command will compute a (0.07,0.1)-Approximation using the ONBRA (ob) estimator for the Prefix Foremost Temporal Betweenness
+
+Save the output to file
+
+```save_results_progressive_sampling("workplace",mantra_ob_pfm,result[1],result[2],result[4],1,0.07)```

@@ -46,7 +46,7 @@ for i in 1:lastindex(epsilon_list)
         println("Running Progressive MANTRA")
         flush(stdout)
         for i in 1:trials
-            result = progressive_cmcera(tg,epsilon,delta, big_int,algo,topt)
+            result = progressive_mantra(tg,epsilon,delta, big_int,algo,topt)
             save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt,result[1],result[2],result[4],starting_ss,epsilon)
             clean_gc()
         end
@@ -72,7 +72,7 @@ for i in 1:lastindex(epsilon_list)
         println("Running Progressive MANTRA")
         flush(stdout)
         for i in 1:trials
-            result = progressive_cmcera(tg,epsilon,delta, big_int,algo,topt)
+            result = progressive_mantra(tg,epsilon,delta, big_int,algo,topt)
             save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt,result[1],result[2],result[4],starting_ss,epsilon)
             clean_gc()
         end
@@ -98,7 +98,7 @@ for i in 1:lastindex(epsilon_list)
         println("Running Progressive MANTRA")
         flush(stdout)
         for i in 1:trials
-            result = progressive_cmcera(tg,epsilon,delta, big_int,algo,topt)
+            result = progressive_mantra(tg,epsilon,delta, big_int,algo,topt)
             save_results_progressive_sampling(nn,"cm_"*algo*"_"*topt,result[1],result[2],result[4],starting_ss,epsilon)
             clean_gc()
         end
