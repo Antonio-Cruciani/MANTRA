@@ -1,9 +1,8 @@
 include("src/MANTRA.jl")
 path = "graphs/"
-
-
-
-
+#=test
+datasets = ["00_workplace.txt"]
+=#
 
 datasets = [
     "01_college_msg.txt",
@@ -18,13 +17,15 @@ datasets = [
     "10_superuser.txt",
     "11_wiki_talk.txt"
 ]
-bint = false
+
+global bint = false
 println("Computing Ground Truth values for the (*)-temporal betweenness ")
 println("Suggestion : Go and grab a coffee ;)")
 flush(stdout)
 
 
 println("Computing Ground Truth values for the prefix-foremost temporal betweenness")
+flush(stdout)
 for gn in datasets
     tg = load_temporal_graph(path*gn," ")
     print_stats(tg, graph_name= gn)
@@ -35,12 +36,15 @@ for gn in datasets
     clean_gc()   
 end
 println("Computing Ground Truth values for the shortest temporal betweenness")
+flush(stdout)
 for gn in datasets
     tg = load_temporal_graph(path*gn," ")
+    print_stats(tg, graph_name= gn)
+    flush(stdout)
     if gn == "06_bordeaux.txt"
-        bint = true
+        global bint = true
     else
-        bint = false
+        global bint = false
     end
     result = threaded_temporal_shortest_betweenness(tg,1000,bint,false)
     nn = String(split(gn, ".t")[1])
@@ -48,12 +52,15 @@ for gn in datasets
     clean_gc()
 end
 println("Computing Ground Truth values for the shoretst-foremost temporal betweenness")
+flush(stdout)
 for gn in datasets
     tg = load_temporal_graph(path*gn," ")
+    print_stats(tg, graph_name= gn)
+    flush(stdout)
     if gn == "06_bordeaux.txt"
-        bint = true
+        global bint = true
     else
-        bint = false
+        global bint = false
     end
     result =threaded_temporal_shortest_foremost_betweenness(tg,1000,bint,false)
     nn = String(split(gn, ".t")[1])
