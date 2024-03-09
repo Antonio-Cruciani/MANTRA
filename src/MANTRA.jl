@@ -48,9 +48,6 @@ include("parallel/progressive/prefix_foremost/mt_cmcera_prefix_foremost.jl")
 include("parallel/progressive/prefix_foremost/mt_weighted_ub_prefix_foremost.jl")
 
 
-#STATS 
-#include("statistics/correlations_and_error.jl")
-
 # SOME PRINTS 
 packet_name::String =raw"
          __  __          _   _ _______ _____            

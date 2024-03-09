@@ -52,11 +52,11 @@ function get_correlations(method::String,starting_sample::Int64,target_epsilon::
         #println("Nnodes "*string(tg.num_nodes))
         #println("Analyzing "*gn*" ε ",target_epsilon, " Algorithm ",algo," Progressive Sampler ",prog_sampler, " Path Optimality ",method, " Upper bound samples via ",upper_bound_samples)
         exact = normalize_centrality(read_centrality_values("scores/"*gn*"/"*method*".txt"))
-        if prog_sampler == "cm"
-            apx_cc = read_centrality_values("scores/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*string(starting_sample)*".txt")
-        else
-            apx_cc = read_centrality_values("scores/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*upper_bound_samples*"_"*string(starting_sample)*".txt")
-        end
+        #if prog_sampler == "cm"
+        apx_cc = read_centrality_values("scores/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*string(starting_sample)*".txt")
+        #else
+        #    apx_cc = read_centrality_values("scores/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*upper_bound_samples*"_"*string(starting_sample)*".txt")
+        #end
         apx_bc = zeros(tg.num_nodes)
 
         for k in 1:trials
@@ -139,11 +139,11 @@ function get_errors(method::String,starting_sample::Int64,target_epsilon::Float6
         gn = split(graph,".txt")[1]
         #println("Analyzing "*gn*" ε ",target_epsilon, " Algorithm ",algo," Progressive Sampler ",prog_sampler, " Path Optimality ",method, " Upper bound samples via ",upper_bound_samples)
         exact = normalize_centrality(read_centrality_values("scores/"*gn*"/"*method*".txt"))
-        if prog_sampler == "cm"
-            apx_cc = read_centrality_values("scores/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*string(starting_sample)*".txt")
-        else
-            apx_cc = read_centrality_values("scores/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*upper_bound_samples*"_"*string(starting_sample)*".txt")
-        end
+        #if prog_sampler == "cm"
+        apx_cc = read_centrality_values("scores/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*string(starting_sample)*".txt")
+        #else
+        #apx_cc = read_centrality_values("scores/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*upper_bound_samples*"_"*string(starting_sample)*".txt")
+        #end
         apx_bc = zeros(tg.num_nodes)
         mse_list = []
         sd_list = []
@@ -192,12 +192,11 @@ function get_times(method::String,starting_sample::Int64,target_epsilon::Float64
         gn = split(graph,".txt")[1]
         #println("Analyzing "*gn*" ε ",target_epsilon, " Algorithm ",algo," Progressive Sampler ",prog_sampler, " Path Optimality ",method, " Upper bound samples via ",upper_bound_samples)
         exact = read_time("times/"*gn*"/time_"*method*".txt")
-        if prog_sampler == "cm"
-            apx_path = "times/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*string(starting_sample)*".txt"
-        else
-            apx_path = "times/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*upper_bound_samples*"_"*string(starting_sample)*".txt"
-
-        end
+        #if prog_sampler == "cm"
+        apx_path = "times/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*string(starting_sample)*".txt"
+        #else
+        #apx_path = "times/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*upper_bound_samples*"_"*string(starting_sample)*".txt"
+        #end
         times = read_time(apx_path)
         samples =read_sample_size(apx_path)
         xi = read_xi(apx_path)
@@ -270,11 +269,11 @@ function get_ranking_intersections(method::String,tk::Int64,starting_sample::Int
         gn = split(graph,".txt")[1]
         #println("Analyzing "*gn*" ε ",target_epsilon, " Algorithm ",algo," Progressive Sampler ",prog_sampler, " Path Optimality ",method, " Upper bound samples via ",upper_bound_samples)
         exact = normalize_centrality(read_centrality_values("scores/"*gn*"/"*method*".txt"))
-        if prog_sampler == "cm"
-            apx_cc = read_centrality_values("scores/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*string(starting_sample)*".txt")
-        else
-            apx_cc = read_centrality_values("scores/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*upper_bound_samples*"_"*string(starting_sample)*".txt")
-        end
+        #if prog_sampler == "cm"
+        apx_cc = read_centrality_values("scores/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*string(starting_sample)*".txt")
+        #else
+        #apx_cc = read_centrality_values("scores/"*gn*"/"*prog_sampler*"_"*algo*"_"*method*"_"*upper_bound_samples*"_"*string(starting_sample)*".txt")
+        #end
         top_k_exact::Array{Tuple{Int64,Float64}} = Array{Tuple{Int64,Float64}}([])
         for u in 1:tg.num_nodes
             push!(top_k_exact,(u,exact[u]))
