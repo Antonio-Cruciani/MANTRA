@@ -22,11 +22,11 @@ where the number indicates the number of thread to use, for more information we 
 # How to reproduce the experiments in the paper
 To reproduce all the experiment you need to: 
 
-		(i) Compute the exact temporal betweenness values running the command ```julia --threads <nthreads> compute_exact_temporal_bc.jl```
+(i) Compute the exact temporal betweenness values running the command `julia --threads <nthreads> compute_exact_temporal_bc.jl`
 
-		(ii) Compute MANTRA's approximation, running ```julia --threads <nthreads> compute_mantra.jl```
-		
-		(iii) Compute ONBRAS's approximation, running ```julia --threads <nthreads> compute_onbra.jl```
+(ii) Compute MANTRA's approximation, running `julia --threads <nthreads> compute_mantra.jl`
+
+(iii) Compute ONBRAS's approximation, running `julia --threads <nthreads> compute_onbra.jl`
 
 where `<nthreads>` is the number of assigned threads.
 All the results will be automatically saved in the `scores` and `times` folders.
