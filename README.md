@@ -83,4 +83,4 @@ the above command will compute a (0.07,0.1)-Approximation using the ONBRA (ob) e
 
 Save the output to file
 
-```save_results_progressive_sampling("workplace",mantra_ob_pfm,result[1],result[2],result[4],1,0.07)```
+```save_results_progressive_sampling("workplace","mantra_ob_pfm",result[1],result[2],result[4],1,0.07)```
