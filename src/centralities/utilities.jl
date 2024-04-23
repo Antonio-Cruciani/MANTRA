@@ -41,6 +41,25 @@ function read_centrality_values_topk(file_name::String)::Array{Tuple{Int64,Float
     return centrality
 end
 
+function _reduce_data_a!(u::Int64,tn::Int64,src_x::Vector{Vector{Float64}},src_y::Vector{Array{Float64}},src_z::Vector{Array{Int64}},dst_x::Array{Float64},dst_y::Array{Float64},dst_z::Array{Int64})
+    for t in 1:tn
+        dst_x[u]+=src_x[t][u]
+        dst_y[u]+=src_y[t][u]
+        dst_z[u]+=src_z[t][u]
+    end
+    return nothing
+end
+
+function _reduce_data_b!(u::Int64,tn::Int64,src_x::Vector{Vector{Float64}},src_y::Vector{Array{Float64}},src_z::Array{Array{Float64}},dst_x::Array{Float64},dst_y::Array{Float64},dst_z::Array{Float64})
+    for t in 1:tn
+        dst_x[u]+=src_x[t][u]
+        dst_y[u]+=src_y[t][u]
+        dst_z[u]+=src_z[t][u]
+    end
+    return nothing
+end
+
+
 
 
 function save_centrality_values(file_name::String, centrality::Array{Float64})::Nothing

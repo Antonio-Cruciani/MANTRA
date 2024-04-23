@@ -17,7 +17,7 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
         tn_index = temporal_node_index(tg)
     end    # Wimpy variance
     local_wv::Array{Array{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
-    wv::Array{Float64} = Array{Float64}([])
+    #wv::Array{Float64} = Array{Float64}([])
     emp_w_node::Float64 = 0.0
     min_inv_w_node::Float64 = 0.0
     # Partitions
@@ -31,6 +31,11 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
     local_temporal_betweenness::Vector{Vector{Float64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
     mcrade::Array{Array{Float64}} = [zeros(tg.num_nodes*mc_trials) for _ in 1:ntasks]
     local_sp_lengths::Array{Array{Int64}} = [zeros(tg.num_nodes) for _ in 1:ntasks]
+    betweenness::Array{Float64} = zeros(Float64,tg.num_nodes)
+    r_mcrade::Array{Float64} = zeros(Float64,(tg.num_nodes+1)*mc_trials)
+    sp_lengths::Array{Int64} = zeros(Int64,tg.num_nodes)
+    wv::Array{Float64} = zeros(Float64,tg.num_nodes)
+
     omega::Float64 = 1000
     t_diam::Float64 = 0.0
     max_num_samples::Float64 = 0.0
@@ -76,18 +81,26 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
         end
     end
 
+    # reducing
+    task_size = cld(tg.num_nodes, ntasks)
+    vs_active = [i for i in 1:tg.num_nodes]
+    @sync for (t, task_range) in enumerate(Iterators.partition(1:tg.num_nodes, task_size))
+        Threads.@spawn for u in @view(vs_active[task_range])
+            _reduce_data_a!(u,ntasks,local_temporal_betweenness,local_wv,local_sp_lengths,betweenness,wv,sp_lengths)
+        end
+    end
 
-    betweenness = reduce(+, local_temporal_betweenness)
-    betweenness = betweenness .* [1/tau]
-    wv = reduce(+,local_wv)
-    sp_lengths = reduce(+,local_sp_lengths) 
+    #betweenness = reduce(+, local_temporal_betweenness)
+    #betweenness = betweenness .* [1/tau]
+    #wv = reduce(+,local_wv)
+    #sp_lengths = reduce(+,local_sp_lengths) 
     println("Empirical peeling phase:")
     flush(stdout)
     max_tbc::Float64 = 0.0
     max_wv::Float64 = 0.0
 
     for i in 1:tg.num_nodes
-        max_tbc = max(max_tbc,betweenness[i])
+        max_tbc = max(max_tbc,betweenness[i]/tau)
         max_wv = max(max_wv,wv[i])
         emp_w_node = wv[i] * 1. /tau
         min_inv_w_node = min(1. /emp_w_node,tau)
@@ -196,11 +209,21 @@ function threaded_progressive_cmcera_shortest_foremost(tg::temporal_graph,eps::F
         end
 
         if !has_to_stop & (num_samples < last_stopping_samples)&(num_samples >= next_stopping_samples)
-            betweenness = reduce(+, local_temporal_betweenness)
+            
+             # reducing
+             task_size = cld(tg.num_nodes, ntasks)
+             vs_active = [i for i in 1:tg.num_nodes]
+             @sync for (t, task_range) in enumerate(Iterators.partition(1:tg.num_nodes, task_size))
+                 Threads.@spawn for u in @view(vs_active[task_range])
+                     _reduce_data_b!(u,ntasks,local_temporal_betweenness,local_wv,mcrade,betweenness,wv,r_mcrade)
+                 end
+             end
+ 
+            #betweenness = reduce(+, local_temporal_betweenness)
      
-            wv = reduce(+,local_wv)
+            #wv = reduce(+,local_wv)
             #sp_lengths = reduce(+,local_sp_lengths) 
-            r_mcrade = reduce(+,mcrade)
+            #r_mcrade = reduce(+,mcrade)
             
             tmp_omega = Vector{Float64}([omega])
             tmp_has_to_stop = Vector{Bool}([false])

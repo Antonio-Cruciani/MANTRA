@@ -1038,3 +1038,25 @@ function _compute_δ_guess!(betweenness::Array{Float64},eps::Float64,delta::Floa
     return nothing
 end
 
+
+
+function temporal_node_index_srtp(tg::temporal_graph)::Dict{Tuple{Int64,Int64},Int64}
+    d::Dict{Tuple{Int64,Int64},Int64} = Dict{Tuple{Int64,Int64},Int64}()
+    t_z::Int64 = tg.temporal_edges[lastindex(tg.temporal_edges)][3]+1
+    current_index = 1
+    for edge in tg.temporal_edges
+        if (get(d, (edge[2], edge[3]), 0) == 0)
+            d[(edge[2], edge[3])] = current_index
+            current_index = current_index + 1
+        end
+    end
+    for s in 1:tg.num_nodes
+        d[(s, 0)] = current_index
+        current_index = current_index + 1
+    end
+    for z in 1:tg.num_nodes
+        d[(z, t_z)] = current_index
+        current_index = current_index + 1
+    end
+    return d
+end

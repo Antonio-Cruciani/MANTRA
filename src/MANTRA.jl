@@ -47,6 +47,7 @@ include("parallel/progressive/prefix_foremost/mt_bernstein_prefix_foremost.jl")
 include("parallel/progressive/prefix_foremost/mt_cmcera_prefix_foremost.jl")
 include("parallel/progressive/prefix_foremost/mt_weighted_ub_prefix_foremost.jl")
 
+include("centralities/shortest_temporal/mantra.jl")
 
 # SOME PRINTS 
 packet_name::String =raw"
