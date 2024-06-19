@@ -1,6 +1,20 @@
 using DataStructures
 using StatsBase
 
+struct BFS_SRTP_SAMPLER_DS
+    sigma::Array{UInt128}
+    dist::Array{Int64}
+    sigma_t::Array{UInt128}
+    sigma_z::Array{UInt128}
+    dist_t::Array{Int64}
+    predecessors::Array{Set{Tuple{Int64,Int64,Int64}}}
+    boolean_array::Array{Bool}
+    forward_queue::Array{Tuple{Int64,Int64,Int64}}
+    function BFS_SRTP_SAMPLER_DS(nn::Int64, ntn::Int64)
+        return new(Array{UInt128}(undef, nn), Array{Int64}(undef, nn), Array{UInt128}(undef, ntn), zeros(Int64, ntn), Array{Int64}(undef, ntn), Array{Set{Tuple{Int64,Int64}}}(undef, ntn+1), falses(ntn), Array{Tuple{Int64,Int64,Int64}}(undef, ntn))
+    end
+end
+
 struct BFS_SRTP_DS
     sigma::Array{UInt128}
     dist::Array{Int64}

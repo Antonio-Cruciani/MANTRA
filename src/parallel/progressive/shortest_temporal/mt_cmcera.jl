@@ -1727,3 +1727,287 @@ function _sh_accumulate_onbra_rel_topk!(tg::temporal_graph,tal::Array{Array{Tupl
     return nothing
 
 end
+
+
+macro unvisited()
+    return 0
+end
+macro visited_s()
+    return 1
+end
+macro visited_z()
+    return 2
+end
+macro adjacency()
+    return 0
+end
+
+macro incidency()
+    return 1
+end
+
+#work in progress
+
+# To finish
+function next_temporal_neighbors_backwards(tal::Array{Array{Tuple{Int64,Int64}}}, u::Int64, t::Int64)::Array{Tuple{Int64,Int64}}
+    neig::Array{Tuple{Int64,Int64}} = tal[u]
+    left::Int64 = 1
+    right::Int64 = length(neig)
+    pos::Int64 = length(neig) + 1
+    mid::Int64 = -1
+    while (left <= right)
+        mid = (left + right) ÷ 2
+        if (neig[mid][2] <= t)
+            left = mid + 1
+        else
+            pos = mid
+            right = mid - 1
+        end
+    end
+    return neig[pos:end]
+end
+
+function sh_path_sampler(tg::temporal_graph,sg::static_graph,tal::Array{Array{Tuple{Int64,Int64}}},tn_index::Dict{Tuple{Int64,Int64},Int64},n::Int64,betweenness::Array{Float64},wimpy_variance::Array{Float64},mcrade::Array{Float64},mc_trials::Int64,alpha_sampling::Float64,lk::ReentrantLock,boostrap_phase::Bool = false)
+    bfs_ds = BFS_SRTP_SAMPLER_DS(tg.num_nodes, length(keys(tn_index)))
+    # 1 s 2 z 0 noone 
+    u::Int64 = -1
+    w::Int64 = -1
+    t::Int64 = -1
+    t_w::Int64 = -1
+    v::Int64 = -1
+    t_v::Int64 = -1
+    tni::Int64 = -1
+    tni_w::Int64 = -1
+    ball::Array{Int8} = zeros(Int8,tg.num_nodes)
+    t_ball::Array{Int8} = zeros(Int8,length(keys(tn_index)))
+    end_q::UInt32 = 1
+    tot_weight::Int64 = 0
+    cur_edge::UInt64 = 0
+    random_edge::UInt32 = 0;
+    s::Int64 = sample(1:n)
+    z::Int64 = sample(1:n)
+    x::Int64  = 0
+    y::Int64 = 0
+    longest_dist::Int64 = 0
+    have_to_stop::Bool = false;
+    start_s::Int64 = 1
+    start_z::Int64 = 2
+    end_s::UInt64 = 2
+    end_z::UInt64 = 3
+    start_cur::UInt64 = 0
+    end_cur::UInt64 = 0
+    new_end_cur::UInt64 = 0
+    sum_degs_s::UInt64 = 0
+    sum_degs_z::UInt64 = 0
+    sum_degs_cur::UInt64 = 0
+    neigh_num::UInt64 = 0
+    to_expand::Int16 = 0
+    vis_edges::Int64 = 0
+    num_path_to_sample::Int64 = 1
+    num_paths::Int64 = 0
+    sp_edges::Array{Tuple{Tuple{Int64,Int64}}} = Array{Tuple{Tuple{Int64,Int64}}}([])
+    path::Array{Int64} = Array{Int64}([])
+    path_map::Dict{Int64,Int64} = Dict{Int64,Int64}()
+
+    temporal_node::Tuple{Int64,Int64} = (-1, -1)
+    lambdas::Array{Int64} = zeros(mc_trials)
+    maxval_lambdas::Int64 = 100000000
+    maxval_half::Int64 = maxval_lambdas/2
+    if !boostrap_phase
+        for j in 1:mc_trials
+            lambdas[j] = (sample(0:maxval_lambdas-1) >= maxval_half)*2-1
+        end
+    end
+    while (s == z)
+        z = sample(1:n)
+    end
+
+    for u in 1:tg.num_nodes
+        bfs_ds.dist[u] = -1
+        bfs_ds.sigma[u] = 0
+    end
+    for tn in 1:(length(tn_index))
+        bfs_ds.sigma_t[tn] = 0
+        bfs_ds.delta_sh[tn] = 0
+        bfs_ds.dist_t[tn] = -1
+        bfs_ds.predecessors[tn] = Set{Tuple{Int64,Int64}}()
+    end
+    tni = tn_index[(s, 0)]
+    bfs_ds.sigma[s] = 1
+    bfs_ds.sigma_t[tni] = 1
+    bfs_ds.dist[s] = 0
+    bfs_ds.dist_t[tni] = 0
+    t_ball[tni] = @visited_s
+
+    tni = tn_index[(z, typemax(Int64))]
+    bfs_ds.sigma[z] = 1
+    bfs_ds.sigma_t[tni] = 1
+    bfs_ds.dist[z] = 0
+    bfs_ds.dist_t[tni] = 0
+    t_ball[tni] = @visited_z
+
+    bfs_ds.queue[1] = (s,0)
+    bfs_ds.queue[2] = (z,typemax(Int64))
+    end_q = 2
+
+    ball[s] = @visited_s
+    ball[z] = @visited_z
+    temporal_neighs = []
+   while (!have_to_stop)
+
+        # decide what ball we have to expand
+        if (sum_degs_s <= sum_degs_z)
+            start_cur = start_s
+            end_cur = end_s
+            start_s = end_q
+            new_end_cur = end_s
+            end_s = end_q
+            sum_degs_s = 0
+            sum_degs_cur = sum_degs_s 
+            to_expand = @adjacency
+            #println("SUM DEG S ",sum_degs_s)
+        else
+            start_cur = start_z
+            end_cur = end_z
+            start_z = end_q
+            new_end_cur = end_z
+            end_z = end_q
+            sum_degs_z = 0
+            sum_degs_cur = sum_degs_z
+            to_expand = @incidency
+            #println("SUM DEG Z ",sum_degs_z)
+        end
+
+        while (start_cur < end_cur)
+            x = q[start_cur]
+            start_cur += 1
+            if (to_expand == @adjacency)
+                neigh_num = lastindex(sg.adjacency[x[1]])
+                temporal_neighs = next_temporal_neighbors(tal, x[1], x[2])
+                #println("Expanding forward from ",x)
+            else
+                neigh_num = lastindex(sg.incidency[x[1]])
+                temporal_neighs = next_temporal_neighbors_backwards(tal,  x[1], x[2])
+
+                #println("Expanding backward from ",x)
+            end
+            tni = tn_index[x]
+            for y in temporal_neighs
+                tni_w = tn_index[y]
+                if (t_ball[tni_w] == @unvisited)
+                    if (to_expand == @adjacency)
+                        sum_degs_cur += lastindex(sg.adjacency[y[1]])
+                    else
+                        sum_degs_cur += lastindex(sg.incidency[y[1]])
+                    end
+                    bfs_ds.sigma_t[tni_w] += bfs_ds.sigma_t[tni]
+                    if bfs_ds.dist[tni_w[1]] == -1
+                        bfs_ds.dist[tni_w[1]] = bfs_ds.dist_t[tni] + 1                       
+                    end
+                    t_ball[tni_w] = t_ball[tni] 
+                    end_q += 1
+                    q[end_q] = y
+                    new_end_cur += 1
+                    bfs_ds.dist_t[tni_w] = bfs_ds.dist_t[tni] + 1
+                    push!(bfs_ds.predecessors[tni_w], x)
+
+                elseif (t_ball[tni_w] != t_ball[tni])
+                    have_to_stop = true
+                    push!(sp_edges,(x,y))
+                elseif (bfs_ds.dist_t[tni_w] == bfs_ds.dist_t[tni]+1)
+                    bfs_ds.sigma_t[tni_w] += bfs_ds.sigma_t[tni]
+                    bfs_ds.sigma[y[1]] += bfs_ds.sigma_t[tni]
+                    push!(bfs_ds.predecessors[tni_w], x)
+                end        
+            end
+        end
+        if (sum_degs_cur == 0)
+            have_to_stop = true
+        end
+        if (to_expand == @adjacency)
+            sum_degs_s = sum_degs_cur
+            start_s = start_cur
+            end_s = new_end_cur
+        else
+            sum_degs_z = sum_degs_cur
+            start_z = start_cur
+            end_z = new_end_cur
+        end
+        end_cur = new_end_cur
+   end
+   if (length(sp_edges) != 0)
+    for p in sp_edges
+        tot_weight += bfs_ds.sigma_t[p[1]] * bfs_ds.sigma_t[p[2]]
+    end
+    if (alpha_sampling > 0 && tot_weight > 1)
+        num_path_to_sample = trunc(Int64,floor(alpha_sampling * tot_weight))
+    end
+    num_paths = num_path_to_sample
+    for j in 1:num_path_to_sample
+        path = Array{Int64}([])
+        random_edge = rand(0:tot_weight-1)
+        cur_edge = 0
+        for p in sp_edges
+            cur_edge += bfs_ds.sigma_t[p[1]] * bfs_ds.sigma_t[p[2]]
+            if (cur_edge > random_edge)
+                #println("randm edge ",p)
+                #println("s ",s," z ",z," p ",p)
+                _backtrack_path!(s,z,p[1],path,bfs_ds.sigma_t,bfs_ds.predecessors)
+                _backtrack_path!(s,z,p[2],path,bfs_ds.sigma_t,bfs_ds.predecessors)
+                break
+            end
+        end
+
+        for u in path
+            if haskey(path_map,u[1])
+                path_map[u[1]] +=1
+            else
+                path_map[u[1]] = 1
+            end
+        end
+    end
+    begin
+        lock(lk)
+        try
+            for u in keys(path_map)
+                pm_value = path_map[u]/num_path_to_sample
+                betweenness[u[1]] += pm_value
+                wimpy_variance[u[1]] += pm_value*pm_value 
+
+                if !boostrap_phase
+                    for j in 1:mc_trials
+                        mcrade[(u*mc_trials) + j] += lambdas[j] * pm_value
+                    end
+                end
+            end
+        finally
+            unlock(lk)
+        end
+
+    return nothing
+   
+end
+
+
+
+function _backtrack_path!(s::Int64,z::Int64,w::Tuple{Int64,Int64},path::Array{Tuple{Int64,Int64}},n_paths::Array{UInt128},pred::Array{Array{Tuple{Int64,Int64}}})
+    tot_weight::UInt64 = n_paths[w]
+    random_pred::Int64 = 0
+    cur_pred::Int64 = 0
+    v::Int64 = 0
+    if (w[1] == s || w[1] == z)
+        return nothing
+    end
+    push!(path,w)
+    random_pred = rand(0:tot_weight-1)
+    for p in pred[w]
+        v = p
+        cur_pred += n_paths[z]
+        if (cur_pred > random_pred)
+            break
+        end
+    end
+    if (s != v[1] && z != v[1])
+        _backtrack_path!(s,z,v,path,n_paths,pred)
+    end
+end
