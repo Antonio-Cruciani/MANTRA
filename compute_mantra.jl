@@ -28,7 +28,7 @@ delta =0.1
 trials = 10
 global big_int = false
 geo = 1.2
-algo = "ob"
+algo = "trk"
 println("Computing absolute (ε,δ)-Approximation of the (*)-temporal betweenness using MANTRA")
 println("Suggestion : Go and grab a (quick) coffee ;)")
 flush(stdout)
