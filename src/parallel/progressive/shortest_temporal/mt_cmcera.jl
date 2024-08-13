@@ -1728,7 +1728,7 @@ function _sh_accumulate_onbra_rel_topk!(tg::temporal_graph,tal::Array{Array{Tupl
 
 end
 
-
+#=
 macro unvisited()
     return 0
 end
@@ -2011,3 +2011,4 @@ function _backtrack_path!(s::Int64,z::Int64,w::Tuple{Int64,Int64},path::Array{Tu
         _backtrack_path!(s,z,v,path,n_paths,pred)
     end
 end
+=#
