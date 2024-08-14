@@ -14,6 +14,7 @@ sample_list = [1000]
 datasets = [
     "10_superuser.txt",
 ]
+delta =0.1
 trials = 1
 global big_int = false
 geo = 1.2
