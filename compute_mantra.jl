@@ -12,13 +12,13 @@ sample_list = [100,350]
 
 
 datasets = [
-    
-"10_superuser.txt",
+    "09_askubuntu.txt"
+
 ]
 epsilon_list = [0.001]
 sample_list = [2000]
 delta =0.1
-trials = 6
+trials = 9
 global big_int = false
 geo = 1.2
 algo = "rtb"
@@ -27,7 +27,7 @@ println("Suggestion : Go and grab a (quick) coffee ;)")
 flush(stdout)
 println("Computing (ε,δ)-Approximation for the prefix-foremost temporal betweenness")
 flush(stdout)
-topt = "pfm"
+topt = "rtk"
 for i in 1:lastindex(epsilon_list)
     epsilon = epsilon_list[i]
     starting_ss = sample_list[i]
@@ -48,7 +48,7 @@ end
 
 
 datasets = [
-    
+    "10_superuser.txt",
     "11_wiki_talk.txt"
 ]
 epsilon_list = [0.001]
@@ -57,7 +57,7 @@ delta =0.1
 trials = 10
 global big_int = false
 geo = 1.2
-algo = "rtb"
+algo = "rtk"
 println("Computing absolute (ε,δ)-Approximation of the (*)-temporal betweenness using MANTRA")
 println("Suggestion : Go and grab a (quick) coffee ;)")
 flush(stdout)
