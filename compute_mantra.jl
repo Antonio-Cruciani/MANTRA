@@ -13,12 +13,12 @@ sample_list = [100,350]
 
 datasets = [
     
-    "09_askubuntu.txt"
+"10_superuser.txt",
 ]
 epsilon_list = [0.001]
 sample_list = [2000]
 delta =0.1
-trials = 9
+trials = 6
 global big_int = false
 geo = 1.2
 algo = "trk"
@@ -49,7 +49,6 @@ end
 
 datasets = [
     
-    "10_superuser.txt",
     "11_wiki_talk.txt"
 ]
 epsilon_list = [0.001]
@@ -82,6 +81,21 @@ for i in 1:lastindex(epsilon_list)
         end
     end
 end
+
+
+datasets = [
+    "01_college_msg.txt",
+    "02_digg_reply.txt",
+    "03_slashdot_reply.txt",
+    "04_facebook_wall.txt",
+    "05_topology.txt",
+    "06_bordeaux.txt",
+    "07_mathoverflow.txt",
+    "08_SMS.txt",
+    "09_askubuntu.txt",
+    "10_superuser.txt",
+    "11_wiki_talk.txt"
+]
 epsilon_list = [0.1,0.07,0.05,0.01,0.007,0.005,0.001]
 sample_list = [100,350,750,1000,1350,1500,2000]
 println("Computing (ε,δ)-Approximation for the shortest temporal betweenness")
