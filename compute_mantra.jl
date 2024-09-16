@@ -21,13 +21,13 @@ delta =0.1
 trials = 9
 global big_int = false
 geo = 1.2
-algo = "rtb"
+algo = "rtk"
 println("Computing absolute (ε,δ)-Approximation of the (*)-temporal betweenness using MANTRA")
 println("Suggestion : Go and grab a (quick) coffee ;)")
 flush(stdout)
 println("Computing (ε,δ)-Approximation for the prefix-foremost temporal betweenness")
 flush(stdout)
-topt = "rtk"
+topt = "pfm"
 for i in 1:lastindex(epsilon_list)
     epsilon = epsilon_list[i]
     starting_ss = sample_list[i]
