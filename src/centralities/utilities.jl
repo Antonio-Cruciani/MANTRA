@@ -50,11 +50,13 @@ function _reduce_data_a!(u::Int64,tn::Int64,src_x::Vector{Vector{Float64}},src_y
     return nothing
 end
 
-function _reduce_data_b!(u::Int64,tn::Int64,src_x::Vector{Vector{Float64}},src_y::Vector{Array{Float64}},src_z::Array{Array{Float64}},dst_x::Array{Float64},dst_y::Array{Float64},dst_z::Array{Float64})
+function _reduce_data_b!(u::Int64,tn::Int64,mc_trials::Int64,src_x::Vector{Vector{Float64}},src_y::Vector{Array{Float64}},src_z::Array{Array{Float64}},dst_x::Array{Float64},dst_y::Array{Float64},dst_z::Array{Float64})
     for t in 1:tn
         dst_x[u]+=src_x[t][u]
         dst_y[u]+=src_y[t][u]
-        dst_z[u]+=src_z[t][u]
+        for j in 1:mc_trials
+            dst_z[(u*mc_trials) + j] += src_z[t][(u*mc_trials) + j]
+        end
     end
     return nothing
 end

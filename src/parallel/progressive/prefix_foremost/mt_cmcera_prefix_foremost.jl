@@ -215,7 +215,7 @@ function threaded_progressive_cmcera_prefix_foremost(tg::temporal_graph,eps::Flo
             vs_active = [i for i in 1:tg.num_nodes]
             @sync for (t, task_range) in enumerate(Iterators.partition(1:tg.num_nodes, task_size))
                 Threads.@spawn for u in @view(vs_active[task_range])
-                    _reduce_data_b!(u,ntasks,local_temporal_betweenness,local_wv,mcrade,betweenness,wv,r_mcrade)
+                    _reduce_data_b!(u,ntasks,mc_trials,local_temporal_betweenness,local_wv,mcrade,betweenness,wv,r_mcrade)
                 end
             end
 
