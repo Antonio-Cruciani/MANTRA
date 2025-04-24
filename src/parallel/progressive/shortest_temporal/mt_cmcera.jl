@@ -7,7 +7,7 @@ function upper_bound_average_diameter(delta::Float64,diam::Int64,tdd::Array{Int6
     avg_dist = avg_dist/sample_size * norm
     # Upper bound using Bernstein bound
     log_term_avg_dist::Float64 = log(1. /delta)
-    c_term_avg_dist::Float64 = (diam - 2)*log_term_avg_dist/sample_size
+    c_term_avg_dist::Float64 = (diam )*log_term_avg_dist/sample_size
     average_diam_ub_b = avg_dist + c_term_avg_dist + sqrt(2*c_term_avg_dist*diam + c_term_avg_dist^2)
     var_estimate_diam::Float64 = 0.0
     # Upper bound using Empirical Bernstein bound
@@ -23,7 +23,7 @@ function upper_bound_average_diameter(delta::Float64,diam::Int64,tdd::Array{Int6
     end
     =#
     log_term_avg_dist = log(2/delta)
-    average_diam_ub_eb::Float64 = avg_dist + 7/3 * (diam -2) * log_term_avg_dist/sample_size + sqrt(2*var_estimate_diam*log_term_avg_dist / sample_size)
+    average_diam_ub_eb::Float64 = avg_dist + 7/3 * (diam ) * log_term_avg_dist/sample_size + sqrt(2*var_estimate_diam*log_term_avg_dist / sample_size)
     avg_diam_upperbound = min(average_diam_ub_b,average_diam_ub_eb)
     if verbose
         println("Average diameter "*string(avg_dist))
@@ -33,7 +33,7 @@ function upper_bound_average_diameter(delta::Float64,diam::Int64,tdd::Array{Int6
         flush(stdout)
     end
     if diam -2 >0
-        return min(avg_diam_upperbound,diam-2)
+        return min(avg_diam_upperbound,diam)
     end
     return avg_diam_upperbound 
 end
