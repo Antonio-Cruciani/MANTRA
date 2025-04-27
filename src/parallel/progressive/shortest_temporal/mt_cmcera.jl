@@ -283,7 +283,7 @@ function threaded_progressive_cmcera(tg::temporal_graph,eps::Float64,delta::Floa
     max_num_samples::Float64 = 0.0
     if (diam == -1)
         println("Approximating (sh)-Temporal Diameter ")
-        diam,avg_dist,_,_,_,t_diam = threaded_temporal_shortest_diameter(tg,64,0,0.9,false)
+        diam,avg_dist,_,_,_,t_diam = threaded_temporal_shortest_diameter(tg,256,0,0.9,true)
         println("Task completed in "*string(round(t_diam;digits = 4))*". Δ = "*string(diam)*" ρ = "*string(avg_dist))
         flush(stdout)
     end
